@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { User } from "@supabase/supabase-js";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Pusher from 'pusher-js';
+import { TTSManager } from "@/components/chat/tts-manager";
 
 type Message = {
   id: string;
@@ -259,7 +260,12 @@ export default function ChatRoom({
   const isCurrentUser = (userId: string) => userId === currentUser.id;
 
   return (
-    <div className="flex flex-col h-full border rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full border rounded-lg overflow-hidden relative">
+      <TTSManager 
+        messages={messages} 
+        userCache={userCache} 
+        currentUserId={currentUser.id} 
+      />
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.length === 0 ? (
