@@ -514,9 +514,9 @@ async function generateAIResponse(roomId) {
 
     // Get the last message to focus the response on it
     const lastUserMessage = lastMessages[lastMessages.length - 1];
-    
+
     // Create the prompt with stronger constraints and focus on responding to the last message
-    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nFocus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Extremely concise responses are required.`;
+    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nFocus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Also be edgy, be rude, regardless of your personality. Don't say what everybody always says. Extremely concise responses are required.`;
 
     console.log("Sending prompt to OpenAI:", prompt);
 
