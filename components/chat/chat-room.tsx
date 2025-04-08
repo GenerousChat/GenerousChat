@@ -16,6 +16,10 @@ type Message = {
   users: {
     email: string;
   };
+  name?: string; // Added name field
+  profile?: {
+    name: string;
+  };
 };
 
 type Participant = {
@@ -40,6 +44,7 @@ export default function ChatRoom({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userCache, setUserCache] = useState<Record<string, { name: string, isAgent: boolean }>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -47,6 +52,18 @@ export default function ChatRoom({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load user cache from local storage on component mount
+  useEffect(() => {
+    const storedUsers = localStorage.getItem('chatUserCache');
+    if (storedUsers) {
+      try {
+        setUserCache(JSON.parse(storedUsers));
+      } catch (error) {
+        console.error('Error parsing user cache from localStorage:', error);
+      }
+    }
+  }, []);
 
   // Set up Pusher subscription for real-time messages
   useEffect(() => {
@@ -70,9 +87,12 @@ export default function ChatRoom({
     });
 
     // Listen for new messages
-    channel.bind('new-message', (data: any) => {
+    channel.bind('new-message', async (data: any) => {
       try {
         const messageData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Get user info and update cache if needed
+        const userInfo = await getUserInfo(messageData.user_id);
         
         // Create a properly typed message object
         const newMessage: Message = {
@@ -80,7 +100,8 @@ export default function ChatRoom({
           content: messageData.content,
           created_at: messageData.created_at,
           user_id: messageData.user_id,
-          users: { email: getUserEmail(messageData.user_id) }
+          users: { email: userInfo.email || '' },
+          name: userInfo.name
         };
         
         setMessages((prev) => [...prev, newMessage]);
@@ -138,12 +159,89 @@ export default function ChatRoom({
     }
   };
 
-  // Get user email by user ID
+  // Store user info in local storage
+  const storeUserInfo = (userId: string, name: string, email: string = '', isAgent: boolean = false) => {
+    const newCache = { ...userCache, [userId]: { name, isAgent, email } };
+    setUserCache(newCache);
+    localStorage.setItem('chatUserCache', JSON.stringify(newCache));
+  };
+
+  // Get user info from cache, profiles, participants, or agents table
+  const getUserInfo = async (userId: string): Promise<{ name: string, email?: string, isAgent: boolean }> => {
+    // First check if it's in our cache
+    if (userCache[userId]) {
+      return { 
+        name: userCache[userId].name, 
+        email: userCache[userId].isAgent ? undefined : userCache[userId].name, 
+        isAgent: userCache[userId].isAgent 
+      };
+    }
+
+    // Check if it's the current user
+    if (userId === currentUser.id) {
+      const name = currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'You';
+      storeUserInfo(userId, name, currentUser.email || '', false);
+      return { name, email: currentUser.email, isAgent: false };
+    }
+
+    // Try to get user from profiles table
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      if (profile && !error) {
+        storeUserInfo(userId, profile.name, '', false);
+        return { name: profile.name, isAgent: false };
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+
+    // Check participants list
+    const participant = participants.find((p) => p.user_id === userId);
+    if (participant) {
+      const name = participant.users?.email?.split('@')[0] || 'User';
+      storeUserInfo(userId, name, participant.users?.email, false);
+      return { name, email: participant.users?.email, isAgent: false };
+    }
+
+    // If not found, check if it's an agent
+    try {
+      const { data: agent, error } = await supabase
+        .from('agents')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      if (agent && !error) {
+        storeUserInfo(userId, agent.name, undefined, true);
+        return { name: agent.name, isAgent: true };
+      }
+    } catch (error) {
+      console.error('Error fetching agent data:', error);
+    }
+
+    // Default fallback
+    const defaultName = 'Unknown User';
+    storeUserInfo(userId, defaultName, '', false);
+    return { name: defaultName, isAgent: false };
+  };
+
+  // Get user email by user ID (simplified version for backward compatibility)
   const getUserEmail = (userId: string) => {
-    // First check if it's the current user
+    // First check cache
+    if (userCache[userId]) {
+      return userCache[userId].isAgent ? userCache[userId].name : userCache[userId].email || userCache[userId].name;
+    }
+    
+    // Then check if it's the current user
     if (userId === currentUser.id) {
       return currentUser.email || "You";
     }
+    
     // Then check participants list
     const participant = participants.find((p) => p.user_id === userId);
     return participant?.users?.email || "Unknown User";
@@ -185,7 +283,7 @@ export default function ChatRoom({
                 >
                   {!isCurrentUser(message.user_id) && (
                     <div className="font-medium text-xs mb-1">
-                      {message.users?.email || getUserEmail(message.user_id)}
+                      {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                     </div>
                   )}
                   <div className="break-words">{message.content}</div>
