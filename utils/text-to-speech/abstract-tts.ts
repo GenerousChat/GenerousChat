@@ -62,6 +62,57 @@ export abstract class AbstractTTSService {
     }
   }
   
+  // Fetch agent voice preference from the agents table
+  protected async fetchAgentVoice(agentId: string): Promise<TTSVoice | null> {
+    try {
+      // Check if this is a UUID format (agent ID)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);
+      
+      if (!isUUID) {
+        return null;
+      }
+      
+      // Use Supabase client to fetch the agent's voice preference
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+      
+      const { data, error } = await supabase
+        .from('agents')
+        .select('id, voice')
+        .eq('id', agentId)
+        .single();
+      
+      if (error || !data || !data.voice) {
+        console.log(`No voice preference found for agent ${agentId}`);
+        return null;
+      }
+      
+      // Create a voice object from the agent's preference
+      // Assuming the voice column contains an OpenAI voice ID like 'nova', 'alloy', etc.
+      const voiceId = data.voice;
+      
+      // Find the voice in available voices or create a basic one
+      const matchingVoice = this.availableVoices.find(v => v.id === voiceId);
+      
+      if (matchingVoice) {
+        return matchingVoice;
+      }
+      
+      // Create a basic voice object if not found in available voices
+      return {
+        id: voiceId,
+        name: voiceId,
+        gender: 'neutral' // Default gender
+      };
+    } catch (error) {
+      console.error('Error fetching agent voice:', error);
+      return null;
+    }
+  }
+
   // Process the message queue
   protected async processQueue(): Promise<void> {
     if (this.queue.length === 0 || this.isPlaying) {
@@ -73,12 +124,22 @@ export abstract class AbstractTTSService {
     
     if (message) {
       try {
-        // Make sure the message has a voice assigned
-        if (!message.voice && !this.userVoices[message.userId]) {
-          await this.assignRandomVoice(message.userId);
-        }
+        let voice = message.voice || this.userVoices[message.userId];
         
-        const voice = message.voice || this.userVoices[message.userId];
+        // If no voice is assigned yet, try to fetch from agents table if it's an agent
+        if (!voice) {
+          const agentVoice = await this.fetchAgentVoice(message.userId);
+          
+          if (agentVoice) {
+            // Save the agent voice for future use
+            this.userVoices[message.userId] = agentVoice;
+            voice = agentVoice;
+          } else {
+            // If not found in agents table, assign a random voice
+            await this.assignRandomVoice(message.userId);
+            voice = this.userVoices[message.userId];
+          }
+        }
         
         if (!voice) {
           throw new Error(`No voice available for user ${message.userId}`);
