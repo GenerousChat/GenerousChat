@@ -519,7 +519,7 @@ async function generateAIResponse(roomId) {
 
     // Generate text using OpenAI with stricter constraints
     const { text } = await generateText({
-      model: openai.responses("gpt-4o-mini"),
+      model: openai.responses("gpt-4o"),
       prompt: prompt,
       apiKey: process.env.OPENAI_API_KEY,
       maxTokens: 75, // Reduced to enforce shorter responses
