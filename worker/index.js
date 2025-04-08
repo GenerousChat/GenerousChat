@@ -453,7 +453,7 @@ async function generateAIResponse(roomId) {
       model: openai.responses("gpt-4o-mini"),
       prompt: prompt,
       apiKey: process.env.OPENAI_API_KEY,
-      generateText: 200,
+      maxTokens: 200,
     });
 
     console.log("AI generated response:", text);
