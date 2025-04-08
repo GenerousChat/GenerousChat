@@ -46,10 +46,37 @@ let aiResponseInProgress = false;
 // Timeout to prevent AI from responding too frequently
 let aiResponseTimeout = null;
 
-// List of AI agent user IDs to prevent AI from responding to its own messages
-const aiAgentIds = [
-  "e92d83f8-b2cd-4ebe-8d06-6e232e64736t", // Main AI assistant
-];
+// Store AI agents fetched from the database
+let aiAgents = [];
+
+// Set to store AI agent user IDs to prevent AI from responding to its own messages
+let aiAgentIds = new Set();
+
+// Fetch AI agents from the database
+async function fetchAIAgents() {
+  try {
+    const { data, error } = await supabase
+      .from("agents")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching AI agents:", error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      aiAgents = data;
+      // Update the set of AI agent IDs
+      aiAgentIds = new Set(data.map((agent) => agent.id));
+      console.log(`Fetched ${aiAgents.length} AI agents`);
+    } else {
+      console.log("No AI agents found in the database");
+    }
+  } catch (error) {
+    console.error("Error in fetchAIAgents:", error);
+  }
+}
 
 // Fetch the last 50 messages from Supabase
 async function fetchRecentMessages() {
@@ -171,6 +198,21 @@ async function setupSupabaseListeners() {
     .on(
       "postgres_changes",
       {
+        event: "*",
+        schema: "public",
+        table: "agents",
+      },
+      async (payload) => {
+        console.log("===== AGENT CHANGE DETECTED =====");
+        console.log("Agent change:", JSON.stringify(payload));
+
+        // Refresh the agents list
+        await fetchAIAgents();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
         event: "INSERT",
         schema: "public",
         table: "messages",
@@ -199,7 +241,7 @@ async function setupSupabaseListeners() {
           );
 
           // Only generate AI responses for messages from human users
-          if (!aiAgentIds.includes(message.user_id)) {
+          if (!aiAgentIds.has(message.user_id)) {
             console.log(
               "Message is from a human user, generating AI response..."
             );
@@ -375,7 +417,7 @@ async function generateAIResponse(roomId) {
 
     // Check if the last message is from an AI agent
     const lastMessage = roomMessages[roomMessages.length - 1];
-    if (aiAgentIds.includes(lastMessage.user_id)) {
+    if (aiAgentIds.has(lastMessage.user_id)) {
       console.log("Last message was from an AI agent, skipping response");
       aiResponseInProgress = false;
       return;
@@ -389,8 +431,20 @@ async function generateAIResponse(roomId) {
       .map((msg) => `User: ${msg.content}`)
       .join("\n");
 
+    // Select a random agent or use the default prompt if no agents are available
+    let agentPrompt =
+      "Respond with a single casual, friendly sentence as if you're part of the conversation. Keep it brief and natural. Don't introduce yourself or explain that you're an AI.";
+    let selectedAgent = null;
+
+    if (aiAgents.length > 0) {
+      // Select a random agent
+      selectedAgent = aiAgents[Math.floor(Math.random() * aiAgents.length)];
+      agentPrompt = selectedAgent.personality_prompt;
+      console.log(`Selected agent: ${selectedAgent.name}`);
+    }
+
     // Create the prompt
-    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\nRespond with a single casual, friendly sentence as if you're part of the conversation. Keep it brief and natural. Don't introduce yourself or explain that you're an AI.`;
+    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}`;
 
     console.log("Sending prompt to OpenAI:", prompt);
 
@@ -407,8 +461,8 @@ async function generateAIResponse(roomId) {
     // The worker will automatically pick up this insert via real-time subscription
     // and forward it to Pusher
 
-    // Use a fixed UUID for the AI assistant from our list of AI agents
-    const aiAssistantId = aiAgentIds[0]; // Using the first AI agent in our list
+    // Use the selected agent's ID or the first agent ID in our list
+    const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
 
     const { data, error } = await supabase.from("messages").insert({
       room_id: roomId,
@@ -462,6 +516,9 @@ async function init() {
     );
     // Fetch recent messages first
     await fetchRecentMessages();
+
+    // Fetch AI agents
+    await fetchAIAgents();
 
     // Set up Supabase listeners
     await setupSupabaseListeners();
