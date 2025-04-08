@@ -145,10 +145,10 @@ export abstract class AbstractTTSService {
           throw new Error(`No voice available for user ${message.userId}`);
         }
         
-        // Format the text to be read
-        const textToRead = `${message.userName} says: ${message.content}`;
+        // Just use the message content directly without the prefix
+        const textToRead = message.content;
         
-        console.log(`Speaking message from ${message.userName} with voice ${voice.name || voice.id}`);
+        console.log(`Speaking message with voice ${voice.name || voice.id}`);
         
         // Speak the text
         await this.speakText(textToRead, voice, this.options);
