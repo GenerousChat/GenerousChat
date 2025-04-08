@@ -94,8 +94,9 @@ export abstract class AbstractTTSService {
       // Assuming the voice column contains an OpenAI voice ID like 'nova', 'alloy', etc.
       const voiceId = data.voice;
       
-      // Find the voice in available voices or create a basic one
-      const matchingVoice = this.availableVoices.find(v => v.id === voiceId);
+      // Get available voices and find a matching one
+      const availableVoices = await this.getAvailableVoices();
+      const matchingVoice = availableVoices.find(v => v.id === voiceId);
       
       if (matchingVoice) {
         return matchingVoice;
