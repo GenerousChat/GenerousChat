@@ -15,10 +15,14 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Prefer service role key when available, fall back to anon key
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const keyType = process.env.SUPABASE_SERVICE_KEY ? 'service role' : 'anon';
 
 // Initialize Supabase client
+console.log(`Initializing Supabase client with URL: ${supabaseUrl ? 'URL is set' : 'URL is NOT set'} and ${keyType} key: ${supabaseKey ? 'Key is set' : 'Key is NOT set'}`);
 const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('Supabase client initialized with', keyType, 'key');
 
 // Pusher configuration
 const pusherConfig = {
@@ -130,86 +134,120 @@ async function sendToPusher(channel, eventName, data) {
 // Set up Supabase real-time listeners
 async function setupSupabaseListeners() {
   console.log('Setting up Supabase real-time listeners...');
+  console.log('Supabase client status:', supabase ? 'initialized' : 'not initialized');
   
-  // Listen for new messages
-  const messagesChannel = supabase
-    .channel('messages-channel')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'messages'
-    }, async (payload) => {
-      console.log('New message received:', JSON.stringify(payload));
-      const message = payload.new;
-      
-      // Add to recent messages
-      recentMessages.push(message);
-      if (recentMessages.length > 50) {
-        recentMessages.shift(); // Remove oldest message if we exceed 50
+  // Create a single channel for all events
+  console.log('Setting up combined channel subscription...');
+  const channel = supabase
+    .channel('db-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      },
+      async (payload) => {
+        console.log('===== MESSAGE INSERTED CALLBACK TRIGGERED =====');
+        console.log('New message received:', JSON.stringify(payload));
+        const message = payload.new;
+        
+        // Add to recent messages
+        recentMessages.push(message);
+        if (recentMessages.length > 50) {
+          recentMessages.shift(); // Remove oldest message if we exceed 50
+        }
+        
+        try {
+          // Send to the appropriate room channel
+          await sendToPusher(
+            `room-${message.room_id}`,
+            'new-message',
+            {
+              id: message.id,
+              content: message.content,
+              created_at: message.created_at,
+              user_id: message.user_id
+            }
+          );
+          console.log(`Message successfully forwarded to Pusher channel room-${message.room_id}`);
+        } catch (error) {
+          console.error('Error forwarding message to Pusher:', error);
+        }
       }
-      
-      // Send to the appropriate room channel
-      await sendToPusher(
-        `room-${message.room_id}`,
-        'new-message',
-        {
-          id: message.id,
-          content: message.content,
-          created_at: message.created_at,
-          user_id: message.user_id
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'room_participants',
+      },
+      async (payload) => {
+        console.log('===== PARTICIPANT JOINED CALLBACK TRIGGERED =====');
+        console.log('User joined room:', JSON.stringify(payload));
+        const participant = payload.new;
+        
+        try {
+          // Send user joined event
+          await sendToPusher(
+            `room-${participant.room_id}`,
+            'user-joined',
+            {
+              user_id: participant.user_id,
+              joined_at: participant.joined_at
+            }
+          );
+          console.log(`User join event forwarded to Pusher channel room-${participant.room_id}`);
+        } catch (error) {
+          console.error('Error forwarding user join event to Pusher:', error);
         }
-      );
-    })
-    .subscribe();
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'room_participants',
+      },
+      async (payload) => {
+        console.log('===== PARTICIPANT LEFT CALLBACK TRIGGERED =====');
+        console.log('User left room:', JSON.stringify(payload));
+        const participant = payload.old;
+        
+        try {
+          // Send user left event
+          await sendToPusher(
+            `room-${participant.room_id}`,
+            'user-left',
+            {
+              user_id: participant.user_id
+            }
+          );
+          console.log(`User left event forwarded to Pusher channel room-${participant.room_id}`);
+        } catch (error) {
+          console.error('Error forwarding user left event to Pusher:', error);
+        }
+      }
+    );
   
-  // Listen for new room participants
-  const participantsChannel = supabase
-    .channel('participants-channel')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'room_participants'
-    }, async (payload) => {
-      console.log('User joined room:', JSON.stringify(payload));
-      const participant = payload.new;
-      
-      // Send user joined event
-      await sendToPusher(
-        `room-${participant.room_id}`,
-        'user-joined',
-        {
-          user_id: participant.user_id,
-          joined_at: participant.joined_at
-        }
-      );
-    })
-    .subscribe();
-  
-  // Listen for deleted room participants
-  const leavingChannel = supabase
-    .channel('leaving-channel')
-    .on('postgres_changes', {
-      event: 'DELETE',
-      schema: 'public',
-      table: 'room_participants'
-    }, async (payload) => {
-      console.log('User left room:', JSON.stringify(payload));
-      const participant = payload.old;
-      
-      // Send user left event
-      await sendToPusher(
-        `room-${participant.room_id}`,
-        'user-left',
-        {
-          user_id: participant.user_id
-        }
-      );
-    })
-    .subscribe();
+  // Subscribe to the channel
+  console.log('Subscribing to channel...');
+  const subscription = channel.subscribe((status) => {
+    console.log(`Subscription status changed: ${status}`);
+    if (status === 'SUBSCRIBED') {
+      console.log('Successfully subscribed to database changes!');
+    }
+    if (status === 'CHANNEL_ERROR') {
+      console.error('Failed to subscribe to database changes');
+    }
+  });
   
   console.log('Supabase real-time listeners set up successfully');
+  console.log('Channel subscription state:', channel.state);
   
-  return { messagesChannel, participantsChannel, leavingChannel };
+  return { channel };
 }
 
 // Express server setup
@@ -255,6 +293,13 @@ app.get('/health', (req, res) => {
 // Initialize the application
 async function init() {
   try {
+    console.log('===== INITIALIZING APPLICATION =====');
+    console.log('Environment variables:');
+    console.log('- PUSHER_SECRET:', process.env.PUSHER_SECRET ? 'is set' : 'is NOT set');
+    console.log('- NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'is set' : 'is NOT set');
+    console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'is set' : 'is NOT set');
+    console.log('- SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'is set' : 'is NOT set');
+    console.log('- Using Supabase key type:', process.env.SUPABASE_SERVICE_KEY ? 'SERVICE ROLE (privileged)' : 'ANON (limited)');
     // Fetch recent messages first
     await fetchRecentMessages();
     

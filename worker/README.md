@@ -13,8 +13,11 @@ This worker service listens to Supabase database changes via real-time subscript
    ```
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_KEY=your_supabase_service_role_key  # Recommended for bypassing RLS
    PUSHER_SECRET=your_pusher_secret
    ```
+   
+   **Important**: Using the `SUPABASE_SERVICE_KEY` (service role key) is highly recommended for the worker service as it bypasses Row Level Security (RLS) policies, allowing the worker to listen to all database changes. You can find this key in your Supabase dashboard under Project Settings > API > Project API keys.
 
 3. Run the service locally:
    ```
@@ -43,6 +46,12 @@ This worker service listens to Supabase database changes via real-time subscript
    fly secrets set PUSHER_SECRET=your_pusher_secret -a hackathon-floral-sun-886
    fly secrets set NEXT_PUBLIC_SUPABASE_URL=your_supabase_url -a hackathon-floral-sun-886
    fly secrets set NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key -a hackathon-floral-sun-886
+   fly secrets set SUPABASE_SERVICE_KEY=your_supabase_service_role_key -a hackathon-floral-sun-886
+   ```
+   
+   Or use the provided deployment script which will handle this for you:
+   ```
+   ./deploy.sh
    ```
 
 ## How It Works
