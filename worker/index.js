@@ -55,7 +55,7 @@ let aiAgentIds = new Set();
 // Configuration for HTML content generation
 const config = {
   // Percentage chance (0-100) to generate HTML content instead of a text response
-  htmlContentChance: process.env.HTML_CONTENT_CHANCE || 90
+  htmlContentChance: process.env.HTML_CONTENT_CHANCE || 90,
 };
 
 // Fetch AI agents from the database
@@ -122,9 +122,13 @@ async function sendToPusher(channel, eventName, data) {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
       const eventData = JSON.stringify(data);
-      console.log(`Preparing to send Pusher event: ${eventName} to channel: ${channel}`);
-      console.log(`Event data type: ${typeof data}, stringified length: ${eventData.length}`);
-      
+      console.log(
+        `Preparing to send Pusher event: ${eventName} to channel: ${channel}`
+      );
+      console.log(
+        `Event data type: ${typeof data}, stringified length: ${eventData.length}`
+      );
+
       const body = JSON.stringify({
         name: eventName,
         channel: channel,
@@ -360,7 +364,9 @@ app.post("/test-pusher", async (req, res) => {
 
     if (messageType === "html") {
       // Test sending HTML content
-      const htmlContent = req.body.htmlContent || `
+      const htmlContent =
+        req.body.htmlContent ||
+        `
         <!DOCTYPE html>
         <html>
         <head>
@@ -380,25 +386,37 @@ app.post("/test-pusher", async (req, res) => {
         </body>
         </html>
       `;
-      
+
       // Send HTML content as a special event type
       console.log("Sending test HTML visualization to Pusher");
-      
+
       const visualizationData = {
         id: "test-viz-" + Date.now(),
         html: htmlContent,
         summary: "Test HTML Visualization",
         created_at: new Date().toISOString(),
-        user_id: "test-user"
+        user_id: "test-user",
       };
-      
+
       try {
-        await sendToPusher(`room-${roomId}`, "html-visualization", visualizationData);
+        await sendToPusher(
+          `room-${roomId}`,
+          "html-visualization",
+          visualizationData
+        );
         console.log("Test HTML visualization successfully sent to Pusher");
-        res.status(200).json({ success: true, message: "Test HTML visualization sent to Pusher" });
+        res.status(200).json({
+          success: true,
+          message: "Test HTML visualization sent to Pusher",
+        });
       } catch (error) {
-        console.error("Error sending test HTML visualization to Pusher:", error);
-        res.status(500).json({ error: "Failed to send HTML visualization to Pusher" });
+        console.error(
+          "Error sending test HTML visualization to Pusher:",
+          error
+        );
+        res
+          .status(500)
+          .json({ error: "Failed to send HTML visualization to Pusher" });
       }
     } else {
       // Regular text message
@@ -436,13 +454,13 @@ app.post("/test-ai", async (req, res) => {
       // Temporarily modify Math.random to always return 0.1 (which is < 0.2)
       const originalRandom = Math.random;
       Math.random = () => 0.1;
-      
+
       // Generate and send AI response with HTML
       await generateAIResponse(roomId);
-      
+
       // Restore original Math.random
       Math.random = originalRandom;
-      
+
       res.status(200).json({
         success: true,
         message: "HTML content generated and sent to Pusher",
@@ -450,7 +468,7 @@ app.post("/test-ai", async (req, res) => {
     } else {
       // Generate and send regular AI response
       await generateAIResponse(roomId);
-      
+
       res.status(200).json({
         success: true,
         message: "AI response generated and sent to Pusher",
@@ -474,11 +492,13 @@ async function generateAIResponse(roomId) {
     console.log("AI response already in progress, skipping");
     return;
   }
-  
+
   // Determine if we should generate HTML content based on configured percentage
   const htmlChance = parseInt(config.htmlContentChance) / 100;
   const shouldGenerateHtml = Math.random() < htmlChance;
-  console.log(`HTML content generation chance: ${config.htmlContentChance}%, generating HTML: ${shouldGenerateHtml}`);
+  console.log(
+    `HTML content generation chance: ${config.htmlContentChance}%, generating HTML: ${shouldGenerateHtml}`
+  );
 
   try {
     aiResponseInProgress = true;
@@ -502,8 +522,8 @@ async function generateAIResponse(roomId) {
       return;
     }
 
-    // Get the last 5 messages or fewer if not available
-    const lastMessages = roomMessages.slice(-25);
+    // Get the last 50 messages or fewer if not available
+    const lastMessages = roomMessages.slice(-50);
 
     // Get user IDs from messages to fetch their names
     const userIds = [...new Set(lastMessages.map((msg) => msg.user_id))];
@@ -619,28 +639,46 @@ async function generateAIResponse(roomId) {
       user_id: aiAssistantId,
       content: text,
     });
-    
+
     if (error) {
       console.error("Error saving AI response to database:", error);
       return;
     }
-    
+
     console.log("AI response saved to database for room:", roomId);
 
     // If we should generate HTML, create and send a special HTML visualization message
     if (shouldGenerateHtml) {
       console.log("Generating HTML content based on conversation...");
-      
-      // Create a prompt for generating HTML content
-      const htmlPrompt = `Based on the following conversation, create an engaging, visually appealing HTML page that summarizes or visualizes the key themes, topics, or information from this chat. The HTML should be creative, well-designed, and relevant to what the users are discussing. Include CSS styling within the HTML file. Make it look professional and modern.
+
+      // Create a prompt for generating HTML content that responds to conversation intent
+      const htmlPrompt = `Analyze the following conversation and create an HTML/CSS visualization that directly responds to any explicit or implicit requests within the conversation. 
+
+For example:
+- If someone asked to "build a storybook" or "create a slideshow" - create exactly that
+- If they discussed data visualization - create charts or graphs
+- If they talked about a timeline - create an interactive timeline
+- If they mentioned a game or interactive element - try to implement a simple version
+- If they discussed a specific design style - implement that style
+
+If there's no clear request, create the most appropriate visualization based on the conversation content and context. Be creative but purposeful.
 
 Conversation:
 ${messageHistory}
 
-Generate complete, valid HTML that can be rendered in an iframe. Include all necessary styling within the HTML (no external CSS). The design should be responsive and visually appealing. Be creative and make something that enhances the conversation experience.`;
-      
+YOUR TASK:
+1. First, identify any explicit requests for visualization or content generation in the conversation
+2. If none exist, determine what type of visualization would best represent the conversation's themes
+3. Generate complete, valid HTML with embedded CSS (no external resources)
+4. The HTML must be immediately renderable in an iframe
+5. Focus on creating something truly useful and relevant to the conversation
+6. Be creative and innovative - surprise the users with something that enhances their discussion
+7. Ensure your HTML is well-formed, responsive, and visually appealing
+
+The visualization should feel like it was custom-built for this specific conversation.`;
+
       console.log("Sending HTML generation prompt to OpenAI");
-      
+
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
         model: openai.responses("gpt-4o"),
@@ -649,32 +687,43 @@ Generate complete, valid HTML that can be rendered in an iframe. Include all nec
         maxTokens: 1500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
       });
-      
+
       console.log("HTML content generated, length:", htmlContent.length);
-      
+
       // Send the HTML content directly to Pusher as a special event type
       // This will not be stored in the messages table or shown in the chat
-      console.log("Sending HTML visualization to Pusher, content length:", htmlContent.length);
-      
+      console.log(
+        "Sending HTML visualization to Pusher, content length:",
+        htmlContent.length
+      );
+
       const visualizationData = {
         id: "viz-" + Date.now(),
         html: htmlContent,
         summary: "Generated a visual summary of this conversation",
         created_at: new Date().toISOString(),
-        user_id: aiAssistantId
+        user_id: aiAssistantId,
       };
-      
-      console.log("Visualization data prepared:", JSON.stringify(visualizationData, null, 2).substring(0, 200) + "...");
-      
+
+      console.log(
+        "Visualization data prepared:",
+        JSON.stringify(visualizationData, null, 2).substring(0, 200) + "..."
+      );
+
       try {
-        await sendToPusher(`room-${roomId}`, "html-visualization", visualizationData);
-        console.log("HTML visualization successfully sent to Pusher for room:", roomId);
+        await sendToPusher(
+          `room-${roomId}`,
+          "html-visualization",
+          visualizationData
+        );
+        console.log(
+          "HTML visualization successfully sent to Pusher for room:",
+          roomId
+        );
       } catch (error) {
         console.error("Error sending HTML visualization to Pusher:", error);
       }
     }
-
-
   } catch (error) {
     console.error("Error generating AI response:", error);
   } finally {
@@ -709,7 +758,9 @@ async function init() {
     );
     console.log(
       "- HTML_CONTENT_CHANCE:",
-      process.env.HTML_CONTENT_CHANCE ? process.env.HTML_CONTENT_CHANCE + "%" : "90% (default)"
+      process.env.HTML_CONTENT_CHANCE
+        ? process.env.HTML_CONTENT_CHANCE + "%"
+        : "90% (default)"
     );
     console.log(
       "- Using Supabase key type:",
