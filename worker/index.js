@@ -450,7 +450,7 @@ async function generateAIResponse(roomId) {
 
     // Generate text using OpenAI
     const { text } = await generateText({
-      model: openai.responses("gpt-4o"),
+      model: openai.responses("gpt-4o-mini"),
       prompt: prompt,
       apiKey: process.env.OPENAI_API_KEY,
     });
