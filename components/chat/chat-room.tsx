@@ -46,6 +46,7 @@ export default function ChatRoom({
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userCache, setUserCache] = useState<Record<string, { name: string, isAgent: boolean }>>({});
+  const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -106,6 +107,8 @@ export default function ChatRoom({
         };
         
         setMessages((prev) => [...prev, newMessage]);
+        // Set the new message for TTS
+        setNewMessageReceived(newMessage);
         scrollToBottom();
       } catch (error) {
         console.error("Error processing Pusher message:", error);
@@ -264,7 +267,8 @@ export default function ChatRoom({
       <TTSManager 
         messages={messages} 
         userCache={userCache} 
-        currentUserId={currentUser.id} 
+        currentUserId={currentUser.id}
+        newMessageReceived={newMessageReceived}
       />
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">

@@ -71,13 +71,26 @@ export abstract class AbstractTTSService {
     this.isPlaying = true;
     const message = this.queue.shift();
     
-    if (message && message.voice) {
+    if (message) {
       try {
+        // Make sure the message has a voice assigned
+        if (!message.voice && !this.userVoices[message.userId]) {
+          await this.assignRandomVoice(message.userId);
+        }
+        
+        const voice = message.voice || this.userVoices[message.userId];
+        
+        if (!voice) {
+          throw new Error(`No voice available for user ${message.userId}`);
+        }
+        
         // Format the text to be read
         const textToRead = `${message.userName} says: ${message.content}`;
         
+        console.log(`Speaking message from ${message.userName} with voice ${voice.name || voice.id}`);
+        
         // Speak the text
-        await this.speakText(textToRead, message.voice, this.options);
+        await this.speakText(textToRead, voice, this.options);
         
         // Mark as read
         this.readMessageIds.add(message.id);
@@ -100,6 +113,7 @@ export abstract class AbstractTTSService {
       if (voices.length > 0) {
         const randomIndex = Math.floor(Math.random() * voices.length);
         this.userVoices[userId] = voices[randomIndex];
+        console.log(`Assigned voice ${voices[randomIndex].name} to user ${userId}`);
         this.saveState();
       }
     } catch (error) {
