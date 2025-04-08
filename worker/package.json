@@ -1,5 +1,5 @@
 {
-  "name": "supabase-pusher-bridge",
+  "name": "hackathon-floral-sun-886",
   "version": "1.0.0",
   "description": "Worker service to bridge Supabase events to Pusher",
   "main": "index.js",
@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

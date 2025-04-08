@@ -1,16 +1,57 @@
 // Supabase to Pusher Bridge Worker
 // This worker listens to Supabase database changes and forwards them to Pusher
 
+// Load environment variables from .env file
+try {
+  require('dotenv').config({ path: '../.env' });
+  console.log('Loaded environment variables from ../.env');
+} catch (error) {
+  console.log('Could not load ../.env file, will use environment variables');
+}
+
 const crypto = require('crypto');
 const https = require('https');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Initialize Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Pusher configuration
 const pusherConfig = {
   appId: '1971423',
   key: '96f9360f34a831ca1901',
-  secret: process.env.PUSHER_SECRET || 'c508bc54a2ca619cfab8', // Using the secret from .env
+  secret: process.env.PUSHER_SECRET || 'c508bc54a2ca619cfab8',
   cluster: 'us3'
 };
+
+// Store the last 50 messages
+let recentMessages = [];
+
+// Fetch the last 50 messages from Supabase
+async function fetchRecentMessages() {
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    
+    if (error) {
+      console.error('Error fetching recent messages:', error);
+      return;
+    }
+    
+    recentMessages = data.reverse();
+    console.log(`Fetched ${recentMessages.length} recent messages`);
+    console.log('Recent messages:', JSON.stringify(recentMessages, null, 2));
+  } catch (error) {
+    console.error('Error in fetchRecentMessages:', error);
+  }
+}
 
 // Function to calculate MD5 hash
 function md5(str) {
@@ -86,22 +127,26 @@ async function sendToPusher(channel, eventName, data) {
   });
 }
 
-// Handle Supabase webhook event
-async function handleSupabaseWebhook(req, res) {
-  try {
-    console.log('Received webhook:', JSON.stringify(req.body));
-    
-    const payload = req.body;
-    
-    // Validate the payload
-    if (!payload || !payload.type || !payload.table || !payload.record) {
-      console.error('Invalid payload received:', JSON.stringify(payload));
-      return res.status(400).json({ error: 'Invalid payload' });
-    }
-
-    // Process different event types
-    if (payload.table === 'messages' && payload.type === 'INSERT') {
-      const message = payload.record;
+// Set up Supabase real-time listeners
+async function setupSupabaseListeners() {
+  console.log('Setting up Supabase real-time listeners...');
+  
+  // Listen for new messages
+  const messagesChannel = supabase
+    .channel('messages-channel')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages'
+    }, async (payload) => {
+      console.log('New message received:', JSON.stringify(payload));
+      const message = payload.new;
+      
+      // Add to recent messages
+      recentMessages.push(message);
+      if (recentMessages.length > 50) {
+        recentMessages.shift(); // Remove oldest message if we exceed 50
+      }
       
       // Send to the appropriate room channel
       await sendToPusher(
@@ -114,8 +159,19 @@ async function handleSupabaseWebhook(req, res) {
           user_id: message.user_id
         }
       );
-    } else if (payload.table === 'room_participants' && payload.type === 'INSERT') {
-      const participant = payload.record;
+    })
+    .subscribe();
+  
+  // Listen for new room participants
+  const participantsChannel = supabase
+    .channel('participants-channel')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'room_participants'
+    }, async (payload) => {
+      console.log('User joined room:', JSON.stringify(payload));
+      const participant = payload.new;
       
       // Send user joined event
       await sendToPusher(
@@ -126,8 +182,19 @@ async function handleSupabaseWebhook(req, res) {
           joined_at: participant.joined_at
         }
       );
-    } else if (payload.table === 'room_participants' && payload.type === 'DELETE') {
-      const participant = payload.record;
+    })
+    .subscribe();
+  
+  // Listen for deleted room participants
+  const leavingChannel = supabase
+    .channel('leaving-channel')
+    .on('postgres_changes', {
+      event: 'DELETE',
+      schema: 'public',
+      table: 'room_participants'
+    }, async (payload) => {
+      console.log('User left room:', JSON.stringify(payload));
+      const participant = payload.old;
       
       // Send user left event
       await sendToPusher(
@@ -137,22 +204,18 @@ async function handleSupabaseWebhook(req, res) {
           user_id: participant.user_id
         }
       );
-    }
-
-    return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error processing webhook:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+    })
+    .subscribe();
+  
+  console.log('Supabase real-time listeners set up successfully');
+  
+  return { messagesChannel, participantsChannel, leavingChannel };
 }
 
 // Express server setup
 const express = require('express');
 const app = express();
 app.use(express.json());
-
-// Webhook endpoint
-app.post('/webhook', handleSupabaseWebhook);
 
 // Test endpoint for Pusher
 app.post('/test-pusher', async (req, res) => {
@@ -179,13 +242,35 @@ app.post('/test-pusher', async (req, res) => {
   }
 });
 
+// Get recent messages endpoint
+app.get('/recent-messages', (req, res) => {
+  res.status(200).json({ messages: recentMessages });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Start the server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Supabase to Pusher bridge worker running on port ${PORT}`);
-});
+// Initialize the application
+async function init() {
+  try {
+    // Fetch recent messages first
+    await fetchRecentMessages();
+    
+    // Set up Supabase listeners
+    await setupSupabaseListeners();
+    
+    // Start the server
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+      console.log(`Supabase to Pusher bridge worker running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error initializing the application:', error);
+    process.exit(1);
+  }
+}
+
+// Start the application
+init();

@@ -1,6 +1,6 @@
 # Supabase to Pusher Bridge Worker
 
-This worker service listens to Supabase database changes via webhooks and forwards them to Pusher for real-time messaging.
+This worker service listens to Supabase database changes via real-time subscriptions and forwards them to Pusher for real-time messaging. It also maintains a cache of the 50 most recent messages.
 
 ## Setup
 
@@ -9,9 +9,11 @@ This worker service listens to Supabase database changes via webhooks and forwar
    npm install
    ```
 
-2. Set the Pusher secret key as an environment variable:
+2. Create a `.env` file in the parent directory with the following variables:
    ```
-   export PUSHER_SECRET=your_pusher_secret
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   PUSHER_SECRET=your_pusher_secret
    ```
 
 3. Run the service locally:
@@ -36,37 +38,62 @@ This worker service listens to Supabase database changes via webhooks and forwar
    fly launch
    ```
 
-4. Set the Pusher secret as a secret in Fly:
+4. Set the required secrets in Fly:
    ```
-   fly secrets set PUSHER_SECRET=your_pusher_secret
+   fly secrets set PUSHER_SECRET=your_pusher_secret -a hackathon-floral-sun-886
+   fly secrets set NEXT_PUBLIC_SUPABASE_URL=your_supabase_url -a hackathon-floral-sun-886
+   fly secrets set NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key -a hackathon-floral-sun-886
    ```
 
-## Supabase Webhook Setup
+## How It Works
 
-1. In your Supabase dashboard, go to Database → Webhooks
-2. Create a new webhook with the following settings:
-   - Name: PusherBridge
-   - Table: messages, room_participants
-   - Events: INSERT, DELETE
-   - URL: https://your-fly-app.fly.dev/webhook
-   - HTTP Method: POST
+1. **Supabase Real-time Subscriptions**: The worker uses Supabase's real-time capabilities to listen for database changes directly:
+   - New messages (INSERT on the messages table)
+   - User joins (INSERT on the room_participants table)
+   - User leaves (DELETE on the room_participants table)
 
-## Testing
+2. **Message Caching**: The worker fetches and maintains a cache of the 50 most recent messages.
 
-You can test the webhook endpoint locally using curl:
+3. **Pusher Integration**: When events are detected, they are forwarded to the appropriate Pusher channels:
+   - `room-{roomId}` channels for each chat room
+   - Events: `new-message`, `user-joined`, `user-left`
+
+## API Endpoints
+
+### Test Pusher Integration
+
+You can test the Pusher integration using the test endpoint:
 
 ```bash
-curl -X POST http://localhost:3001/webhook \
+curl -X POST http://localhost:3001/test-pusher \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "INSERT",
-    "table": "messages",
-    "record": {
-      "id": "123",
-      "room_id": "room-123",
-      "user_id": "user-123",
-      "content": "Test message",
-      "created_at": "2025-04-08T10:00:00Z"
-    }
+    "roomId": "room-123",
+    "message": "Test message"
   }'
+```
+
+### Get Recent Messages
+
+Retrieve the cached recent messages:
+
+```bash
+curl http://localhost:3001/recent-messages
+```
+
+### Health Check
+
+Verify the service is running:
+
+```bash
+curl http://localhost:3001/health
+```
+
+## Testing with Node.js Scripts
+
+You can also use the provided Node.js scripts to test the Pusher integration:
+
+```bash
+# Send a test message to a specific room
+node pusher-send-test.js room-123 "Your test message"
 ```
