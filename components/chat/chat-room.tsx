@@ -60,21 +60,35 @@ export default function ChatRoom({
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          // Fetch the user information for the new message
-          const { data } = await supabase
-            .from("messages")
-            .select(`
-              id,
-              content,
-              created_at,
-              user_id,
-              auth.users (email)
-            `)
-            .eq("id", payload.new.id)
-            .single();
+          try {
+            // Fetch the user information for the new message
+            const { data } = await supabase
+              .from("messages")
+              .select("id, content, created_at, user_id")
+              .eq("id", payload.new.id)
+              .single();
 
-          if (data) {
-            setMessages((prev) => [...prev, data as Message]);
+            if (data) {
+              // Get user email separately to avoid type issues
+              const { data: userData } = await supabase
+                .from("auth.users")
+                .select("email")
+                .eq("id", data.user_id)
+                .single();
+
+              // Create a properly typed message object
+              const newMessage: Message = {
+                id: data.id,
+                content: data.content,
+                created_at: data.created_at,
+                user_id: data.user_id,
+                users: { email: userData?.email || "Unknown User" }
+              };
+              
+              setMessages((prev) => [...prev, newMessage]);
+            }
+          } catch (error) {
+            console.error("Error fetching new message:", error);
           }
         }
       )

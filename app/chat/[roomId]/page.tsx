@@ -4,11 +4,8 @@ import ChatRoom from "@/components/chat/chat-room";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default async function ChatRoomPage({
-  params,
-}: {
-  params: { roomId: string };
-}) {
+export default async function ChatRoomPage(props: any) {
+  const roomId = props.params.roomId;
   const supabase = await createClient();
   
   const {
@@ -23,7 +20,7 @@ export default async function ChatRoomPage({
   const { data: room, error: roomError } = await supabase
     .from("chat_rooms")
     .select("*")
-    .eq("id", params.roomId)
+    .eq("id", roomId)
     .single();
 
   if (roomError || !room) {
@@ -44,19 +41,19 @@ export default async function ChatRoomPage({
   const { data: participant } = await supabase
     .from("room_participants")
     .select("*")
-    .eq("room_id", params.roomId)
+    .eq("room_id", roomId)
     .eq("user_id", user.id)
     .single();
 
   if (!participant) {
     await supabase.from("room_participants").insert({
-      room_id: params.roomId,
+      room_id: roomId,
       user_id: user.id,
     });
   }
 
   // Fetch messages
-  const { data: messages, error: messagesError } = await supabase
+  const { data: messagesData, error: messagesError } = await supabase
     .from("messages")
     .select(`
       id,
@@ -65,22 +62,38 @@ export default async function ChatRoomPage({
       user_id,
       auth.users (email)
     `)
-    .eq("room_id", params.roomId)
+    .eq("room_id", roomId)
     .order("created_at", { ascending: true });
+    
+  // Transform messages to match the expected type
+  const messages = messagesData ? messagesData.map((msg: any) => ({
+    id: msg.id,
+    content: msg.content,
+    created_at: msg.created_at,
+    user_id: msg.user_id,
+    users: msg.users || { email: "Unknown" }
+  })) : [];
 
   if (messagesError) {
     console.error("Error fetching messages:", messagesError);
   }
 
   // Fetch participants
-  const { data: participants, error: participantsError } = await supabase
+  const { data: participantsData, error: participantsError } = await supabase
     .from("room_participants")
     .select(`
       user_id,
       joined_at,
       auth.users (email)
     `)
-    .eq("room_id", params.roomId);
+    .eq("room_id", roomId);
+    
+  // Transform participants to match the expected type
+  const participants = participantsData ? participantsData.map((participant: any) => ({
+    user_id: participant.user_id,
+    joined_at: participant.joined_at,
+    users: participant.users || { email: "Unknown" }
+  })) : [];
 
   if (participantsError) {
     console.error("Error fetching participants:", participantsError);
@@ -104,10 +117,10 @@ export default async function ChatRoomPage({
       </div>
 
       <ChatRoom
-        roomId={params.roomId}
-        initialMessages={messages || []}
+        roomId={roomId}
+        initialMessages={messages}
         currentUser={user}
-        participants={participants || []}
+        participants={participants}
       />
     </div>
   );
