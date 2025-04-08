@@ -433,7 +433,7 @@ async function generateAIResponse(roomId) {
 
     // Select a random agent or use the default prompt if no agents are available
     let agentPrompt =
-      "IMPORTANT: Your response MUST be 1-2 sentences ONLY, maximum 200 characters total. Respond with a single casual, friendly sentence as if you're part of the conversation. Be brief and natural. Don't introduce yourself or explain that you're an AI.";
+      "IMPORTANT: Your response MUST be 1-2 sentences ONLY, maximum 200 characters total. Respond with a single casual, friendly sentence as if you're part of the conversation. Be brief and natural. Don't introduce yourself or explain that you're an AI. Don't ever use emojis.";
     let selectedAgent = null;
 
     if (aiAgents.length > 0) {
@@ -442,6 +442,9 @@ async function generateAIResponse(roomId) {
       agentPrompt = selectedAgent.personality_prompt;
       console.log(`Selected agent: ${selectedAgent.name}`);
     }
+
+    // log the message history
+    console.log("Message history:", messageHistory);
 
     // Create the prompt with stronger constraints
     const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Extremely concise responses are required.`;
