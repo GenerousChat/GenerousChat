@@ -652,44 +652,56 @@ async function generateAIResponse(roomId) {
       console.log("Generating HTML content based on conversation...");
 
       // Create a prompt for generating HTML content that responds to conversation intent
-      const htmlPrompt = `Analyze the following conversation and create an HTML/CSS/JavaScript visualization that directly responds to any explicit or implicit requests within the conversation. Be extremely creative and ambitious - you can create fully interactive experiences!
+      const htmlPrompt = `# Conversation-Driven UI Generation
 
-For example:
-- If someone asked to "build a storybook" or "create a slideshow" - create exactly that
-- If they discussed data visualization - create charts or graphs using D3.js or Chart.js
-- If they talked about a timeline - create an interactive timeline with animations
-- If they mentioned a game or interactive element - implement a fully playable game or interactive experience
-- If they discussed 3D content - use Three.js to create 3D visualizations
-- If they mentioned animations - use GSAP or other animation libraries
+## PRIORITY: Focus on the most recent 5-10 messages
+Analyze this conversation with special attention to recent exchanges and create a visualization that directly responds to what users are currently discussing.
 
-You can use ANY external JavaScript libraries from CDN sources like cdnjs.com, including but not limited to:
-- Three.js for 3D graphics
-- D3.js for data visualization
-- GSAP for animations
-- React, Vue, or other frameworks (via CDN)
-- p5.js for creative coding
-- Phaser for game development
-- Any other library that helps create an amazing experience
+## Context Analysis Guidelines:
+- Identify EXPLICIT visualization requests (e.g., "show me a graph of...", "visualize this as...")
+- Detect IMPLICIT visualization opportunities from conversation themes
+- Determine what would be most helpful to the current discussion flow
+- Consider if users are discussing technical, creative, business, or personal topics
 
-If there's no clear request, create the most impressive and appropriate visualization based on the conversation content. Be bold and ambitious!
+## Technology Selection - Match the right tool to the conversation:
 
-Conversation:
+- Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
+- Timelines/processes → Use TimelineJS or custom animations
+- 3D objects/spaces → Use Three.js (only when truly beneficial)
+- Creative explanations → Use SVG/Canvas/p5.js for illustrations
+- Interactive tools → Use appropriate JS framework for the specific tool
+- Educational concepts → Create interactive diagrams that teach
+- Games/simulations → Use Phaser or p5.js (only if relevant)
+- Simple text/concepts → Use elegant typography and minimal JS
+
+IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
+
+## Conversation:
 ${messageHistory}
 
-YOUR TASK:
-1. First, identify any explicit requests for visualization or content generation in the conversation
-2. If none exist, determine what type of visualization would best represent the conversation's themes
-3. Generate complete, valid HTML with embedded CSS and JavaScript
-4. Include any external libraries from CDN sources that will enhance the experience
-5. Make it as interactive and engaging as possible - games, animations, 3D, whatever fits!
-6. Focus on creating something truly useful, impressive, and relevant to the conversation
-7. Be creative and innovative - surprise the users with something that enhances their discussion
-8. Ensure your HTML is well-formed, responsive, and visually appealing
-9. Don't hold back - create the most impressive visualization you can imagine!
+## Your Creation Requirements:
+1. Use only technologies that truly fit the conversation needs
+2. Create a visualization that directly enhances the ongoing discussion
+3. Make it immediately useful and relevant, especially to recent messages
+4. Balance aesthetics with functionality - beautiful but purposeful
+5. Ensure responsive design that works well in the sidebar panel
+6. Add thoughtful interactivity that improves understanding
+7. Provide clear visual cues for how to interact with your creation
+8. Optimize performance (lazy load libraries, efficient code)
+9. Include helpful annotations where appropriate
+10. Handle edge cases gracefully with fallbacks
 
-FINALLY: ONLY RETURN A PURE HTML DOCUMENT, NO COMMENTARY OR MARKDOWN, JUST THE PURE RAW HTML/CSS/JS DOCUMENT AS INSTRUCTED
+## Implementation Details:
+- You may use external libraries from trusted CDNs (cdnjs, unpkg, jsdelivr)
+- The visualization must work immediately without setup steps
+- Use appropriate semantic HTML and accessibility features
+- Include fallback content if libraries fail to load
+- Create smooth loading experience with transitions
+- Make appropriate use of viewport dimensions
 
-The visualization should feel like it was custom-built for this specific conversation and showcase the full potential of web technologies.`;
+## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
+
+Create something that feels custom-built for this specific conversation and makes users say "This is exactly what we needed to see!"`;
 
       console.log("Sending HTML generation prompt to OpenAI");
 
