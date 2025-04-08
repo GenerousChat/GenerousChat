@@ -424,71 +424,75 @@ async function generateAIResponse(roomId) {
     }
 
     // Get the last 5 messages or fewer if not available
-    const lastMessages = roomMessages.slice(-5);
+    const lastMessages = roomMessages.slice(-25);
 
     // Get user IDs from messages to fetch their names
-    const userIds = [...new Set(lastMessages.map(msg => msg.user_id))];
-    console.log('User IDs to fetch:', userIds);
-    
+    const userIds = [...new Set(lastMessages.map((msg) => msg.user_id))];
+    console.log("User IDs to fetch:", userIds);
+
     // Fetch user profiles for all users in the conversation
     const { data: userProfiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, name')
-      .in('id', userIds);
-      
+      .from("profiles")
+      .select("id, name")
+      .in("id", userIds);
+
     if (profilesError) {
-      console.error('Error fetching user profiles:', profilesError);
+      console.error("Error fetching user profiles:", profilesError);
     }
-    
-    console.log('Fetched user profiles:', userProfiles);
-    
+
+    console.log("Fetched user profiles:", userProfiles);
+
     // Create a map of user IDs to names
     const userNames = {};
     if (userProfiles && userProfiles.length > 0) {
-      userProfiles.forEach(profile => {
+      userProfiles.forEach((profile) => {
         userNames[profile.id] = profile.name;
       });
-      console.log('User names map from profiles:', userNames);
+      console.log("User names map from profiles:", userNames);
     } else {
-      console.log('No user profiles found or empty array returned');
+      console.log("No user profiles found or empty array returned");
     }
-    
+
     // For any user IDs not found in profiles, check if they're agents
-    const missingUserIds = userIds.filter(id => !userNames[id] && aiAgentIds.has(id));
-    
+    const missingUserIds = userIds.filter(
+      (id) => !userNames[id] && aiAgentIds.has(id)
+    );
+
     if (missingUserIds.length > 0) {
-      console.log('Looking up agent names for:', missingUserIds);
-      
+      console.log("Looking up agent names for:", missingUserIds);
+
       // Fetch agent names
       const { data: agentData, error: agentError } = await supabase
-        .from('agents')
-        .select('id, name')
-        .in('id', missingUserIds);
-        
+        .from("agents")
+        .select("id, name")
+        .in("id", missingUserIds);
+
       if (agentError) {
-        console.error('Error fetching agent data:', agentError);
+        console.error("Error fetching agent data:", agentError);
       } else if (agentData && agentData.length > 0) {
-        agentData.forEach(agent => {
+        agentData.forEach((agent) => {
           userNames[agent.id] = agent.name;
         });
-        console.log('Updated user names map with agents:', userNames);
+        console.log("Updated user names map with agents:", userNames);
       }
     }
-    
+
     // Format messages for the prompt with user names
     const messageHistory = lastMessages
       .map((msg) => {
         let userName = userNames[msg.user_id];
-        
+
         // If still no name found and it's an AI agent, use a generic agent name
         if (!userName && aiAgentIds.has(msg.user_id)) {
-          userName = 'AI Assistant';
+          userName = "AI Assistant";
         }
-        
+
         // Final fallback
-        userName = userName || 'Unknown User';
-        
-        console.log(`Message from user ${msg.user_id}, mapped name: ${userName}`);
+        userName = userName || "Unknown User";
+
+        console.log(
+          `Message from user ${msg.user_id}, mapped name: ${userName}`
+        );
         return `${userName}: ${msg.content}`;
       })
       .join("\n");
