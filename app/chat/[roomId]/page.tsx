@@ -59,45 +59,50 @@ export default async function ChatRoomPage(props: any) {
       id,
       content,
       created_at,
-      user_id,
-      auth.users (email)
+      user_id
     `)
     .eq("room_id", roomId)
     .order("created_at", { ascending: true });
     
+  if (messagesError) {
+    console.error("Error fetching messages:", messagesError);
+  }
+  
+  // Create a map of user IDs to emails
+  const userEmails: Record<string, string> = {};
+  
+  // Add current user to the map
+  userEmails[user.id] = user.email || 'Unknown';
+  
   // Transform messages to match the expected type
   const messages = messagesData ? messagesData.map((msg: any) => ({
     id: msg.id,
     content: msg.content,
     created_at: msg.created_at,
     user_id: msg.user_id,
-    users: msg.users || { email: "Unknown" }
+    users: { email: userEmails[msg.user_id] || 'Unknown' }
   })) : [];
-
-  if (messagesError) {
-    console.error("Error fetching messages:", messagesError);
-  }
 
   // Fetch participants
   const { data: participantsData, error: participantsError } = await supabase
     .from("room_participants")
     .select(`
       user_id,
-      joined_at,
-      auth.users (email)
+      joined_at
     `)
     .eq("room_id", roomId);
     
+  if (participantsError) {
+    console.error("Error fetching participants:", participantsError);
+  }
+  
+  // For participants, use the same userEmails map we built earlier
   // Transform participants to match the expected type
   const participants = participantsData ? participantsData.map((participant: any) => ({
     user_id: participant.user_id,
     joined_at: participant.joined_at,
-    users: participant.users || { email: "Unknown" }
+    users: { email: userEmails[participant.user_id] || 'Unknown' }
   })) : [];
-
-  if (participantsError) {
-    console.error("Error fetching participants:", participantsError);
-  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)]">

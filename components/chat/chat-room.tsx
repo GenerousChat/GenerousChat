@@ -61,34 +61,37 @@ export default function ChatRoom({
         },
         async (payload) => {
           try {
-            // Fetch the user information for the new message
-            const { data } = await supabase
+            // Fetch the complete message with user information
+            const { data, error } = await supabase
               .from("messages")
-              .select("id, content, created_at, user_id")
+              .select(`
+                id, 
+                content, 
+                created_at, 
+                user_id
+              `)
               .eq("id", payload.new.id)
               .single();
 
-            if (data) {
-              // Get user email separately to avoid type issues
-              const { data: userData } = await supabase
-                .from("auth.users")
-                .select("email")
-                .eq("id", data.user_id)
-                .single();
+            if (error) {
+              console.error("Error fetching message details:", error);
+              return;
+            }
 
+            if (data) {
               // Create a properly typed message object
               const newMessage: Message = {
                 id: data.id,
                 content: data.content,
                 created_at: data.created_at,
                 user_id: data.user_id,
-                users: { email: userData?.email || "Unknown User" }
+                users: { email: getUserEmail(data.user_id) }
               };
               
               setMessages((prev) => [...prev, newMessage]);
             }
           } catch (error) {
-            console.error("Error fetching new message:", error);
+            console.error("Error processing new message:", error);
           }
         }
       )
@@ -130,8 +133,13 @@ export default function ChatRoom({
 
   // Get user email by user ID
   const getUserEmail = (userId: string) => {
+    // First check if it's the current user
+    if (userId === currentUser.id) {
+      return currentUser.email || "You";
+    }
+    // Then check participants list
     const participant = participants.find((p) => p.user_id === userId);
-    return participant?.users.email || "Unknown User";
+    return participant?.users?.email || "Unknown User";
   };
 
   // Format timestamp
