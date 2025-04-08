@@ -26,6 +26,7 @@ export abstract class AbstractTTSService {
   protected isPlaying: boolean = false;
   protected userVoices: Record<string, TTSVoice> = {};
   protected readMessageIds: Set<string> = new Set();
+  protected cachedVoices: TTSVoice[] | null = null;
   
   constructor(protected options: TTSOptions = {}) {
     this.loadState();
@@ -34,6 +35,19 @@ export abstract class AbstractTTSService {
   // Abstract methods that must be implemented by concrete classes
   abstract getAvailableVoices(): Promise<TTSVoice[]>;
   abstract speakText(text: string, voice: TTSVoice, options?: TTSOptions): Promise<void>;
+  
+  // Get cached voices or fetch them if not cached
+  protected async getCachedVoices(): Promise<TTSVoice[]> {
+    if (!this.cachedVoices) {
+      try {
+        this.cachedVoices = await this.getAvailableVoices();
+      } catch (error) {
+        console.error('Error fetching available voices:', error);
+        return [];
+      }
+    }
+    return this.cachedVoices || [];
+  }
   
   // Queue a message to be read
   public queueMessage(message: TTSMessage): void {
@@ -94,9 +108,9 @@ export abstract class AbstractTTSService {
       // Assuming the voice column contains an OpenAI voice ID like 'nova', 'alloy', etc.
       const voiceId = data.voice;
       
-      // Get available voices and find a matching one
-      const availableVoices = await this.getAvailableVoices();
-      const matchingVoice = availableVoices.find(v => v.id === voiceId);
+      // Try to find a matching voice in cached voices
+      const voices = await this.getCachedVoices();
+      const matchingVoice = voices.find(v => v.id === voiceId);
       
       if (matchingVoice) {
         return matchingVoice;

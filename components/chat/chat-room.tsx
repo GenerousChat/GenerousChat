@@ -21,9 +21,6 @@ type Message = {
   profile?: {
     name: string;
   };
-  metadata?: {
-    messageType?: string;
-  };
 };
 
 type Participant = {
@@ -107,14 +104,10 @@ export default function ChatRoom({
           created_at: messageData.created_at,
           user_id: messageData.user_id,
           users: { email: userInfo.email || '' },
-          name: userInfo.name,
-          metadata: messageData.metadata
+          name: userInfo.name
         };
         
-        // Check if this is an HTML content message and update the latest HTML content
-        if (isHtmlContent(newMessage)) {
-          setLatestHtmlContent(getHtmlContent(newMessage));
-        }
+        // No need to check for HTML content in regular messages anymore
         
         setMessages((prev) => [...prev, newMessage]);
         // Set the new message for TTS
@@ -123,6 +116,29 @@ export default function ChatRoom({
       } catch (error) {
         console.error("Error processing Pusher message:", error);
       }
+    });
+
+    // Listen for HTML visualizations
+    channel.bind('html-visualization', (data: any) => {
+      try {
+        console.log('Received HTML visualization event:', data);
+        const visualizationData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Update the visualization panel with the HTML content
+        if (visualizationData.html) {
+          console.log('Setting latest HTML content, length:', visualizationData.html.length);
+          setLatestHtmlContent(visualizationData.html);
+        } else {
+          console.warn('HTML visualization received but no html field found:', visualizationData);
+        }
+      } catch (error) {
+        console.error("Error processing HTML visualization:", error);
+      }
+    });
+    
+    // Log when Pusher connection state changes
+    pusher.connection.bind('state_change', (states: any) => {
+      console.log('Pusher connection state changed from', states.previous, 'to', states.current);
     });
 
     // Listen for user joined events
@@ -272,41 +288,7 @@ export default function ChatRoom({
   // Check if message is from current user
   const isCurrentUser = (userId: string) => userId === currentUser.id;
 
-  // Check if a message contains HTML content
-  const isHtmlContent = (message: Message): boolean => {
-    // Check if the message has metadata indicating it's HTML content
-    if (message.metadata?.messageType === 'html_content') {
-      return true;
-    }
-    
-    // Also check the content itself in case metadata is missing
-    try {
-      const parsedContent = JSON.parse(message.content);
-      return parsedContent.type === 'html_content' && !!parsedContent.html;
-    } catch {
-      return false;
-    }
-  };
-
-  // Extract HTML content from a message
-  const getHtmlContent = (message: Message): string => {
-    try {
-      const parsedContent = JSON.parse(message.content);
-      return parsedContent.html || '';
-    } catch {
-      return '';
-    }
-  };
-
-  // Get the summary of HTML content
-  const getHtmlContentSummary = (message: Message): string => {
-    try {
-      const parsedContent = JSON.parse(message.content);
-      return parsedContent.summary || 'HTML Content';
-    } catch {
-      return 'HTML Content';
-    }
-  };
+  // These functions are no longer needed as HTML content comes through a separate channel
 
   // Default HTML content for visualization
   const defaultHtmlContent = `
@@ -359,6 +341,11 @@ export default function ChatRoom({
     </body>
     </html>
   `;
+  
+  // Log when latestHtmlContent changes
+  useEffect(() => {
+    console.log('latestHtmlContent updated:', latestHtmlContent ? 'HTML content present' : 'No HTML content');
+  }, [latestHtmlContent]);
 
   return (
     <div className="flex h-full">
@@ -397,22 +384,7 @@ export default function ChatRoom({
                       {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                     </div>
                   )}
-                  {isHtmlContent(message) ? (
-                    <div className="html-content-container">
-                      <div className="html-content-summary mb-2 text-sm font-medium">
-                        {getHtmlContentSummary(message)}
-                      </div>
-                      <iframe
-                        srcDoc={getHtmlContent(message)}
-                        className="w-full border-0 rounded bg-white"
-                        style={{ height: '300px', minWidth: '300px' }}
-                        sandbox="allow-scripts"
-                        title="Generated HTML Content"
-                      />
-                    </div>
-                  ) : (
-                    <div className="break-words">{message.content}</div>
-                  )}
+                  <div className="break-words">{message.content}</div>
                   <div
                     className={`text-xs mt-1 ${
                       isCurrentUser(message.user_id)

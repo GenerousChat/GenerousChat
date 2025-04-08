@@ -122,6 +122,9 @@ async function sendToPusher(channel, eventName, data) {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
       const eventData = JSON.stringify(data);
+      console.log(`Preparing to send Pusher event: ${eventName} to channel: ${channel}`);
+      console.log(`Event data type: ${typeof data}, stringified length: ${eventData.length}`);
+      
       const body = JSON.stringify({
         name: eventName,
         channel: channel,
@@ -378,19 +381,25 @@ app.post("/test-pusher", async (req, res) => {
         </html>
       `;
       
-      await sendToPusher(`room-${roomId}`, "new-message", {
-        id: "test-html-" + Date.now(),
-        content: JSON.stringify({
-          type: "html_content",
-          html: htmlContent,
-          summary: "Test HTML Content"
-        }),
-        created_at: new Date().toISOString(),
-        user_id: "test-user",
-        metadata: { messageType: "html_content" }
-      });
+      // Send HTML content as a special event type
+      console.log("Sending test HTML visualization to Pusher");
       
-      res.status(200).json({ success: true, message: "Test HTML content sent to Pusher" });
+      const visualizationData = {
+        id: "test-viz-" + Date.now(),
+        html: htmlContent,
+        summary: "Test HTML Visualization",
+        created_at: new Date().toISOString(),
+        user_id: "test-user"
+      };
+      
+      try {
+        await sendToPusher(`room-${roomId}`, "html-visualization", visualizationData);
+        console.log("Test HTML visualization successfully sent to Pusher");
+        res.status(200).json({ success: true, message: "Test HTML visualization sent to Pusher" });
+      } catch (error) {
+        console.error("Error sending test HTML visualization to Pusher:", error);
+        res.status(500).json({ error: "Failed to send HTML visualization to Pusher" });
+      }
     } else {
       // Regular text message
       await sendToPusher(`room-${roomId}`, "new-message", {
@@ -601,7 +610,24 @@ async function generateAIResponse(roomId) {
 
     console.log("AI generated response:", text);
 
-    // If we should generate HTML, create a special HTML content message
+    // Always send a regular text message first
+    const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
+
+    // Save the regular AI response to the Supabase database
+    const { data, error } = await supabase.from("messages").insert({
+      room_id: roomId,
+      user_id: aiAssistantId,
+      content: text,
+    });
+    
+    if (error) {
+      console.error("Error saving AI response to database:", error);
+      return;
+    }
+    
+    console.log("AI response saved to database for room:", roomId);
+
+    // If we should generate HTML, create and send a special HTML visualization message
     if (shouldGenerateHtml) {
       console.log("Generating HTML content based on conversation...");
       
@@ -626,46 +652,26 @@ Generate complete, valid HTML that can be rendered in an iframe. Include all nec
       
       console.log("HTML content generated, length:", htmlContent.length);
       
-      // Use the selected agent's ID or the first agent ID in our list
-      const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
+      // Send the HTML content directly to Pusher as a special event type
+      // This will not be stored in the messages table or shown in the chat
+      console.log("Sending HTML visualization to Pusher, content length:", htmlContent.length);
       
-      // Insert the HTML content as a special message type
-      const { data: htmlData, error: htmlError } = await supabase.from("messages").insert({
-        room_id: roomId,
-        user_id: aiAssistantId,
-        content: JSON.stringify({
-          type: "html_content",
-          html: htmlContent,
-          summary: "Generated a visual summary of this conversation"
-        }),
-        metadata: { messageType: "html_content" }
-      });
+      const visualizationData = {
+        id: "viz-" + Date.now(),
+        html: htmlContent,
+        summary: "Generated a visual summary of this conversation",
+        created_at: new Date().toISOString(),
+        user_id: aiAssistantId
+      };
       
-      if (htmlError) {
-        console.error("Error saving HTML content to database:", htmlError);
-      } else {
-        console.log("HTML content saved to database for room:", roomId);
+      console.log("Visualization data prepared:", JSON.stringify(visualizationData, null, 2).substring(0, 200) + "...");
+      
+      try {
+        await sendToPusher(`room-${roomId}`, "html-visualization", visualizationData);
+        console.log("HTML visualization successfully sent to Pusher for room:", roomId);
+      } catch (error) {
+        console.error("Error sending HTML visualization to Pusher:", error);
       }
-    } else {
-      // Save the regular AI response to the Supabase database
-      // The worker will automatically pick up this insert via real-time subscription
-      // and forward it to Pusher
-
-      // Use the selected agent's ID or the first agent ID in our list
-      const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
-
-      const { data, error } = await supabase.from("messages").insert({
-        room_id: roomId,
-        user_id: aiAssistantId,
-        content: text,
-      });
-      
-      if (error) {
-        console.error("Error saving AI response to database:", error);
-        return;
-      }
-      
-      console.log("AI response saved to database for room:", roomId);
     }
 
 
