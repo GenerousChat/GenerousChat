@@ -16,6 +16,17 @@ if [ -z "$PUSHER_SECRET" ] || [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_
   exit 1
 fi
 
+# Check if OpenAI API key is set
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "Warning: OPENAI_API_KEY is not set."
+  echo "The AI response feature will not work without an OpenAI API key."
+  read -p "Do you want to continue without the OpenAI API key? (y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
 # Check if service role key is set
 if [ -z "$SUPABASE_SERVICE_KEY" ]; then
   echo "Warning: SUPABASE_SERVICE_KEY is not set."
@@ -42,6 +53,12 @@ fly secrets set NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" -
 if [ ! -z "$SUPABASE_SERVICE_KEY" ]; then
   echo "Setting SUPABASE_SERVICE_KEY in Fly.io..."
   fly secrets set SUPABASE_SERVICE_KEY="$SUPABASE_SERVICE_KEY" -a $APP_NAME
+fi
+
+# Set OpenAI API key if available
+if [ ! -z "$OPENAI_API_KEY" ]; then
+  echo "Setting OPENAI_API_KEY in Fly.io..."
+  fly secrets set OPENAI_API_KEY="$OPENAI_API_KEY" -a $APP_NAME
 fi
 
 # Deploy the application

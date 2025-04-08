@@ -12,6 +12,8 @@ try {
 const crypto = require('crypto');
 const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
+const { generateText } = require('ai');
+const { openai } = require('@ai-sdk/openai');
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,6 +36,12 @@ const pusherConfig = {
 
 // Store the last 50 messages
 let recentMessages = [];
+
+// Flag to track if AI is currently generating a response
+let aiResponseInProgress = false;
+
+// Timeout to prevent AI from responding too frequently
+let aiResponseTimeout = null;
 
 // Fetch the last 50 messages from Supabase
 async function fetchRecentMessages() {
@@ -171,6 +179,18 @@ async function setupSupabaseListeners() {
             }
           );
           console.log(`Message successfully forwarded to Pusher channel room-${message.room_id}`);
+          
+          // Generate AI response after a short delay
+          // Clear any existing timeout to prevent multiple responses
+          if (aiResponseTimeout) {
+            clearTimeout(aiResponseTimeout);
+          }
+          
+          // Set a new timeout to generate a response after 2 seconds
+          aiResponseTimeout = setTimeout(() => {
+            generateAIResponse(message.room_id);
+          }, 2000);
+          
         } catch (error) {
           console.error('Error forwarding message to Pusher:', error);
         }
@@ -285,10 +305,105 @@ app.get('/recent-messages', (req, res) => {
   res.status(200).json({ messages: recentMessages });
 });
 
+// Test endpoint for AI response
+app.post('/test-ai', async (req, res) => {
+  try {
+    console.log('Testing AI response generation');
+    const roomId = req.body.roomId || 'test-room';
+    
+    // Generate and send AI response
+    await generateAIResponse(roomId);
+    
+    res.status(200).json({ success: true, message: 'AI response generated and sent to Pusher' });
+  } catch (error) {
+    console.error('Error testing AI response:', error);
+    res.status(500).json({ error: 'Failed to generate AI response' });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Generate AI response based on recent messages
+async function generateAIResponse(roomId) {
+  // Prevent multiple AI responses at the same time
+  if (aiResponseInProgress) {
+    console.log('AI response already in progress, skipping');
+    return;
+  }
+  
+  try {
+    aiResponseInProgress = true;
+    console.log('Generating AI response based on recent messages...');
+    
+    // Filter messages for the specific room
+    const roomMessages = recentMessages.filter(msg => msg.room_id === roomId);
+    
+    // If no messages in this room, skip
+    if (roomMessages.length === 0) {
+      console.log('No messages in room, skipping AI response');
+      aiResponseInProgress = false;
+      return;
+    }
+    
+    // Get the last 5 messages or fewer if not available
+    const lastMessages = roomMessages.slice(-5);
+    
+    // Format messages for the prompt
+    const messageHistory = lastMessages.map(msg => `User: ${msg.content}`).join('\n');
+    
+    // Create the prompt
+    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\nRespond with a single casual, friendly sentence as if you're part of the conversation. Keep it brief and natural. Don't introduce yourself or explain that you're an AI.`;
+    
+    console.log('Sending prompt to OpenAI:', prompt);
+    
+    // Generate text using OpenAI
+    const { text } = await generateText({
+      model: openai.responses('gpt-4o'),
+      prompt: prompt,
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    
+    console.log('AI generated response:', text);
+    
+    // Create a unique ID for the AI message
+    const aiMessageId = 'ai-' + Date.now();
+    
+    // Send the AI response to Pusher
+    await sendToPusher(
+      `room-${roomId}`,
+      'new-message',
+      {
+        id: aiMessageId,
+        content: text,
+        created_at: new Date().toISOString(),
+        user_id: 'ai-assistant', // Special user ID for the AI
+      }
+    );
+    
+    console.log(`AI response sent to room-${roomId}`);
+    
+    // Also add the AI message to our recent messages
+    recentMessages.push({
+      id: aiMessageId,
+      room_id: roomId,
+      content: text,
+      created_at: new Date().toISOString(),
+      user_id: 'ai-assistant'
+    });
+    
+    if (recentMessages.length > 50) {
+      recentMessages.shift(); // Remove oldest message if we exceed 50
+    }
+    
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+  } finally {
+    aiResponseInProgress = false;
+  }
+}
 
 // Initialize the application
 async function init() {
@@ -299,6 +414,7 @@ async function init() {
     console.log('- NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'is set' : 'is NOT set');
     console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'is set' : 'is NOT set');
     console.log('- SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'is set' : 'is NOT set');
+    console.log('- OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'is set' : 'is NOT set');
     console.log('- Using Supabase key type:', process.env.SUPABASE_SERVICE_KEY ? 'SERVICE ROLE (privileged)' : 'ANON (limited)');
     // Fetch recent messages first
     await fetchRecentMessages();

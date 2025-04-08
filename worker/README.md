@@ -15,6 +15,7 @@ This worker service listens to Supabase database changes via real-time subscript
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_KEY=your_supabase_service_role_key  # Recommended for bypassing RLS
    PUSHER_SECRET=your_pusher_secret
+   OPENAI_API_KEY=your_openai_api_key  # Required for AI response feature
    ```
    
    **Important**: Using the `SUPABASE_SERVICE_KEY` (service role key) is highly recommended for the worker service as it bypasses Row Level Security (RLS) policies, allowing the worker to listen to all database changes. You can find this key in your Supabase dashboard under Project Settings > API > Project API keys.
@@ -47,6 +48,7 @@ This worker service listens to Supabase database changes via real-time subscript
    fly secrets set NEXT_PUBLIC_SUPABASE_URL=your_supabase_url -a hackathon-floral-sun-886
    fly secrets set NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key -a hackathon-floral-sun-886
    fly secrets set SUPABASE_SERVICE_KEY=your_supabase_service_role_key -a hackathon-floral-sun-886
+   fly secrets set OPENAI_API_KEY=your_openai_api_key -a hackathon-floral-sun-886
    ```
    
    Or use the provided deployment script which will handle this for you:
@@ -56,16 +58,15 @@ This worker service listens to Supabase database changes via real-time subscript
 
 ## How It Works
 
-1. **Supabase Real-time Subscriptions**: The worker uses Supabase's real-time capabilities to listen for database changes directly:
-   - New messages (INSERT on the messages table)
-   - User joins (INSERT on the room_participants table)
-   - User leaves (DELETE on the room_participants table)
+This worker service acts as a bridge between Supabase and Pusher, enabling real-time messaging in the chat application. It performs the following functions:
 
-2. **Message Caching**: The worker fetches and maintains a cache of the 50 most recent messages.
+1. **Listens to Supabase Database Changes**: The worker uses Supabase's real-time functionality to listen for changes to the `messages` and `room_participants` tables.
 
-3. **Pusher Integration**: When events are detected, they are forwarded to the appropriate Pusher channels:
-   - `room-{roomId}` channels for each chat room
-   - Events: `new-message`, `user-joined`, `user-left`
+2. **Forwards Events to Pusher**: When a database change is detected, the worker formats the data and forwards it to the appropriate Pusher channel.
+
+3. **Maintains Message Cache**: The worker maintains a cache of the last 50 messages received, which can be accessed via the `/recent-messages` endpoint.
+
+4. **AI Response Generation**: The worker automatically generates AI responses to messages using OpenAI's GPT-4 model. When a new message is received, the worker waits 2 seconds and then generates a casual, friendly response based on the recent conversation history.
 
 ## API Endpoints
 
@@ -79,6 +80,18 @@ curl -X POST http://localhost:3001/test-pusher \
   -d '{
     "roomId": "room-123",
     "message": "Test message"
+  }'
+```
+
+### Test AI Response Generation
+
+You can test the AI response generation using the test endpoint:
+
+```bash
+curl -X POST http://localhost:3001/test-ai \
+  -H "Content-Type: application/json" \
+  -d '{
+    "roomId": "room-123"
   }'
 ```
 
