@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pusher Test</title>
+  <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+  <script>
+    // Enable pusher logging
+    Pusher.logToConsole = true;
+
+    // Initialize Pusher
+    const pusher = new Pusher('96f9360f34a831ca1901', {
+      cluster: 'us3'
+    });
+
+    // Subscribe to test channel
+    const channel = pusher.subscribe('room-test-123');
+    
+    // Listen for new messages
+    channel.bind('new-message', function(data) {
+      console.log('Received message:', data);
+      const messagesDiv = document.getElementById('messages');
+      const messageElement = document.createElement('div');
+      messageElement.textContent = JSON.stringify(data);
+      messageElement.className = 'message';
+      messagesDiv.appendChild(messageElement);
+    });
+
+    // Function to manually test sending a message
+    function testSendMessage() {
+      // This doesn't actually send a message to Pusher
+      // It just simulates receiving one for testing the display
+      const testData = {
+        id: 'local-test-' + Date.now(),
+        content: document.getElementById('messageInput').value || 'Test message',
+        created_at: new Date().toISOString(),
+        user_id: 'test-user'
+      };
+      
+      console.log('Simulating received message:', testData);
+      const messagesDiv = document.getElementById('messages');
+      const messageElement = document.createElement('div');
+      messageElement.textContent = JSON.stringify(testData);
+      messageElement.className = 'message';
+      messagesDiv.appendChild(messageElement);
+    }
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    input {
+      padding: 8px;
+      width: 300px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pusher Test</h1>
+  <p>This page is listening for events on channel <code>room-test-123</code> with event name <code>new-message</code>.</p>
+  
+  <div class="controls">
+    <input id="messageInput" type="text" placeholder="Type a test message">
+    <button onclick="testSendMessage()">Simulate Message</button>
+  </div>
+  
+  <h2>Messages</h2>
+  <div id="messages"></div>
+  
+  <h2>Debugging</h2>
+  <p>Open your browser console to see Pusher connection logs.</p>
+  <p>If you're not seeing messages, check:</p>
+  <ol>
+    <li>Pusher app credentials (key and cluster)</li>
+    <li>Worker service deployment and configuration</li>
+    <li>Supabase webhook configuration</li>
+  </ol>
+</body>
+</html>
