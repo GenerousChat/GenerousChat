@@ -195,21 +195,21 @@ async function setupSupabaseListeners() {
   console.log("Setting up combined channel subscription...");
   const channel = supabase
     .channel("db-changes")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "agents",
-      },
-      async (payload) => {
-        console.log("===== AGENT CHANGE DETECTED =====");
-        console.log("Agent change:", JSON.stringify(payload));
+    // .on(
+    //   "postgres_changes",
+    //   {
+    //     event: "*",
+    //     schema: "public",
+    //     table: "agents",
+    //   },
+    //   async (payload) => {
+    //     console.log("===== AGENT CHANGE DETECTED =====");
+    //     console.log("Agent change:", JSON.stringify(payload));
 
-        // Refresh the agents list
-        await fetchAIAgents();
-      }
-    )
+    //     // Refresh the agents list
+    //     await fetchAIAgents();
+    //   }
+    // )
     .on(
       "postgres_changes",
       {
