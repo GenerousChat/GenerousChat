@@ -1,46 +1,98 @@
-# Product Requirements Document
+# Chat Application Migration: Supabase to Pusher
 
-The chat room should listen to pusher app for events instead of supabase.
+## Product Requirements Document
 
-e.g. <!DOCTYPE html>
+### Overview
+This document outlines the requirements for migrating our chat application from Supabase real-time subscriptions to Pusher for real-time messaging capabilities. The migration aims to improve reliability, scalability, and performance of our real-time messaging system.
 
-<head>
-  <title>Pusher Test</title>
-  <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
-  <script>
+### Goals
+- Replace Supabase real-time subscriptions with Pusher for message delivery
+- Maintain all existing chat functionality
+- Implement a worker service to bridge Supabase database events to Pusher
+- Ensure seamless user experience during and after the migration
 
-    // Enable pusher logging - don't include this in production
-    Pusher.logToConsole = true;
+### Technical Requirements
 
-    var pusher = new Pusher('96f9360f34a831ca1901', {
-      cluster: 'us3'
-    });
+#### 1. Client-Side Integration
+- Integrate Pusher JavaScript SDK into the chat application
+- Subscribe to appropriate Pusher channels for each chat room
+- Update the message handling logic to process events from Pusher
+- Maintain backward compatibility during the transition period
 
-    var channel = pusher.subscribe('my-channel');
-    channel.bind('my-event', function(data) {
-      alert(JSON.stringify(data));
-    });
+#### 2. Worker Service
+- Create a worker service to be deployed on Fly.io
+- Connect to Supabase database change events via webhooks or listeners
+- Process database events and forward them to Pusher
+- Implement proper error handling and retry mechanisms
+- Add logging for monitoring and debugging
 
-  </script>
-</head>
-<body>
-  <h1>Pusher Test</h1>
-  <p>
-    Try publishing an event to channel <code>my-channel</code>
-    with event name <code>my-event</code>.
-  </p>
-</body>
+#### 3. Pusher Configuration
+- Set up a Pusher account and application
+- Configure the following Pusher channels:
+  - `room-{roomId}`: For messages in a specific room
+- Configure the following Pusher events:
+  - `new-message`: When a new message is added
+  - `user-joined`: When a user joins a room
+  - `user-left`: When a user leaves a room
 
----
+#### 4. Security
+- Implement proper authentication for Pusher channels
+- Ensure only authorized users can subscribe to room channels
+- Secure the worker service with appropriate authentication
 
-There should be a worker which will be deployed to fly.io. It should listen to the supabase events and forward them onto the pusherapp
+### Implementation Details
 
-example code
+#### Pusher Client Integration
+```javascript
+// Initialize Pusher
+const pusher = new Pusher('96f9360f34a831ca1901', {
+  cluster: 'us3'
+});
 
-curl -H 'Content-Type: application/json' -d '{"data":"{\"message\":\"hello world\"}","name":"my-event","channel":"my-channel"}' \
-"https://api-us3.pusher.com/apps/1971423/events?"\
-"body_md5=2c99321eeba901356c4c7998da9be9e0&"\
-"auth_version=1.0&"\
-"auth_key=96f9360f34a831ca1901&"\
-"auth_timestamp=1744106925&"\
-"auth_signature=3f9bbaaff82cb0f2cc64cec379ab3a374c742669fceb41deaed7c842159147c1&"
+// Subscribe to a room channel
+const channel = pusher.subscribe(`room-${roomId}`);
+
+// Listen for new messages
+channel.bind('new-message', function(data) {
+  // Process and display the new message
+});
+```
+
+#### Worker Service
+The worker service will:
+1. Listen to Supabase database changes via webhooks
+2. Process the events and format them for Pusher
+3. Send the events to Pusher using the Pusher API
+
+Example Pusher API call:
+```bash
+curl -H 'Content-Type: application/json' \
+  -d '{"data":"{\"message\":\"hello world\"}","name":"new-message","channel":"room-123"}' \
+  "https://api-us3.pusher.com/apps/1971423/events?" \
+  "body_md5=CALCULATED_MD5&" \
+  "auth_version=1.0&" \
+  "auth_key=96f9360f34a831ca1901&" \
+  "auth_timestamp=TIMESTAMP&" \
+  "auth_signature=CALCULATED_SIGNATURE&"
+```
+
+### Migration Plan
+1. Develop and test the worker service
+2. Update the client-side code to support Pusher
+3. Deploy the worker service to Fly.io
+4. Run both systems in parallel for a transition period
+5. Monitor for any issues
+6. Once stable, remove the Supabase real-time subscription code
+
+### Success Metrics
+- Zero message loss during transition
+- Equal or better message delivery latency
+- Improved reliability for high-volume chat rooms
+- Positive user feedback on chat performance
+
+### Timeline
+- Development: 1 week
+- Testing: 3 days
+- Deployment: 1 day
+- Parallel run: 1 week
+- Final cutover: 1 day

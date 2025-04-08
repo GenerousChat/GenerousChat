@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "@supabase/supabase-js";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Pusher from 'pusher-js';
 
 type Message = {
   id: string;
@@ -47,60 +48,55 @@ export default function ChatRoom({
     scrollToBottom();
   }, [messages]);
 
-  // Set up real-time subscription to new messages
+  // Set up Pusher subscription for real-time messages
   useEffect(() => {
-    const channel = supabase
-      .channel(`room:${roomId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `room_id=eq.${roomId}`,
-        },
-        async (payload) => {
-          try {
-            // Fetch the complete message with user information
-            const { data, error } = await supabase
-              .from("messages")
-              .select(`
-                id, 
-                content, 
-                created_at, 
-                user_id
-              `)
-              .eq("id", payload.new.id)
-              .single();
+    // Initialize Pusher
+    const pusher = new Pusher('96f9360f34a831ca1901', {
+      cluster: 'us3',
+    });
 
-            if (error) {
-              console.error("Error fetching message details:", error);
-              return;
-            }
+    // Subscribe to the room channel
+    const channel = pusher.subscribe(`room-${roomId}`);
 
-            if (data) {
-              // Create a properly typed message object
-              const newMessage: Message = {
-                id: data.id,
-                content: data.content,
-                created_at: data.created_at,
-                user_id: data.user_id,
-                users: { email: getUserEmail(data.user_id) }
-              };
-              
-              setMessages((prev) => [...prev, newMessage]);
-            }
-          } catch (error) {
-            console.error("Error processing new message:", error);
-          }
-        }
-      )
-      .subscribe();
+    // Listen for new messages
+    channel.bind('new-message', (data: any) => {
+      try {
+        const messageData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Create a properly typed message object
+        const newMessage: Message = {
+          id: messageData.id,
+          content: messageData.content,
+          created_at: messageData.created_at,
+          user_id: messageData.user_id,
+          users: { email: getUserEmail(messageData.user_id) }
+        };
+        
+        setMessages((prev) => [...prev, newMessage]);
+        scrollToBottom();
+      } catch (error) {
+        console.error("Error processing Pusher message:", error);
+      }
+    });
 
+    // Listen for user joined events
+    channel.bind('user-joined', (data: any) => {
+      console.log('User joined the room:', data);
+      // You could update the participants list here if needed
+    });
+
+    // Listen for user left events
+    channel.bind('user-left', (data: any) => {
+      console.log('User left the room:', data);
+      // You could update the participants list here if needed
+    });
+
+    // Clean up on unmount
     return () => {
-      supabase.removeChannel(channel);
+      channel.unbind_all();
+      pusher.unsubscribe(`room-${roomId}`);
     };
-  }, [roomId, supabase]);
+  }, [roomId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
