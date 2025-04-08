@@ -652,16 +652,26 @@ async function generateAIResponse(roomId) {
       console.log("Generating HTML content based on conversation...");
 
       // Create a prompt for generating HTML content that responds to conversation intent
-      const htmlPrompt = `Analyze the following conversation and create an HTML/CSS visualization that directly responds to any explicit or implicit requests within the conversation. 
+      const htmlPrompt = `Analyze the following conversation and create an HTML/CSS/JavaScript visualization that directly responds to any explicit or implicit requests within the conversation. Be extremely creative and ambitious - you can create fully interactive experiences!
 
 For example:
 - If someone asked to "build a storybook" or "create a slideshow" - create exactly that
-- If they discussed data visualization - create charts or graphs
-- If they talked about a timeline - create an interactive timeline
-- If they mentioned a game or interactive element - try to implement a simple version
-- If they discussed a specific design style - implement that style
+- If they discussed data visualization - create charts or graphs using D3.js or Chart.js
+- If they talked about a timeline - create an interactive timeline with animations
+- If they mentioned a game or interactive element - implement a fully playable game or interactive experience
+- If they discussed 3D content - use Three.js to create 3D visualizations
+- If they mentioned animations - use GSAP or other animation libraries
 
-If there's no clear request, create the most appropriate visualization based on the conversation content and context. Be creative but purposeful.
+You can use ANY external JavaScript libraries from CDN sources like cdnjs.com, including but not limited to:
+- Three.js for 3D graphics
+- D3.js for data visualization
+- GSAP for animations
+- React, Vue, or other frameworks (via CDN)
+- p5.js for creative coding
+- Phaser for game development
+- Any other library that helps create an amazing experience
+
+If there's no clear request, create the most impressive and appropriate visualization based on the conversation content. Be bold and ambitious!
 
 Conversation:
 ${messageHistory}
@@ -669,16 +679,17 @@ ${messageHistory}
 YOUR TASK:
 1. First, identify any explicit requests for visualization or content generation in the conversation
 2. If none exist, determine what type of visualization would best represent the conversation's themes
-3. Generate complete, valid HTML with embedded CSS (no external resources)
-4. The HTML must be immediately renderable in an iframe
-5. Focus on creating something truly useful and relevant to the conversation
-6. Be creative and innovative - surprise the users with something that enhances their discussion
-7. Ensure your HTML is well-formed, responsive, and visually appealing
+3. Generate complete, valid HTML with embedded CSS and JavaScript
+4. Include any external libraries from CDN sources that will enhance the experience
+5. Make it as interactive and engaging as possible - games, animations, 3D, whatever fits!
+6. Focus on creating something truly useful, impressive, and relevant to the conversation
+7. Be creative and innovative - surprise the users with something that enhances their discussion
+8. Ensure your HTML is well-formed, responsive, and visually appealing
+9. Don't hold back - create the most impressive visualization you can imagine!
 
+FINALLY: ONLY RETURN A PURE HTML DOCUMENT, NO COMMENTARY OR MARKDOWN, JUST THE PURE RAW HTML/CSS/JS DOCUMENT AS INSTRUCTED
 
-FINALLY: ONLY RETURN A PURE HTML DOCUMENT, NO COMMENTARY OR MARKDOWN, JUST THE PURE RAW HTML/CSS DOCUMENT AS INSTRUCTED 
-
-The visualization should feel like it was custom-built for this specific conversation.`;
+The visualization should feel like it was custom-built for this specific conversation and showcase the full potential of web technologies.`;
 
       console.log("Sending HTML generation prompt to OpenAI");
 
@@ -687,7 +698,7 @@ The visualization should feel like it was custom-built for this specific convers
         model: openai.responses("gpt-4o"),
         prompt: htmlPrompt,
         apiKey: process.env.OPENAI_API_KEY,
-        maxTokens: 1500, // Allow more tokens for HTML content
+        maxTokens: 4500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
       });
 
