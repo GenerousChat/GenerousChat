@@ -50,13 +50,24 @@ export default function ChatRoom({
 
   // Set up Pusher subscription for real-time messages
   useEffect(() => {
-    // Initialize Pusher
+    // Initialize Pusher with logging enabled for debugging
+    Pusher.logToConsole = true; // Remove this in production
+    
     const pusher = new Pusher('96f9360f34a831ca1901', {
       cluster: 'us3',
     });
 
     // Subscribe to the room channel
     const channel = pusher.subscribe(`room-${roomId}`);
+    
+    // Log connection status
+    pusher.connection.bind('connected', () => {
+      console.log('Connected to Pusher!', `Subscribed to channel: room-${roomId}`);
+    });
+    
+    pusher.connection.bind('error', (err: any) => {
+      console.error('Pusher connection error:', err);
+    });
 
     // Listen for new messages
     channel.bind('new-message', (data: any) => {

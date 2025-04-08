@@ -8,7 +8,7 @@ const https = require('https');
 const pusherConfig = {
   appId: '1971423',
   key: '96f9360f34a831ca1901',
-  secret: process.env.PUSHER_SECRET || 'YOUR_PUSHER_SECRET', // Set this in environment variables
+  secret: process.env.PUSHER_SECRET || 'c508bc54a2ca619cfab8', // Using the secret from .env
   cluster: 'us3'
 };
 
@@ -89,10 +89,13 @@ async function sendToPusher(channel, eventName, data) {
 // Handle Supabase webhook event
 async function handleSupabaseWebhook(req, res) {
   try {
+    console.log('Received webhook:', JSON.stringify(req.body));
+    
     const payload = req.body;
     
     // Validate the payload
     if (!payload || !payload.type || !payload.table || !payload.record) {
+      console.error('Invalid payload received:', JSON.stringify(payload));
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
@@ -150,6 +153,31 @@ app.use(express.json());
 
 // Webhook endpoint
 app.post('/webhook', handleSupabaseWebhook);
+
+// Test endpoint for Pusher
+app.post('/test-pusher', async (req, res) => {
+  try {
+    console.log('Testing Pusher integration');
+    const roomId = req.body.roomId || 'test-room';
+    const message = req.body.message || 'Test message';
+    
+    await sendToPusher(
+      `room-${roomId}`,
+      'new-message',
+      {
+        id: 'test-' + Date.now(),
+        content: message,
+        created_at: new Date().toISOString(),
+        user_id: 'test-user'
+      }
+    );
+    
+    res.status(200).json({ success: true, message: 'Test message sent to Pusher' });
+  } catch (error) {
+    console.error('Error testing Pusher:', error);
+    res.status(500).json({ error: 'Failed to send test message to Pusher' });
+  }
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
