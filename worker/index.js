@@ -675,6 +675,9 @@ YOUR TASK:
 6. Be creative and innovative - surprise the users with something that enhances their discussion
 7. Ensure your HTML is well-formed, responsive, and visually appealing
 
+
+FINALLY: ONLY RETURN A PURE HTML DOCUMENT, NO COMMENTARY OR MARKDOWN, JUST THE PURE RAW HTML/CSS DOCUMENT AS INSTRUCTED 
+
 The visualization should feel like it was custom-built for this specific conversation.`;
 
       console.log("Sending HTML generation prompt to OpenAI");
