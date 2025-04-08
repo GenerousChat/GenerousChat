@@ -4,7 +4,7 @@
 #
 
 app = 'supabase-pusher-bridge'
-primary_region = 'syd'
+primary_region = 'lax'
 
 [build]
 
@@ -30,6 +30,6 @@ primary_region = 'syd'
     path = '/health'
 
 [[vm]]
-  memory = '1gb'
+  memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1
