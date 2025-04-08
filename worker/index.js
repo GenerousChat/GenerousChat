@@ -426,9 +426,40 @@ async function generateAIResponse(roomId) {
     // Get the last 5 messages or fewer if not available
     const lastMessages = roomMessages.slice(-5);
 
-    // Format messages for the prompt
+    // Get user IDs from messages to fetch their names
+    const userIds = [...new Set(lastMessages.map(msg => msg.user_id))];
+    console.log('User IDs to fetch:', userIds);
+    
+    // Fetch user profiles for all users in the conversation
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .in('id', userIds);
+      
+    if (profilesError) {
+      console.error('Error fetching user profiles:', profilesError);
+    }
+    
+    console.log('Fetched user profiles:', userProfiles);
+    
+    // Create a map of user IDs to names
+    const userNames = {};
+    if (userProfiles && userProfiles.length > 0) {
+      userProfiles.forEach(profile => {
+        userNames[profile.id] = profile.name;
+      });
+      console.log('User names map:', userNames);
+    } else {
+      console.log('No user profiles found or empty array returned');
+    }
+    
+    // Format messages for the prompt with user names
     const messageHistory = lastMessages
-      .map((msg) => `User: ${msg.content}`)
+      .map((msg) => {
+        const userName = userNames[msg.user_id] || 'Unknown User';
+        console.log(`Message from user ${msg.user_id}, mapped name: ${userName}`);
+        return `${userName}: ${msg.content}`;
+      })
       .join("\n");
 
     // Select a random agent or use the default prompt if no agents are available
