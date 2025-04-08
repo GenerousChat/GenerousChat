@@ -433,7 +433,7 @@ async function generateAIResponse(roomId) {
 
     // Select a random agent or use the default prompt if no agents are available
     let agentPrompt =
-      "Respond with a single casual, friendly sentence as if you're part of the conversation. Keep it to 100-200 characters. Just two sentences. Keep it brief and natural. KEEP IT SHORT. 200 CHRACTERS OR LESS. Don't introduce yourself or explain that you're an AI. Take your agent prompts, but don't make them corny. ";
+      "IMPORTANT: Your response MUST be 1-2 sentences ONLY, maximum 200 characters total. Respond with a single casual, friendly sentence as if you're part of the conversation. Be brief and natural. Don't introduce yourself or explain that you're an AI.";
     let selectedAgent = null;
 
     if (aiAgents.length > 0) {
@@ -443,17 +443,18 @@ async function generateAIResponse(roomId) {
       console.log(`Selected agent: ${selectedAgent.name}`);
     }
 
-    // Create the prompt
-    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}`;
+    // Create the prompt with stronger constraints
+    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Extremely concise responses are required.`;
 
     console.log("Sending prompt to OpenAI:", prompt);
 
-    // Generate text using OpenAI
+    // Generate text using OpenAI with stricter constraints
     const { text } = await generateText({
       model: openai.responses("gpt-4o-mini"),
       prompt: prompt,
       apiKey: process.env.OPENAI_API_KEY,
-      maxTokens: 100,
+      maxTokens: 75, // Reduced to enforce shorter responses
+      temperature: 0.7, // Add some randomness but not too much
     });
 
     console.log("AI generated response:", text);
