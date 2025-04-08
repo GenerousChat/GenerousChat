@@ -1,7 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function ProtectedPage() {
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const supabase = await createClient();
 
   const {
@@ -12,6 +16,5 @@ export default async function ProtectedPage() {
     return redirect("/sign-in");
   }
 
-  // Redirect authenticated users to the chat page
-  return redirect("/chat");
+  return <>{children}</>;
 }
