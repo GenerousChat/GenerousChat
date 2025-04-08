@@ -45,7 +45,7 @@ export default function ChatRoom({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userCache, setUserCache] = useState<Record<string, { name: string, isAgent: boolean }>>({});
+  const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -165,9 +165,9 @@ export default function ChatRoom({
 
   // Store user info in local storage
   const storeUserInfo = (userId: string, name: string, email: string = '', isAgent: boolean = false) => {
-    const newCache = { ...userCache, [userId]: { name, isAgent, email } };
-    setUserCache(newCache);
-    localStorage.setItem('chatUserCache', JSON.stringify(newCache));
+    const updatedCache = { ...userCache, [userId]: { name, email, isAgent } };
+    setUserCache(updatedCache);
+    localStorage.setItem('chatUserCache', JSON.stringify(updatedCache));
   };
 
   // Get user info from cache, profiles, participants, or agents table

@@ -103,7 +103,11 @@ export class GoogleTTSService extends AbstractTTSService {
         this.currentUtterance = utterance;
         
         // Speak the text
-        this.speechSynthesis.speak(utterance);
+        if (this.speechSynthesis) {
+          this.speechSynthesis.speak(utterance);
+        } else {
+          reject(new Error('Speech synthesis not available'));
+        }
       } catch (error) {
         reject(error);
       }

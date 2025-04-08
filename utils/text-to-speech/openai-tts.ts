@@ -11,7 +11,7 @@ export interface OpenAITTSOptions extends TTSOptions {
 export class OpenAITTSService extends AbstractTTSService {
   private audioContext: AudioContext | null = null;
   private audioQueue: HTMLAudioElement[] = [];
-  private isPlaying: boolean = false;
+  protected isPlaying: boolean = false;
   private fallbackSynthesis: SpeechSynthesis | null = null;
   private useFallback: boolean = false;
   private availableVoices: TTSVoice[] = [
