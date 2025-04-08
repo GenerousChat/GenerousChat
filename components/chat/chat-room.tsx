@@ -21,6 +21,9 @@ type Message = {
   profile?: {
     name: string;
   };
+  metadata?: {
+    messageType?: string;
+  };
 };
 
 type Participant = {
@@ -47,6 +50,7 @@ export default function ChatRoom({
   const [isLoading, setIsLoading] = useState(false);
   const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
+  const [latestHtmlContent, setLatestHtmlContent] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -103,8 +107,14 @@ export default function ChatRoom({
           created_at: messageData.created_at,
           user_id: messageData.user_id,
           users: { email: userInfo.email || '' },
-          name: userInfo.name
+          name: userInfo.name,
+          metadata: messageData.metadata
         };
+        
+        // Check if this is an HTML content message and update the latest HTML content
+        if (isHtmlContent(newMessage)) {
+          setLatestHtmlContent(getHtmlContent(newMessage));
+        }
         
         setMessages((prev) => [...prev, newMessage]);
         // Set the new message for TTS
@@ -262,15 +272,106 @@ export default function ChatRoom({
   // Check if message is from current user
   const isCurrentUser = (userId: string) => userId === currentUser.id;
 
+  // Check if a message contains HTML content
+  const isHtmlContent = (message: Message): boolean => {
+    // Check if the message has metadata indicating it's HTML content
+    if (message.metadata?.messageType === 'html_content') {
+      return true;
+    }
+    
+    // Also check the content itself in case metadata is missing
+    try {
+      const parsedContent = JSON.parse(message.content);
+      return parsedContent.type === 'html_content' && !!parsedContent.html;
+    } catch {
+      return false;
+    }
+  };
+
+  // Extract HTML content from a message
+  const getHtmlContent = (message: Message): string => {
+    try {
+      const parsedContent = JSON.parse(message.content);
+      return parsedContent.html || '';
+    } catch {
+      return '';
+    }
+  };
+
+  // Get the summary of HTML content
+  const getHtmlContentSummary = (message: Message): string => {
+    try {
+      const parsedContent = JSON.parse(message.content);
+      return parsedContent.summary || 'HTML Content';
+    } catch {
+      return 'HTML Content';
+    }
+  };
+
+  // Default HTML content for visualization
+  const defaultHtmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          margin: 0;
+          padding: 20px;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #334155;
+        }
+        .container {
+          max-width: 100%;
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        h2 {
+          margin-top: 0;
+          color: #3b82f6;
+        }
+        p {
+          line-height: 1.6;
+          margin-bottom: 0;
+        }
+        .pulse {
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+          0% { opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { opacity: 0.6; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>Chat Visualization</h2>
+        <p class="pulse">As your conversation evolves, AI will occasionally generate visual summaries that will appear here.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
   return (
-    <div className="flex flex-col h-full border rounded-lg overflow-hidden relative">
-      <TTSManager 
-        messages={messages} 
-        userCache={userCache} 
-        currentUserId={currentUser.id}
-        newMessageReceived={newMessageReceived}
-      />
-      <ScrollArea className="flex-1 p-4">
+    <div className="flex h-full">
+      {/* Main Chat Column */}
+      <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
+        <TTSManager 
+          messages={messages} 
+          userCache={userCache} 
+          currentUserId={currentUser.id}
+          newMessageReceived={newMessageReceived}
+        />
+        
+        <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -296,7 +397,22 @@ export default function ChatRoom({
                       {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                     </div>
                   )}
-                  <div className="break-words">{message.content}</div>
+                  {isHtmlContent(message) ? (
+                    <div className="html-content-container">
+                      <div className="html-content-summary mb-2 text-sm font-medium">
+                        {getHtmlContentSummary(message)}
+                      </div>
+                      <iframe
+                        srcDoc={getHtmlContent(message)}
+                        className="w-full border-0 rounded bg-white"
+                        style={{ height: '300px', minWidth: '300px' }}
+                        sandbox="allow-scripts"
+                        title="Generated HTML Content"
+                      />
+                    </div>
+                  ) : (
+                    <div className="break-words">{message.content}</div>
+                  )}
                   <div
                     className={`text-xs mt-1 ${
                       isCurrentUser(message.user_id)
@@ -335,5 +451,23 @@ export default function ChatRoom({
         </Button>
       </form>
     </div>
+    
+    {/* Visualization Panel (Right Side) */}
+    <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
+      <div className="p-4 border-b">
+        <h3 className="text-sm font-medium">Conversation Visualization</h3>
+      </div>
+      <div className="flex-1 p-4">
+        <div className="bg-white rounded-md overflow-hidden shadow-sm h-full">
+          <iframe
+            srcDoc={latestHtmlContent || defaultHtmlContent}
+            className="w-full h-full border-0"
+            sandbox="allow-scripts"
+            title="Conversation Visualization"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
   );
 }

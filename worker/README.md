@@ -68,6 +68,8 @@ This worker service acts as a bridge between Supabase and Pusher, enabling real-
 
 4. **AI Response Generation**: The worker automatically generates AI responses to messages using OpenAI's GPT-4 model. When a new message is received, the worker waits 2 seconds and then generates a casual, friendly response based on the recent conversation history.
 
+5. **HTML Content Generation**: Approximately 20% of the time, the worker will generate an HTML page based on the conversation content. This creative HTML summary is sent as a special message type through Pusher. When the client receives this special message type, it should render the HTML content in an iframe or other suitable container on the chat page.
+
 ## API Endpoints
 
 ### Test Pusher Integration
