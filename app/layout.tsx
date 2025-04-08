@@ -1,4 +1,3 @@
-import DeployButton from "@/components/deploy-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -6,6 +5,7 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -14,13 +14,13 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "WeBoard - a Collaborative Development Canvas",
+  description: "Build applications visually with your team and AI assistance in real-time.",
 };
 
 const geistSans = Geist({
-  display: "swap",
-  subsets: ["latin"],
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export default function RootLayout({
@@ -30,44 +30,50 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">
+      <body className="bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col items-center">
-            <div className="flex-1 w-full flex flex-col gap-20 items-center">
-              <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                  <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Next.js Supabase Starter</Link>
-                    <div className="flex items-center gap-2">
-                      <DeployButton />
-                    </div>
-                  </div>
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                </div>
-              </nav>
-              <div className="flex flex-col gap-20 max-w-5xl p-5">
-                {children}
+          <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
+            {/* Radial gradient for the background */}
+            <div className="fixed inset-0 -z-10">
+              <div className="absolute inset-0 bg-gradient-to-b from-background/5 via-background to-background" />
+              <div className="absolute left-[50%] top-0 -z-10 -translate-x-1/2 blur-3xl" aria-hidden="true">
+                <div
+                  className="aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#80caff] to-[#4f46e5] opacity-20 dark:from-[#1d4ed8] dark:to-[#7c3aed] dark:opacity-30"
+                  style={{
+                    clipPath:
+                      'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
+                  }}
+                />
               </div>
+            </div>
 
-              <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-                <p>
-                  Powered by{" "}
-                  <a
-                    href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-                    target="_blank"
-                    className="font-bold hover:underline"
-                    rel="noreferrer"
-                  >
-                    Supabase
-                  </a>
-                </p>
-                <ThemeSwitcher />
-              </footer>
+            {/* Header */}
+            <nav className="sticky top-0 z-50 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container h-full flex items-center">
+                <Link 
+                  href="/" 
+                  className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
+                >
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                  </div>
+                  WeBoard
+                </Link>
+                <div className="flex items-center gap-4 ml-auto">
+                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                  <ThemeSwitcher />
+                </div>
+              </div>
+            </nav>
+
+            {/* Main content */}
+            <div className="flex-1 flex flex-col">
+              {children}
             </div>
           </main>
         </ThemeProvider>
