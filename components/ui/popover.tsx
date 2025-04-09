@@ -185,8 +185,9 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
     
     // Position calculation
     const [position, setPosition] = React.useState({ top: 0, left: 0 })
+    const { triggerRef } = React.useContext(PopoverContext)
+    
     const calculatePosition = React.useCallback(() => {
-      const { triggerRef } = React.useContext(PopoverContext)
       if (!triggerRef.current || !contentRef.current) return
       
       const triggerRect = triggerRef.current.getBoundingClientRect()

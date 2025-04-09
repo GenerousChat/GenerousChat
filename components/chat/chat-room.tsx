@@ -176,6 +176,26 @@ export default function ChatRoom({
         });
         
         console.log('Dyte client initialized successfully');
+        
+        // Add event listeners to track meeting state
+        meeting.self.on('roomJoined', () => {
+          console.log('ChatRoom: Room joined successfully');
+          console.log('Meeting state:', {
+            roomJoined: meeting.self.roomJoined,
+            audioEnabled: meeting.self.audioEnabled,
+            meetingStarted: meeting.meta.meetingStarted,
+            participantCount: Object.keys(meeting.participants.active).length
+          });
+        });
+        
+        // Track participant changes
+        meeting.participants.on('participantJoined', (participant) => {
+          console.log('ChatRoom: Participant joined:', {
+            name: participant.name,
+            id: participant.id,
+            audioEnabled: participant.audioEnabled
+          });
+        });
       } catch (error) {
         console.error('Failed to initialize Dyte:', error);
         if (error instanceof Error) {

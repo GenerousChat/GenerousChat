@@ -107,45 +107,76 @@ export async function createOrJoinMeeting(roomId: string, userId: string, userNa
         });
     }
 
-    console.log('Adding participant to meeting:', {
+    console.log('Adding participant to meeting: ', {
       meetingId,
       userName,
       userId,
       presetName: process.env.NEXT_PUBLIC_DYTE_PRESET_NAME || 'group_call_host'
     });
 
-    // Add participant to the meeting
-    const addParticipantResponse = await fetch(`${baseUrl}/meetings/${meetingId}/participants`, {
+    // Verify the preset name exists
+    try {
+      const presetsUrl = `${baseUrl}/presets`;
+      const presetsResponse = await fetch(presetsUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader
+        }
+      });
+
+      const presetsData = await presetsResponse.json();
+      console.log('Available presets:', presetsData);
+      
+      // Check if our preset exists
+      const presetName = process.env.NEXT_PUBLIC_DYTE_PRESET_NAME || 'group_call_host';
+      const presetExists = presetsData.data?.some((preset: any) => 
+        preset.name === presetName || preset.id === presetName
+      );
+      
+      console.log(`Preset '${presetName}' exists:`, presetExists ? 'Yes' : 'No');
+      
+      if (!presetExists) {
+        console.warn(`Warning: Preset '${presetName}' not found in available presets!`);
+      }
+    } catch (error) {
+      console.error('Error checking presets:', error);
+    }
+
+    const participantUrl = `${baseUrl}/meetings/${meetingId}/participants`;
+    const participantData = {
+      name: userName,
+      custom_participant_id: userId,
+      preset_name: process.env.NEXT_PUBLIC_DYTE_PRESET_NAME || 'group_call_host'
+    };
+
+    const participantResponse = await fetch(participantUrl, {
       method: 'POST',
       headers: {
-        'Authorization': authHeader,
         'Content-Type': 'application/json',
+        'Authorization': authHeader
       },
-      body: JSON.stringify({
-        name: userName,
-        preset_name: process.env.NEXT_PUBLIC_DYTE_PRESET_NAME || 'group_call_host',
-        custom_participant_id: userId,
-      }),
+      body: JSON.stringify(participantData)
     });
 
     // Log the raw response for debugging
     console.log('Dyte add participant response:', {
-      status: addParticipantResponse.status,
-      statusText: addParticipantResponse.statusText,
-      headers: Object.fromEntries(addParticipantResponse.headers.entries())
+      status: participantResponse.status,
+      statusText: participantResponse.statusText,
+      headers: Object.fromEntries(participantResponse.headers.entries())
     });
 
-    if (!addParticipantResponse.ok) {
-      const errorText = await addParticipantResponse.text();
+    if (!participantResponse.ok) {
+      const errorText = await participantResponse.text();
       console.error('Dyte API error:', {
-        status: addParticipantResponse.status,
-        statusText: addParticipantResponse.statusText,
+        status: participantResponse.status,
+        statusText: participantResponse.statusText,
         response: errorText
       });
-      throw new Error(`Failed to add participant: ${addParticipantResponse.status} ${addParticipantResponse.statusText}`);
+      throw new Error(`Failed to add participant: ${participantResponse.status} ${participantResponse.statusText}`);
     }
 
-    const participantData = (await addParticipantResponse.json()) as DyteParticipantResponse;
+    const participantData = (await participantResponse.json()) as DyteParticipantResponse;
     console.log('Dyte participant response data:', {
       success: participantData.success,
       hasData: !!participantData.data,

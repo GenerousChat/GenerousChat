@@ -28,36 +28,96 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       theme: 'light',
     });
 
+    console.log('AudioRoom component state:', {
+      roomJoined,
+      audioEnabled,
+      participantsCount: Object.keys(participants).length,
+      meetingState: meeting.meta.meetingStarted ? 'started' : 'not started',
+      selfId: meeting.self.id,
+      selfName: meeting.self.name,
+      activeParticipants: Object.values(participants).map(p => ({ name: p.name, id: p.id }))
+    });
+
+    // Try to join room if not already joined
+    const joinRoom = async () => {
+      try {
+        if (!roomJoined) {
+          console.log('AudioRoom: Attempting to manually join room...');
+          await meeting.joinRoom();
+          console.log('AudioRoom: Manual room join successful');
+        } else {
+          console.log('AudioRoom: Room already joined, no need to join again');
+        }
+      } catch (error) {
+        console.error('AudioRoom: Error joining room:', error);
+        setError('Failed to connect to audio room');
+      }
+    };
+
     // Enable audio when room is joined
     const enableAudio = async () => {
       try {
         if (roomJoined && !audioEnabled) {
-          console.log('Enabling audio in room...');
+          console.log('AudioRoom: Enabling audio in room...');
           await meeting.self.enableAudio();
-          console.log('Audio enabled successfully');
+          console.log('AudioRoom: Audio enabled successfully');
+        } else if (!roomJoined) {
+          console.log('AudioRoom: Cannot enable audio, room not joined yet');
+        } else if (audioEnabled) {
+          console.log('AudioRoom: Audio already enabled');
         }
       } catch (error) {
-        console.error('Error enabling audio:', error);
+        console.error('AudioRoom: Error enabling audio:', error);
         setError('Failed to enable microphone');
       }
     };
 
-    if (roomJoined) {
-      enableAudio();
-    }
-
-    // Handle room leave events
-    meeting.self.on('roomLeft', () => {
-      console.log('Left audio room');
-    });
-
-    // Handle media permission errors
-    meeting.self.on('mediaPermissionError', ({ message, kind }) => {
-      console.error(`Media permission error: ${kind} - ${message}`);
-      if (kind === 'audio') {
-        setError('Microphone permission denied. Please check your browser settings.');
+    // First try to join room if needed
+    joinRoom().then(() => {
+      // Then enable audio if room joined
+      if (roomJoined) {
+        enableAudio();
       }
     });
+
+    // Set up event listeners for debugging
+    const setupEventListeners = () => {
+      // Room events
+      meeting.self.on('roomJoined', () => {
+        console.log('Room joined event fired');
+      });
+      
+      meeting.self.on('roomLeft', () => {
+        console.log('Left audio room');
+      });
+
+      // Media events
+      meeting.self.on('mediaPermissionError', ({ message, kind }) => {
+        console.error(`Media permission error: ${kind} - ${message}`);
+        if (kind === 'audio') {
+          setError('Microphone permission denied. Please check your browser settings.');
+        }
+      });
+
+      meeting.self.on('audioUpdate', (audioEnabled) => {
+        console.log('Audio state updated:', audioEnabled ? 'enabled' : 'disabled');
+      });
+
+      // Participant events
+      meeting.participants.on('participantJoined', (participant) => {
+        console.log('Participant joined:', participant.name);
+      });
+
+      meeting.participants.on('participantLeft', (participant) => {
+        console.log('Participant left:', participant.name);
+      });
+
+      meeting.participants.on('activeSpeakerChanged', (participant) => {
+        console.log('Active speaker changed:', participant?.name || 'None');
+      });
+    };
+
+    setupEventListeners();
 
     return () => {
       // Cleanup
@@ -109,19 +169,23 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
               <div className="text-sm text-muted-foreground">No participants</div>
             ) : (
               <div className="space-y-1">
-                {Object.values(participants).map((participant: any) => (
-                  <div
-                    key={participant.id}
-                    className="flex items-center justify-between text-sm py-1"
-                  >
-                    <span>{participant.name}</span>
-                    {participant.audioEnabled ? (
-                      <Mic className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <MicOff className="h-3 w-3 text-gray-400" />
-                    )}
-                  </div>
-                ))}
+                {Object.values(participants).map((participant: any) => {
+                  // Ensure we have a valid key by using userId or a fallback
+                  const participantKey = participant.id || participant.userId || `participant-${Math.random()}`;
+                  return (
+                    <div
+                      key={participantKey}
+                      className="flex items-center justify-between text-sm py-1"
+                    >
+                      <span>{participant.name}</span>
+                      {participant.audioEnabled ? (
+                        <Mic className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <MicOff className="h-3 w-3 text-gray-400" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
