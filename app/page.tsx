@@ -48,7 +48,7 @@ export default async function Home() {
               <BlurFade delay={0.4}>
                 <div className="flex flex-wrap gap-5 justify-center lg:justify-start">
                   <Link href="/sign-in">
-                    <ShinyButton className="rounded-md px-8 py-3 text-base shadow-sm hover:shadow bg-primary hover:bg-primary/90 transition-all duration-200 group">
+                    <ShinyButton className="rounded-md px-8 py-3 text-base shadow-sm hover:shadow bg-primary hover:bg-primary/90 transition-all duration-200 group text-white">
                       <span className="flex items-center">
                         Start Collaborating <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </span>
