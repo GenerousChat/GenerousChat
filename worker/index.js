@@ -927,7 +927,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 4000, // Reduced to enforce shorter responses
+      maxTokens: 2000, // Reduced to enforce shorter responses
       temperature: 0.8, // Add some randomness but not too much
     });
 
@@ -1017,7 +1017,7 @@ ${messageHistory}
 ## Expert Agent Response:
 ${expertAgentText}
 
-MAKE SURE YOUR SOLUTION INVOLVES EVERYTHING, DON"T WORRY ABOUT HOW BIG THE FILE IS
+MAKE SURE YOUR SOLUTION INCLUDES EVERYTHING NECESSARY TO RENDER, DO NOT WORRY ABOUT HOW BIG THE FILE IS
 
 IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE, KEEP THE SCRIPT OR LINK TAG AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
 
