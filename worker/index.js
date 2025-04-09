@@ -14,6 +14,7 @@ const https = require("https");
 const { createClient } = require("@supabase/supabase-js");
 const { generateText } = require("ai");
 const { openai } = require("@ai-sdk/openai");
+const { google } = require("@ai-sdk/google");
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -621,7 +622,8 @@ async function generateAIResponse(roomId) {
 
     // Generate text using OpenAI with stricter constraints
     const { text } = await generateText({
-      model: openai.responses("gpt-4o"),
+      model: google("gemini-2.5-pro-exp-03-25"),
+      // model: openai.responses("gpt-4o"),
       prompt: prompt,
       apiKey: process.env.OPENAI_API_KEY,
       maxTokens: 75, // Reduced to enforce shorter responses
