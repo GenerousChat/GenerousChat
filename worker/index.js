@@ -537,6 +537,12 @@ async function generateAIResponse(roomId) {
         "design",
         "mockup",
         "prototype",
+        "render",
+        "play",
+        "animate",
+        "simulate",
+        "illustrate",
+        "depict",
       ];
 
       // Simple keyword-based analysis
