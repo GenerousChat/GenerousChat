@@ -567,7 +567,9 @@ async function generateAIResponse(roomId) {
         "rethink",
         "reconceptualize",
         "reengineer",
-        "restructure",];
+        "restructure",
+        "reconfigure",
+      ];
 
       // Simple keyword-based analysis
       const messageText = message.content.toLowerCase();
