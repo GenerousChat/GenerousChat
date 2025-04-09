@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { createClient } from "@/utils/supabase/client";
+import ParticipantList from "@/components/chat/participant-list";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "@supabase/supabase-js";
@@ -486,10 +487,11 @@ export default function ChatRoom({
     </html>
   `;
   
-  // Removed excessive logging that might impact performance
-
   return (
-    <div className="flex h-full">
+    <div className="flex h-full gap-4">
+      {/* Participants Panel (Left Side) */}
+      <ParticipantList participants={participants} />
+
       {/* Main Chat Column */}
       <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
         <TTSManager 
