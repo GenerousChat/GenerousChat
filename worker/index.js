@@ -671,10 +671,13 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - 3D objects/spaces → Use Three.js (only when truly beneficial)
 - Creative explanations → Use SVG/Canvas/p5.js for illustrations
 - Interactive tools → Use appropriate JS framework for the specific tool
-- Educational concepts → Create interactive diagrams that teach
+- Math concepts → use MathJax or KaTeX for math, or custom SVG
+- Schemas/diagrams → Use Mermaid.js or custom SVG
 - Games/simulations → Use Phaser or p5.js, keep output small and performant
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
 - Physics simulations → Use Matter.js or dynamics.js
+- Simple animations → Use CSS animations or GSAP
+- Scientific visualizations → Use Plotly.js or Vega-Lite
 - Simple text/concepts → Use elegant typography and minimal JS
 
 IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
