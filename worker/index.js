@@ -543,7 +543,31 @@ async function generateAIResponse(roomId) {
         "simulate",
         "illustrate",
         "depict",
-      ];
+        "add",
+        "update",
+        "change",
+        "modify",
+        "improve",
+        "enhance",
+        "optimize",
+        "refine",
+        "revise",
+        "customize",
+        "personalize",
+        "tailor",
+        "adjust",
+        "transform",
+        "evolve",
+        "rework",
+        "rebuild",
+        "recreate",
+        "remake",
+        "reproduce",
+        "reimagine",
+        "rethink",
+        "reconceptualize",
+        "reengineer",
+        "restructure",];
 
       // Simple keyword-based analysis
       const messageText = message.content.toLowerCase();
