@@ -622,10 +622,8 @@ async function generateAIResponse(roomId) {
 
     // Generate text using OpenAI with stricter constraints
     const { text } = await generateText({
-      model: google("gemini-2.5-pro-exp-03-25"),
-      // model: openai.responses("gpt-4o"),
+      model: openai.responses("gpt-4o"),
       prompt: prompt,
-      apiKey: process.env.OPENAI_API_KEY,
       maxTokens: 75, // Reduced to enforce shorter responses
       temperature: 0.7, // Add some randomness but not too much
     });
@@ -710,9 +708,9 @@ Create something that directly fulfills the most recent build/create request and
 
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
-        model: openai.responses("o3-mini"),
+        model: google("gemini-2.5-pro-exp-03-25"),
+        // model: openai.responses("o3-mini"),
         prompt: htmlPrompt,
-        apiKey: process.env.OPENAI_API_KEY,
         maxTokens: 4500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
       });
