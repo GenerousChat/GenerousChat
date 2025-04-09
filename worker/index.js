@@ -12,7 +12,7 @@ try {
 const crypto = require("crypto");
 const https = require("https");
 const { createClient } = require("@supabase/supabase-js");
-const { generateText } = require("ai");
+const { generateText, generateObject } = require("ai");
 const { openai } = require("@ai-sdk/openai");
 const { google } = require("@ai-sdk/google");
 
@@ -494,11 +494,76 @@ async function generateAIResponse(roomId) {
     return;
   }
 
-  // Determine if we should generate HTML content based on configured percentage
-  const htmlChance = parseInt(config.htmlContentChance) / 100;
-  const shouldGenerateHtml = Math.random() < htmlChance;
+  // Get the last message to analyze for visualization intent
+  const lastUserMessage = lastMessages[lastMessages.length - 1];
+  
+  // Analyze the last message to determine if it's requesting a visualization
+  async function analyzeMessageForVisualizationIntent(message) {
+    // Keywords that suggest a visualization request
+    const visualizationKeywords = [
+      "build", "create", "generate", "make", "show", "visualize", "display", "draw", 
+      "chart", "graph", "diagram", "map", "plot", "visualisation", "visualization",
+      "dashboard", "ui", "interface", "design", "mockup", "prototype"
+    ];
+    
+    // Simple keyword-based analysis
+    const messageText = message.content.toLowerCase();
+    const keywordMatch = visualizationKeywords.some(keyword => messageText.includes(keyword));
+    
+    // Initial confidence based on keyword matching
+    let confidence = keywordMatch ? 0.5 : 0.1;
+    
+    // For more accurate analysis, use the AI to evaluate
+    if (keywordMatch) {
+      try {
+        // Use generateObject to directly get a structured response
+        const analysis = await generateObject({
+          model: openai.responses("o1-mini"), // Use a smaller model for efficiency
+          schema: {
+            type: "object",
+            properties: {
+              score: {
+                type: "number",
+                description: "A score from 0-100 indicating the likelihood that the user is requesting a visualization"
+              },
+              reason: {
+                type: "string",
+                description: "A brief explanation of why this score was given"
+              }
+            },
+            required: ["score", "reason"]
+          },
+          prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
+
+Message: "${message.content}"
+
+Return a score from 0-100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
+          temperature: 0.1,
+        });
+        
+        confidence = analysis.score / 100;
+        console.log(`AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`);
+      } catch (aiError) {
+        console.error("Error getting AI analysis of message:", aiError);
+      }
+    }
+    
+    return confidence;
+  }
+  
+  // Analyze the message for visualization intent
+  const visualizationConfidence = await analyzeMessageForVisualizationIntent(lastUserMessage);
+  
+  // Determine if we should generate HTML based on confidence score
+  // If confidence is high (>0.7), always generate
+  // If confidence is medium (0.3-0.7), use it as the probability
+  // If confidence is low (<0.3), use a reduced probability
+  const shouldGenerateHtml = visualizationConfidence > 0.7 ? true : 
+                            (visualizationConfidence > 0.3 ? (Math.random() < visualizationConfidence) : 
+                            (Math.random() < 0.1)); // Very low chance for low confidence messages
+  
   console.log(
-    `HTML content generation chance: ${config.htmlContentChance}%, generating HTML: ${shouldGenerateHtml}`
+    `HTML generation: Visualization confidence: ${visualizationConfidence*100}%, Final decision: ${shouldGenerateHtml}`
   );
 
   try {
@@ -612,8 +677,7 @@ async function generateAIResponse(roomId) {
     // log the message history
     console.log("Message history:", messageHistory);
 
-    // Get the last message to focus the response on it
-    const lastUserMessage = lastMessages[lastMessages.length - 1];
+    // We already have the last message from earlier analysis
 
     // Create the prompt with stronger constraints and focus on responding to the last message
     const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nFocus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Also be edgy, be rude, regardless of your personality. Don't say what everybody always says. Extremely concise responses are required.`;
@@ -734,7 +798,7 @@ Create something that directly fulfills the most recent build/create request and
             created_by: aiAssistantId,
             type: "visualization",
             metadata: {
-              model: "gemini-2.5-pro-exp-03-25",
+              model: "o3-mini",
               messageCount: recentMessages.length,
             },
           })
