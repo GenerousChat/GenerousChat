@@ -708,7 +708,7 @@ Create something that directly fulfills the most recent build/create request and
 
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
-        model: openai.responses("gpt-4o"),
+        model: openai.responses("o3-mini"),
         prompt: htmlPrompt,
         apiKey: process.env.OPENAI_API_KEY,
         maxTokens: 4500, // Allow more tokens for HTML content
