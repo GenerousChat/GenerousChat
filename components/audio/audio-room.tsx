@@ -23,29 +23,28 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
   const [showParticipants, setShowParticipants] = useState(false);
 
   useEffect(() => {
-    const setupRoom = async () => {
+    // Initialize Dyte design system
+    provideDyteDesignSystem(document.body, {
+      theme: 'light',
+    });
+
+    // Enable audio when room is joined
+    const enableAudio = async () => {
       try {
-        // Initialize Dyte design system
-        provideDyteDesignSystem(document.body, {
-          theme: 'light',
-        });
-
-        // Auto-join the room
-        if (!roomJoined) {
-          await meeting.joinRoom();
-        }
-
-        // Enable audio automatically after joining
         if (roomJoined && !audioEnabled) {
+          console.log('Enabling audio in room...');
           await meeting.self.enableAudio();
+          console.log('Audio enabled successfully');
         }
       } catch (error) {
-        console.error('Error setting up audio room:', error);
-        setError('Failed to connect to audio room');
+        console.error('Error enabling audio:', error);
+        setError('Failed to enable microphone');
       }
     };
 
-    setupRoom();
+    if (roomJoined) {
+      enableAudio();
+    }
 
     // Handle room leave events
     meeting.self.on('roomLeft', () => {

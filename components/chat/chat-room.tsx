@@ -157,21 +157,34 @@ export default function ChatRoom({
   useEffect(() => {
     const initDyte = async () => {
       try {
+        console.log('Initializing Dyte meeting for room:', roomId);
+        
         const authToken = await createOrJoinMeeting(
           roomId,
           currentUser.id,
           currentUser.email || 'Anonymous'
         );
         
+        console.log('Got Dyte auth token, initializing client...');
+        
         await initMeeting({
           authToken,
           defaults: {
-            audio: false,
+            audio: true,
             video: false,
           },
         });
+        
+        console.log('Dyte client initialized successfully');
       } catch (error) {
         console.error('Failed to initialize Dyte:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          });
+        }
       }
     };
 
