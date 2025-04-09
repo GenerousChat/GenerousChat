@@ -95,32 +95,29 @@ export abstract class AbstractTTSService {
       
       const { data, error } = await supabase
         .from('agents')
-        .select('id, voice')
+        .select('id, voice, gender')
         .eq('id', agentId)
         .single();
       
-      if (error || !data || !data.voice) {
+      if (error || !data) {
         console.log(`No voice preference found for agent ${agentId}`);
         return null;
       }
       
-      // Create a voice object from the agent's preference
-      // Assuming the voice column contains an OpenAI voice ID like 'nova', 'alloy', etc.
-      const voiceId = data.voice;
+      // Create a voice object based on the agent's data
+      // If there's a specific voice ID in the database, use that
+      const voiceId = data.voice || '';
       
-      // Try to find a matching voice in cached voices
-      const voices = await this.getCachedVoices();
-      const matchingVoice = voices.find(v => v.id === voiceId);
+      // Make sure we have a valid gender value
+      const gender = data.gender === 'male' || data.gender === 'female' || data.gender === 'neutral' 
+        ? data.gender 
+        : 'neutral';
       
-      if (matchingVoice) {
-        return matchingVoice;
-      }
-      
-      // Create a basic voice object if not found in available voices
+      // Return a voice object with the agent's preferences
       return {
         id: voiceId,
-        name: voiceId,
-        gender: 'neutral' // Default gender
+        name: voiceId || 'Agent Voice',
+        gender: gender
       };
     } catch (error) {
       console.error('Error fetching agent voice:', error);

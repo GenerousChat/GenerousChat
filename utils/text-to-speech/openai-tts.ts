@@ -14,21 +14,14 @@ export class OpenAITTSService extends AbstractTTSService {
   protected isPlaying: boolean = false;
   private fallbackSynthesis: SpeechSynthesis | null = null;
   private useFallback: boolean = false;
-  private availableVoices: TTSVoice[] = [
-    { id: 'alloy', name: 'Alloy', gender: 'neutral' },
-    { id: 'echo', name: 'Echo', gender: 'male' },
-    { id: 'fable', name: 'Fable', gender: 'female' },
-    { id: 'onyx', name: 'Onyx', gender: 'male' },
-    { id: 'nova', name: 'Nova', gender: 'female' },
-    { id: 'shimmer', name: 'Shimmer', gender: 'female' },
-    { id: 'ash', name: 'Ash', gender: 'neutral' },
-    { id: 'sage', name: 'Sage', gender: 'neutral' },
-    { id: 'coral', name: 'Coral', gender: 'female' }
-  ];
   private currentAudio: HTMLAudioElement | null = null;
+  private agentVoices: Record<string, string> = {};
 
   constructor(private apiOptions: OpenAITTSOptions = {}) {
     super(apiOptions);
+    
+    // Load agent voices when initializing
+    this.loadAgentVoices();
     
     // Initialize audio context when in browser environment
     if (typeof window !== 'undefined') {
@@ -52,8 +45,58 @@ export class OpenAITTSService extends AbstractTTSService {
     }
   }
 
+  private async loadAgentVoices() {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+      
+      const { data, error } = await supabase
+        .from('agents')
+        .select('id, voice');
+      
+      if (!error && data) {
+        // Cache all agent voices
+        this.agentVoices = data.reduce((acc, agent) => {
+          if (agent.voice) {
+            acc[agent.id] = agent.voice;
+          }
+          return acc;
+        }, {} as Record<string, string>);
+      }
+    } catch (error) {
+      console.error('Error loading agent voices:', error);
+    }
+  }
+
   async getAvailableVoices(): Promise<TTSVoice[]> {
-    return this.availableVoices;
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+      
+      const { data, error } = await supabase
+        .from('agents')
+        .select('id, voice, gender')
+        .not('voice', 'is', null);
+      
+      if (!error && data) {
+        return data.map(agent => ({
+          id: agent.voice,
+          name: agent.voice,
+          gender: agent.gender || 'neutral'
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading available voices:', error);
+    }
+    
+    // Return empty array if query fails
+    return [];
   }
 
   async speakText(text: string, voice: TTSVoice, options?: TTSOptions): Promise<void> {
@@ -63,32 +106,11 @@ export class OpenAITTSService extends AbstractTTSService {
     }
     
     try {
-      // Ensure we're using an OpenAI voice
-      let openAIVoice = 'nova';
+      let openAIVoice = voice.id || 'nova';
       
-      // If the voice is one of our predefined OpenAI voices, use it
-      if (this.availableVoices.some(v => v.id === voice.id)) {
-        openAIVoice = voice.id;
-      } else if (this.apiOptions.preferredVoices && this.apiOptions.preferredVoices.length > 0) {
-        // Try to use one of the preferred voices
-        for (const preferredVoice of this.apiOptions.preferredVoices) {
-          if (this.availableVoices.some(v => v.id === preferredVoice)) {
-            openAIVoice = preferredVoice;
-            break;
-          }
-        }
-      } else {
-        // Otherwise, assign a voice based on gender if available
-        const genderMatches = this.availableVoices.filter(v => v.gender === voice.gender);
-        if (genderMatches.length > 0) {
-          const randomIndex = Math.floor(Math.random() * genderMatches.length);
-          openAIVoice = genderMatches[randomIndex].id;
-        } else {
-          // Fallback to a random voice
-          const randomIndex = Math.floor(Math.random() * this.availableVoices.length);
-          openAIVoice = this.availableVoices[randomIndex].id;
-        }
-        console.log(`Voice ${voice.id} not supported by OpenAI, using ${openAIVoice} instead`);
+      // If this is an agent, use their cached voice
+      if (this.agentVoices[voice.id]) {
+        openAIVoice = this.agentVoices[voice.id];
       }
       
       // Call our API endpoint
