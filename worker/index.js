@@ -654,14 +654,15 @@ async function generateAIResponse(roomId) {
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
 
-## PRIORITY: Focus on the most recent 5-10 messages
-Analyze this conversation with special attention to recent exchanges and create a visualization that directly responds to what users are currently discussing.
+## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
+Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, or visualized. Ignore casual conversation or messages that don't request creation of something. Look for phrases like "build", "create", "generate", "make", "show me", "visualize", etc.
 
 ## Context Analysis Guidelines:
-- Identify EXPLICIT visualization requests (e.g., "show me a graph of...", "visualize this as...")
-- Detect IMPLICIT visualization opportunities from conversation themes
-- Determine what would be most helpful to the current discussion flow
-- Consider if users are discussing technical, creative, business, or personal topics
+- Find the most recent message containing an EXPLICIT request to build/create something
+- Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me..."
+- Skip over casual messages, questions, or discussion that don't request creation
+- Once found, implement exactly what that message requested
+- Use conversation history only as supporting context for implementing the request
 
 ## Technology Selection - Match the right tool to the conversation:
 
@@ -681,8 +682,8 @@ ${messageHistory}
 
 ## Your Creation Requirements:
 1. Use only technologies that truly fit the conversation needs
-2. Create a visualization that directly enhances the ongoing discussion
-3. Make it immediately useful and relevant, especially to recent messages
+2. Create a visualization that directly fulfills the most recent build/create request
+3. Make it immediately useful by focusing on exactly what was requested in the build/create message
 4. Balance aesthetics with functionality - beautiful but purposeful
 5. Ensure responsive design that works well in the sidebar panel
 6. Add thoughtful interactivity that improves understanding
@@ -701,7 +702,7 @@ ${messageHistory}
 
 ## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
 
-Create something that feels custom-built for this specific conversation and makes users say "This is exactly what we needed to see!"`;
+Create something that directly fulfills the most recent build/create request and makes users say "This is exactly what I asked for!"`;
 
       console.log("Sending HTML generation prompt to OpenAI");
 
