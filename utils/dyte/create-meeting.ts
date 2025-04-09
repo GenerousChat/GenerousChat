@@ -176,20 +176,20 @@ export async function createOrJoinMeeting(roomId: string, userId: string, userNa
       throw new Error(`Failed to add participant: ${participantResponse.status} ${participantResponse.statusText}`);
     }
 
-    const participantData = (await participantResponse.json()) as DyteParticipantResponse;
+    const participantResponseData = (await participantResponse.json()) as DyteParticipantResponse;
     console.log('Dyte participant response data:', {
-      success: participantData.success,
-      hasData: !!participantData.data,
-      hasToken: participantData.data?.token ? 'yes' : 'no',
-      tokenLength: participantData.data?.token?.length
+      success: participantResponseData.success,
+      hasData: !!participantResponseData.data,
+      hasToken: participantResponseData.data?.token ? 'yes' : 'no',
+      tokenLength: participantResponseData.data?.token?.length
     });
     
-    if (!participantData.success || !participantData.data || !participantData.data.token) {
-      console.error('Dyte API returned invalid response:', participantData);
+    if (!participantResponseData.success || !participantResponseData.data || !participantResponseData.data.token) {
+      console.error('Dyte API returned invalid response:', participantResponseData);
       throw new Error('Failed to add participant: Missing token in response');
     }
 
-    return participantData.data.token;
+    return participantResponseData.data.token;
   } catch (error) {
     console.error('Error in createOrJoinMeeting:', error);
     throw error;
