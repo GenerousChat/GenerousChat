@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { BlurFade } from "@/components/ui/magicui/blur-fade";
+import { ShinyButton } from "@/components/ui/magicui/shiny-button";
+import { BackgroundGradient } from "@/components/ui/background-gradient";
+import { User, RefreshCw, Save, Shield, Loader2, ArrowLeft } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -206,62 +210,112 @@ export default function ProfilePage() {
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <BlurFade delay={0.2}>
+          <p className="text-muted-foreground">Loading your profile...</p>
+        </BlurFade>
       </div>
     );
   }
   
   return (
     <div className="container max-w-2xl py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Profile</CardTitle>
-          <CardDescription>
-            Update your profile information that will be visible to others in chat rooms.
-          </CardDescription>
-          {error && (
-            <div className="mt-2 text-sm font-medium text-destructive">{error}</div>
-          )}
-          {success && (
-            <div className="mt-2 text-sm font-medium text-green-600">{success}</div>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Display Name</Label>
-            <div className="flex gap-2">
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your display name"
-              />
+      <BlurFade delay={0.1} className="mb-8">
+        <h1 className="text-3xl font-bold">Your Profile</h1>
+        <p className="text-muted-foreground mt-2">Manage your account settings and preferences</p>
+      </BlurFade>
+      
+      <BlurFade delay={0.2}>
+        <BackgroundGradient 
+          className="p-[1px] rounded-xl overflow-hidden shadow-md dark:shadow-primary/5"
+          gradientClassName="bg-gradient-to-br from-primary/40 via-primary/20 to-primary/5 dark:from-primary/30 dark:via-primary/20 dark:to-primary/10"
+        >
+          <Card className="border-0 bg-background/95 dark:bg-background/90 backdrop-blur-sm rounded-xl">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10 text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+                <CardTitle>Profile Details</CardTitle>
+              </div>
+              <CardDescription className="mt-2">
+                Update your profile information that will be visible to others in chat rooms.
+              </CardDescription>
+              {error && (
+                <BlurFade className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                  {error}
+                </BlurFade>
+              )}
+              {success && (
+                <BlurFade className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span>{success}</span>
+                </BlurFade>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">Display Name</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your display name"
+                    className="h-11 rounded-lg bg-background/80 border-muted-foreground/20 focus:border-primary/60"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={handleGenerateRandomName}
+                    disabled={loading}
+                    className="rounded-lg flex gap-2 items-center border-muted-foreground/20 hover:border-primary/30 hover:bg-primary/5"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span>Random</span>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  This name will be visible to other users in chat rooms
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-3">
+              <ShinyButton
+                onClick={handleUpdateProfile}
+                disabled={updating || !name.trim() || (profile?.name === name)}
+                className={`w-full px-4 py-2.5 rounded-lg flex items-center gap-2 justify-center ${
+                  (updating || !name.trim() || (profile?.name === name)) 
+                    ? 'opacity-70 cursor-not-allowed bg-muted hover:bg-muted' 
+                    : 'bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary'
+                }`}
+              >
+                {updating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-muted-foreground">Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className={`h-4 w-4 ${(!name.trim() || (profile?.name === name)) ? 'text-muted-foreground' : 'text-white dark:text-primary-foreground'}`} />
+                    <span className={`${(!name.trim() || (profile?.name === name)) ? 'text-muted-foreground' : 'text-white dark:text-primary-foreground'}`}>
+                      Save Changes
+                    </span>
+                  </>
+                )}
+              </ShinyButton>
               <Button 
                 variant="outline" 
-                onClick={handleGenerateRandomName}
-                disabled={loading}
+                onClick={() => router.push("/")}
+                className="w-full rounded-lg flex gap-2 items-center justify-center border-muted-foreground/20 hover:border-primary/30 hover:bg-primary/5"
               >
-                Random
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
               </Button>
-            </div>
-          </div>
-          
-          {/* Could add avatar upload functionality here in the future */}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/")}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleUpdateProfile} 
-            disabled={updating || !name.trim() || name === profile?.name}
-            type="button"
-          >
-            {updating ? "Saving..." : "Save Changes"}
-          </Button>
-        </CardFooter>
-      </Card>
+            </CardFooter>
+          </Card>
+        </BackgroundGradient>
+      </BlurFade>
     </div>
   );
 }

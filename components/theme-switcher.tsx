@@ -22,7 +22,7 @@ export const ThemeSwitcher = () => {
     <Button
       variant="ghost"
       size="icon"
-      className="ml-auto w-9 h-9 rounded-full"
+      className="hidden md:flex md:items-center md:justify-center w-9 h-9 rounded-full"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
     >
       {theme === "light" ? (

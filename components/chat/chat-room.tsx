@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,40 +47,7 @@ export default function ChatRoom({
   const [isLoading, setIsLoading] = useState(false);
   const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
-  const [latestHtmlContent, setLatestHtmlContent] = useState<string>('');
-  const [generations, setGenerations] = useState<any[]>([]);
-  const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(null);
-
-  const fetchGenerations = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('chat_room_generations')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('type', 'visualization')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        throw error;
-      }
-
-      setGenerations(data || []);
-      
-      // If there are generations and none is selected, select the latest one
-      if (data?.length > 0 && !selectedGenerationId) {
-        setSelectedGenerationId(data[0].id);
-        setLatestHtmlContent(data[0].html);
-      }
-    } catch (error) {
-      console.error('Error fetching generations:', error);
-    }
-  }, [roomId, selectedGenerationId]);
-
-  useEffect(() => {
-    fetchGenerations();
-  }, [fetchGenerations]);
-
+  const [latestHtmlContent, setLatestHtmlContent] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -151,38 +118,21 @@ export default function ChatRoom({
       }
     });
 
-    // Listen for new generation notifications
-    channel.bind('new-generation', async (data: any) => {
+    // Listen for HTML visualizations
+    channel.bind('html-visualization', (data: any) => {
       try {
-        console.log('Received new generation notification:', data);
-        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+        console.log('Received HTML visualization event:', data);
+        const visualizationData = typeof data === 'string' ? JSON.parse(data) : data;
         
-        if (notificationData.type !== 'visualization') {
-          return; // Only handle visualization type generations
-        }
-        
-        // Fetch the generation from the database
-        const { data: generation, error } = await supabase
-          .from('chat_room_generations')
-          .select('*')
-          .eq('id', notificationData.generation_id)
-          .single();
-
-        if (error) {
-          throw new Error(`Error fetching generation: ${error.message}`);
-        }
-        
-        if (generation?.html) {
-          console.log('Setting latest HTML content from database, length:', generation.html.length);
-          // Add the new generation to the list and select it
-          setGenerations(prev => [generation, ...prev].slice(0, 20));
-          setSelectedGenerationId(generation.id);
-          setLatestHtmlContent(generation.html);
+        // Update the visualization panel with the HTML content
+        if (visualizationData.html) {
+          console.log('Setting latest HTML content, length:', visualizationData.html.length);
+          setLatestHtmlContent(visualizationData.html);
         } else {
-          console.warn('Generation found but no html field:', generation);
+          console.warn('HTML visualization received but no html field found:', visualizationData);
         }
       } catch (error) {
-        console.error('Error handling new generation notification:', error);
+        console.error("Error processing HTML visualization:", error);
       }
     });
     
@@ -407,109 +357,89 @@ export default function ChatRoom({
           currentUserId={currentUser.id}
           newMessageReceived={newMessageReceived}
         />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No messages yet. Be the first to send a message!
-                </div>
-              ) : (
-                messages.map((message, index) => (
+        
+        <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          {messages.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No messages yet. Be the first to send a message!
+            </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  isCurrentUser(message.user_id) ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    isCurrentUser(message.user_id)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  {!isCurrentUser(message.user_id) && (
+                    <div className="font-medium text-xs mb-1">
+                      {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
+                    </div>
+                  )}
+                  <div className="break-words">{message.content}</div>
                   <div
-                    key={index}
-                    className={`flex ${
-                      isCurrentUser(message.user_id) ? "justify-end" : "justify-start"
+                    className={`text-xs mt-1 ${
+                      isCurrentUser(message.user_id)
+                        ? "text-primary-foreground/70"
+                        : "text-muted-foreground"
                     }`}
                   >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        isCurrentUser(message.user_id)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      {!isCurrentUser(message.user_id) && (
-                        <div className="font-medium text-xs mb-1">
-                          {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
-                        </div>
-                      )}
-                      <div className="break-words">{message.content}</div>
-                      <div
-                        className={`text-xs mt-1 ${
-                          isCurrentUser(message.user_id)
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {formatTime(message.created_at)}
-                      </div>
-                    </div>
+                    {formatTime(message.created_at)}
                   </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          
-          {generations.length > 0 && (
-            <div className="border-t border-gray-200 p-2 bg-gray-50">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {generations.map((gen) => (
-                  <button
-                    key={gen.id}
-                    onClick={() => {
-                      setSelectedGenerationId(gen.id);
-                      setLatestHtmlContent(gen.html);
-                    }}
-                    className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${selectedGenerationId === gen.id ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'}`}
-                  >
-                    {formatTime(gen.created_at)}
-                  </button>
-                ))}
+                </div>
               </div>
-            </div>
+            ))
           )}
+          <div ref={messagesEndRef} />
         </div>
+      </ScrollArea>
 
-        <form
-          onSubmit={handleSendMessage}
-          className="border-t p-4 flex gap-2 items-end"
-        >
-          <Textarea
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="min-h-[60px] resize-none"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-          />
-          <Button type="submit" disabled={isLoading || !newMessage.trim()}>
-            {isLoading ? "Sending..." : "Send"}
-          </Button>
-        </form>
+      <form
+        onSubmit={handleSendMessage}
+        className="border-t p-4 flex gap-2 items-end"
+      >
+        <Textarea
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+          className="min-h-[60px] resize-none"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage(e);
+            }
+          }}
+        />
+        <Button type="submit" disabled={isLoading || !newMessage.trim()}>
+          {isLoading ? "Sending..." : "Send"}
+        </Button>
+      </form>
+    </div>
+    
+    {/* Visualization Panel (Right Side) */}
+    <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
+      <div className="p-4 border-b">
+        <h3 className="text-sm font-medium">Conversation Visualization</h3>
       </div>
-      
-      {/* Visualization Panel (Right Side) */}
-      <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
-        <div className="p-4 border-b">
-          <h3 className="text-sm font-medium">Conversation Visualization</h3>
-        </div>
-        <div className="flex-1 p-4">
-          <div className="bg-white rounded-md overflow-hidden shadow-sm h-full">
-            <iframe
-              srcDoc={latestHtmlContent || defaultHtmlContent}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts"
-              title="Conversation Visualization"
-            />
-          </div>
+      <div className="flex-1 p-4">
+        <div className="bg-white rounded-md overflow-hidden shadow-sm h-full">
+          <iframe
+            srcDoc={latestHtmlContent || defaultHtmlContent}
+            className="w-full h-full border-0"
+            sandbox="allow-scripts"
+            title="Conversation Visualization"
+          />
         </div>
       </div>
     </div>
+  </div>
   );
 }

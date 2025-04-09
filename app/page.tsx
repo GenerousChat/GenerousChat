@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
+import { ShinyButton } from "@/components/ui/magicui/shiny-button";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Code, Users, Zap, Layers, GitBranch } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 
 export default async function Home() {
@@ -47,15 +47,13 @@ export default async function Home() {
               
               <BlurFade delay={0.4}>
                 <div className="flex flex-wrap gap-5 justify-center lg:justify-start">
-                  <Button 
-                    size="lg" 
-                    className="rounded-md px-8 text-base shadow-sm hover:shadow bg-primary hover:bg-primary/90 transition-all duration-200 group"
-                    asChild
-                  >
-                    <Link href="/sign-in">
-                      Start Collaborating <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
+                  <Link href="/sign-in">
+                    <ShinyButton className="rounded-md px-8 py-3 text-base shadow-sm hover:shadow bg-primary hover:bg-primary/90 transition-all duration-200 group">
+                      <span className="flex items-center">
+                        Start Collaborating <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </ShinyButton>
+                  </Link>
                 </div>
               </BlurFade>
             </div>

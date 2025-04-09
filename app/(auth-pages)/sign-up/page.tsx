@@ -9,6 +9,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, LogIn } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
+import { BlurFade } from "@/components/ui/magicui/blur-fade";
+import { ShinyButton } from "@/components/ui/magicui/shiny-button";
+import { BackgroundGradient } from "@/components/ui/background-gradient";
 
 function SignupForm() {
   const [mounted, setMounted] = useState(false);
@@ -50,22 +53,22 @@ function SignupForm() {
   }
 
   return (
-    <div>
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-2 text-center relative">
-          {/* Subtle glow behind the title */}
-          <div className="absolute -top-6 left-0 right-0 h-24 bg-primary/5 rounded-full blur-3xl"></div>
-          
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-            Create an <span className="text-primary">account</span>
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Enter your email to get started
-          </p>
-        </div>
+    <div className="flex flex-col space-y-6 w-full">
+      <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
+        {/* Subtle glow behind the title */}
+        <div className="absolute -top-6 left-0 right-0 h-24 bg-primary/5 rounded-full blur-3xl"></div>
+        
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
+          Create an <span className="text-primary">account</span>
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your email to get started
+        </p>
+      </BlurFade>
 
-        <form className="grid gap-3">
-          <div className="grid gap-2">
+      <BackgroundGradient className="p-[1px] rounded-xl overflow-hidden">
+        <form className="grid gap-4 p-4 sm:p-5 rounded-xl bg-background/95 backdrop-blur-sm">
+          <BlurFade delay={0.2} className="grid gap-2">
             <Label className="sr-only" htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -76,10 +79,11 @@ function SignupForm() {
               autoComplete="email"
               autoCorrect="off"
               required
-              className="rounded-xl backdrop-blur-sm bg-background/80 border-2 border-muted-foreground/20 dark:border-muted-foreground/30 focus:border-primary/70 dark:focus:border-primary/60 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/30 h-12 px-4 shadow-sm transition-all duration-200"
+              className="rounded-xl backdrop-blur-sm bg-background/80 border-2 border-muted-foreground/20 dark:border-muted-foreground/30 focus:border-primary/70 dark:focus:border-primary/60 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/30 h-11 px-4 shadow-sm transition-all duration-200"
             />
-          </div>
-          <div className="grid gap-2">
+          </BlurFade>
+          
+          <BlurFade delay={0.3} className="grid gap-2">
             <Label className="sr-only" htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -89,42 +93,48 @@ function SignupForm() {
               autoComplete="new-password"
               minLength={6}
               required
-              className="rounded-xl backdrop-blur-sm bg-background/80 border-2 border-muted-foreground/20 dark:border-muted-foreground/30 focus:border-primary/70 dark:focus:border-primary/60 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/30 h-12 px-4 shadow-sm transition-all duration-200"
+              className="rounded-xl backdrop-blur-sm bg-background/80 border-2 border-muted-foreground/20 dark:border-muted-foreground/30 focus:border-primary/70 dark:focus:border-primary/60 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/30 h-11 px-4 shadow-sm transition-all duration-200"
             />
             <p className="text-xs text-muted-foreground">
               Must be at least 6 characters
             </p>
-          </div>
-          <SubmitButton
-            className="w-full"
-            formAction={signUpAction}
-            pendingText="Creating account..."
-          >
-            Create account
-          </SubmitButton>
+          </BlurFade>
           
-          {/* Styled "Already have an account?" section matching the sign-in page */}
-          <div className="mt-4 p-3 rounded-lg border border-primary/10 bg-primary/5 backdrop-blur-sm shadow-sm flex items-center justify-between group hover:bg-primary/10 transition-all duration-300">
+          <BlurFade delay={0.4}>
+            <SubmitButton
+              className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white dark:text-primary-foreground"
+              formAction={signUpAction}
+              pendingText="Creating account..."
+            >
+              Create account <ArrowRight className="ml-2 h-4 w-4" />
+            </SubmitButton>
+          </BlurFade>
+        </form>
+      </BackgroundGradient>
+      
+      {/* "Already have an account?" section with ShinyButton */}
+      <BlurFade delay={0.5}>
+        <Link href="/sign-in" className="block">
+          <ShinyButton className="w-full p-4 rounded-lg border border-primary/10 bg-background backdrop-blur-sm shadow-sm flex items-center justify-between group transition-all duration-300">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center shadow-sm">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shadow-sm">
                 <LogIn size={16} className="text-primary" />
               </div>
               <p className="text-sm">
                 <span className="text-muted-foreground">Already have an account?</span>
+                <span className="ml-2 font-medium text-primary">Sign in</span>
               </p>
             </div>
-            <Link 
-              href="/sign-in" 
-              className="shrink-0 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-            >
-              Sign in
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </Link>
-          </div>
-        </form>
+            <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform duration-300" />
+          </ShinyButton>
+        </Link>
+      </BlurFade>
 
-        {message && <FormMessage message={message} />}
-      </div>
+      {message && (
+        <BlurFade delay={0.6}>
+          <FormMessage message={message} />
+        </BlurFade>
+      )}
     </div>
   );
 }
@@ -132,16 +142,14 @@ function SignupForm() {
 // Fallback component for Suspense
 function FallbackLoading() {
   return (
-    <div>
-      <div className="flex flex-col space-y-4">
-        <div className="flex flex-col space-y-2 text-center relative">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-            Create an <span className="text-primary">account</span>
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Loading...
-          </p>
-        </div>
+    <div className="flex flex-col space-y-5 w-full">
+      <div className="flex flex-col space-y-2 text-center relative">
+        <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
+          Create an <span className="text-primary">account</span>
+        </h1>
+        <p className="text-sm md:text-base text-muted-foreground">
+          Loading...
+        </p>
       </div>
     </div>
   );
