@@ -9,6 +9,9 @@ import { User } from "@supabase/supabase-js";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Pusher from 'pusher-js';
 import { TTSManager } from "@/components/chat/tts-manager";
+import { DyteProvider } from '@dytesdk/react-web-core';
+import AudioRoom from '@/components/audio/audio-room';
+import { createOrJoinMeeting } from '@/utils/dyte/create-meeting';
 
 type StatusType = 'join' | 'leave';
 
@@ -147,6 +150,25 @@ export default function ChatRoom({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   // Removed newMessage state as it's now handled by the OptimizedInput component
   const [isLoading, setIsLoading] = useState(false);
+  const [dyteAuthToken, setDyteAuthToken] = useState<string>();
+
+  // Initialize Dyte meeting
+  useEffect(() => {
+    const initDyte = async () => {
+      try {
+        const authToken = await createOrJoinMeeting(
+          roomId,
+          currentUser.id,
+          currentUser.email || 'Anonymous'
+        );
+        setDyteAuthToken(authToken);
+      } catch (error) {
+        console.error('Failed to initialize Dyte:', error);
+      }
+    };
+
+    initDyte();
+  }, [roomId, currentUser]);
   const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
   const [latestHtmlContent, setLatestHtmlContent] = useState<string | null>(null);
@@ -521,6 +543,18 @@ export default function ChatRoom({
   
   return (
     <div className="flex h-full gap-4">
+      {dyteAuthToken && (
+        <DyteProvider
+          clientId={process.env.NEXT_PUBLIC_DYTE_ORG_ID!}
+          meeting={dyteAuthToken}
+        >
+          <AudioRoom
+            roomId={roomId}
+            userId={currentUser.id}
+            userName={currentUser.email || 'Anonymous'}
+          />
+        </DyteProvider>
+      )}
       {/* Participants Panel (Left Side) */}
       <ParticipantList participants={participants} />
 

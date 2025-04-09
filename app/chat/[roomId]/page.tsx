@@ -80,7 +80,9 @@ export default async function ChatRoomPage(props: any) {
     content: msg.content,
     created_at: msg.created_at,
     user_id: msg.user_id,
-    users: { email: userEmails[msg.user_id] || 'Unknown' }
+    users: { email: userEmails[msg.user_id] || 'Unknown' },
+    type: 'chat' as const,
+    email: userEmails[msg.user_id] || 'Unknown'
   })) : [];
 
   // Fetch participants
