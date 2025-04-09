@@ -786,19 +786,19 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       const htmlPrompt = `# Conversation-Driven UI Generation
 
 ## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
-Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, or visualized. Ignore casual conversation or messages that don't request creation of something. Look for phrases like "build", "create", "generate", "make", "show me", "visualize", etc.
+Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.
 
 ## Context Analysis Guidelines:
 - Find the most recent message containing an EXPLICIT request to build/create something
-- Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me..."
-- Skip over casual messages, questions, or discussion that don't request creation
+- Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me...", "update...",
+- Skip over casual messages, questions, or discussions that don't request creation or updates
 - Once found, implement exactly what that message requested
 - Use conversation history only as supporting context for implementing the request
 
-## Technology Selection - Match the right tool to the request and load required libraries:
+## Technology Selection - Match the right tool to the request and check for dependencies:
 
 - Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
-- Timelines/processes → Use TimelineJS or custom animations
+- Timelines/processes → Use TimelineJS, fill in as much detail as possible and choose the best format
 - 3D objects/spaces → Use Three.js (only when truly beneficial)
 - Creative explanations → Use SVG/Canvas/p5.js for illustrations
 - Interactive tools → Use appropriate JS framework for the specific tool
@@ -811,14 +811,14 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Youtube videos → Use lite YouTube embed
 - Simple text/concepts → Use elegant typography 
 
-IMPORTANT: Use complex libraries when simpler approaches are less visually appealing. Choose technology based on conversation needs, and always prioritize user experience and aesthetics.
+IMPORTANT: Use complex libraries only when simpler approaches are less visually appealing. Choose technology based on conversation needs, and always prioritize user experience and aesthetics.
 
 ## Conversation:
 ${messageHistory}
 
 ## Your Creation Requirements:
 1. Ensure responsive design that works well in the sidebar panel
-2. Create a visualization that directly fulfills the most recent build/create request
+2. Create a visualization that directly fulfills the most recent build/create/update request
 3. DO NOT INCLUDE markdown code comment blocks in the output as it will be rendered directly
 4. Optimize performance (lazy load libraries, efficient code) 
 5. Balance aesthetics with functionality - beautiful but purposeful
@@ -842,7 +842,7 @@ IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE, KEE
 
 ## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
 
-Create something that directly fulfills the most recent build/create request and makes users say "This is exactly what I asked for!"`;
+Create something that directly fulfills the most recent build/create/update request and makes users say "This is exactly what I asked for!"`;
 
       console.log("Sending HTML generation prompt to OpenAI");
 
