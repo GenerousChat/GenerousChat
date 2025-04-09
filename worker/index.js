@@ -678,6 +678,7 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Physics simulations → Use Matter.js or dynamics.js
 - Simple animations → Use CSS animations or GSAP
 - Scientific visualizations → Use Plotly.js or Vega-Lite
+- Youtube videos → Use lite YouTube embed
 - Simple text/concepts → Use elegant typography and minimal JS
 
 IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
