@@ -494,78 +494,6 @@ async function generateAIResponse(roomId) {
     return;
   }
 
-  // Get the last message to analyze for visualization intent
-  const lastUserMessage = lastMessages[lastMessages.length - 1];
-  
-  // Analyze the last message to determine if it's requesting a visualization
-  async function analyzeMessageForVisualizationIntent(message) {
-    // Keywords that suggest a visualization request
-    const visualizationKeywords = [
-      "build", "create", "generate", "make", "show", "visualize", "display", "draw", 
-      "chart", "graph", "diagram", "map", "plot", "visualisation", "visualization",
-      "dashboard", "ui", "interface", "design", "mockup", "prototype"
-    ];
-    
-    // Simple keyword-based analysis
-    const messageText = message.content.toLowerCase();
-    const keywordMatch = visualizationKeywords.some(keyword => messageText.includes(keyword));
-    
-    // Initial confidence based on keyword matching
-    let confidence = keywordMatch ? 0.5 : 0.1;
-    
-    // For more accurate analysis, use the AI to evaluate
-    if (keywordMatch) {
-      try {
-        // Use generateObject to directly get a structured response
-        const analysis = await generateObject({
-          model: openai.responses("o1-mini"), // Use a smaller model for efficiency
-          schema: {
-            type: "object",
-            properties: {
-              score: {
-                type: "number",
-                description: "A score from 0-100 indicating the likelihood that the user is requesting a visualization"
-              },
-              reason: {
-                type: "string",
-                description: "A brief explanation of why this score was given"
-              }
-            },
-            required: ["score", "reason"]
-          },
-          prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
-
-Message: "${message.content}"
-
-Return a score from 0-100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
-          temperature: 0.1,
-        });
-        
-        confidence = analysis.score / 100;
-        console.log(`AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`);
-      } catch (aiError) {
-        console.error("Error getting AI analysis of message:", aiError);
-      }
-    }
-    
-    return confidence;
-  }
-  
-  // Analyze the message for visualization intent
-  const visualizationConfidence = await analyzeMessageForVisualizationIntent(lastUserMessage);
-  
-  // Determine if we should generate HTML based on confidence score
-  // If confidence is high (>0.7), always generate
-  // If confidence is medium (0.3-0.7), use it as the probability
-  // If confidence is low (<0.3), use a reduced probability
-  const shouldGenerateHtml = visualizationConfidence > 0.7 ? true : 
-                            (visualizationConfidence > 0.3 ? (Math.random() < visualizationConfidence) : 
-                            (Math.random() < 0.1)); // Very low chance for low confidence messages
-  
-  console.log(
-    `HTML generation: Visualization confidence: ${visualizationConfidence*100}%, Final decision: ${shouldGenerateHtml}`
-  );
-
   try {
     aiResponseInProgress = true;
     console.log("Generating AI response based on recent messages...");
@@ -575,10 +503,109 @@ Return a score from 0-100 indicating the likelihood that the user is requesting 
 
     // If no messages in this room, skip
     if (roomMessages.length === 0) {
-      console.log("No messages in room, skipping AI response");
+      console.log("No messages found for room:", roomId);
       aiResponseInProgress = false;
       return;
     }
+
+    // Get the last message to analyze for visualization intent
+    const lastUserMessage = roomMessages[roomMessages.length - 1];
+
+    // Analyze the last message to determine if it's requesting a visualization
+    async function analyzeMessageForVisualizationIntent(message) {
+      // Keywords that suggest a visualization request
+      const visualizationKeywords = [
+        "build",
+        "create",
+        "generate",
+        "make",
+        "show",
+        "visualize",
+        "display",
+        "draw",
+        "chart",
+        "graph",
+        "diagram",
+        "map",
+        "plot",
+        "visualisation",
+        "visualization",
+        "dashboard",
+        "ui",
+        "interface",
+        "design",
+        "mockup",
+        "prototype",
+      ];
+
+      // Simple keyword-based analysis
+      const messageText = message.content.toLowerCase();
+      const keywordMatch = visualizationKeywords.some((keyword) =>
+        messageText.includes(keyword)
+      );
+
+      // Initial confidence based on keyword matching
+      let confidence = keywordMatch ? 0.5 : 0.1;
+
+      // For more accurate analysis, use the AI to evaluate
+      if (keywordMatch) {
+        try {
+          // Use generateObject to directly get a structured response
+          const analysis = await generateObject({
+            model: openai.responses("gpt-4o"), // Use a smaller model for efficiency
+            schema: {
+              type: "object",
+              properties: {
+                score: {
+                  type: "number",
+                  description:
+                    "A score from 0-100 indicating the likelihood that the user is requesting a visualization",
+                },
+                reason: {
+                  type: "string",
+                  description: "A brief explanation of why this score was given",
+                },
+              },
+              required: ["score", "reason"],
+            },
+            prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
+
+Message: "${message.content}"
+
+Return a score from 0-100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
+            temperature: 0.1,
+          });
+
+          confidence = analysis.score / 100;
+          console.log(
+            `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`
+          );
+        } catch (aiError) {
+          console.error("Error getting AI analysis of message:", aiError);
+        }
+      }
+
+      return confidence;
+    }
+
+    // Analyze the message for visualization intent
+    const visualizationConfidence =
+      await analyzeMessageForVisualizationIntent(lastUserMessage);
+
+    // Determine if we should generate HTML based on confidence score
+    // If confidence is high (>0.7), always generate
+    // If confidence is medium (0.3-0.7), use it as the probability
+    // If confidence is low (<0.3), use a reduced probability
+    const shouldGenerateHtml =
+      visualizationConfidence > 0.7
+        ? true
+        : visualizationConfidence > 0.3
+          ? Math.random() < visualizationConfidence
+          : Math.random() < 0.1; // Very low chance for low confidence messages
+
+    console.log(
+      `HTML generation: Visualization confidence: ${visualizationConfidence * 100}%, Final decision: ${shouldGenerateHtml}`
+    );
 
     // Check if the last message is from an AI agent
     const lastMessage = roomMessages[roomMessages.length - 1];
