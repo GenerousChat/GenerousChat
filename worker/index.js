@@ -672,7 +672,8 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Creative explanations → Use SVG/Canvas/p5.js for illustrations
 - Interactive tools → Use appropriate JS framework for the specific tool
 - Educational concepts → Create interactive diagrams that teach
-- Games/simulations → Use Phaser or p5.js (only if relevant)
+- Games/simulations → Use Phaser or p5.js, keep output small and performant
+- Maps/locations → Use Leaflet.js or Mapbox GL JS
 - Simple text/concepts → Use elegant typography and minimal JS
 
 IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
