@@ -771,6 +771,17 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       content: text,
     });
 
+    // fetch the last generation for this room id
+    const { data: lastGeneration, error: lastGenerationError } = await supabase
+      .from("chat_room_generations")
+      .select()
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    // save it the html column to a variable
+    const lastGenerationHtml = lastGeneration[0]?.html;
+
     if (error) {
       console.error("Error saving AI response to database:", error);
       return;
@@ -784,6 +795,10 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
 
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
+
+## Last generated Canvas  
+Only use this if the person seemingly wants to update the last canvas 
+${lastGenerationHtml ? lastGenerationHtml : ""}
 
 ## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
 Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.

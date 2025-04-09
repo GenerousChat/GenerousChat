@@ -709,7 +709,7 @@ export default function ChatRoom({
         isLoading={isLoading} 
       />
     </div>
-    
+
     {/* Visualization Panel (Right Side) */}
     <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
       <div className="p-4 border-b">
