@@ -9,7 +9,7 @@ import { User } from "@supabase/supabase-js";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Pusher from 'pusher-js';
 import { TTSManager } from "@/components/chat/tts-manager";
-import { DyteProvider } from '@dytesdk/react-web-core';
+import { DyteProvider, useDyteClient } from '@dytesdk/react-web-core';
 import AudioRoom from '@/components/audio/audio-room';
 import { createOrJoinMeeting } from '@/utils/dyte/create-meeting';
 
@@ -140,7 +140,7 @@ export default function ChatRoom({
   roomId,
   initialMessages,
   currentUser,
-  participants,
+  participants: initialParticipants,
 }: {
   roomId: string;
   initialMessages: Message[];
@@ -148,9 +148,10 @@ export default function ChatRoom({
   participants: Participant[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [participants, setParticipants] = useState<Participant[]>(initialParticipants);
   // Removed newMessage state as it's now handled by the OptimizedInput component
   const [isLoading, setIsLoading] = useState(false);
-  const [dyteAuthToken, setDyteAuthToken] = useState<string>();
+  const [meeting, initMeeting] = useDyteClient();
 
   // Initialize Dyte meeting
   useEffect(() => {
@@ -161,7 +162,14 @@ export default function ChatRoom({
           currentUser.id,
           currentUser.email || 'Anonymous'
         );
-        setDyteAuthToken(authToken);
+        
+        await initMeeting({
+          authToken,
+          defaults: {
+            audio: false,
+            video: false,
+          },
+        });
       } catch (error) {
         console.error('Failed to initialize Dyte:', error);
       }
@@ -476,6 +484,14 @@ export default function ChatRoom({
     return participant?.users?.email || "Unknown User";
   };
 
+  // Get message timestamp based on message type
+  const getMessageTimestamp = (message: Message): string => {
+    if (message.type === 'chat') {
+      return message.created_at;
+    }
+    return message.timestamp;
+  };
+
   // Format timestamp
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString([], {
@@ -487,34 +503,50 @@ export default function ChatRoom({
   // Check if message is from current user
   const isCurrentUser = (userId: string) => userId === currentUser.id;
 
-  // These functions are no longer needed as HTML content comes through a separate channel
-
   // Default HTML content for visualization
   const defaultHtmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body {
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          margin: 0;
-          padding: 20px;
-          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #334155;
-        }
-        .container {
-          max-width: 100%;
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          text-align: center;
-        }
-        h2 {
+  <style>
+    body {
+      background-color: #f9fafb;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+    }
+    .container {
+      max-width: 100%;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h2 {
+      margin-top: 0;
+      color: #3b82f6;
+    }
+    p {
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+  </style>
+  <body>
+    <div class="container">
+      <h2>Chat Visualization</h2>
+      <p class="pulse">As your conversation evolves, AI will occasionally generate visual summaries that will appear here.</p>
+    </div>
+  </body>
+  </html>
           margin-top: 0;
           color: #3b82f6;
         }
@@ -543,10 +575,9 @@ export default function ChatRoom({
   
   return (
     <div className="flex h-full gap-4">
-      {dyteAuthToken && (
+      {meeting && (
         <DyteProvider
-          clientId={process.env.NEXT_PUBLIC_DYTE_ORG_ID!}
-          meeting={dyteAuthToken}
+          value={meeting}
         >
           <AudioRoom
             roomId={roomId}
@@ -597,7 +628,7 @@ export default function ChatRoom({
                       )}
                       <div className="break-words">{message.content}</div>
                       <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                        {formatTime(message.type === 'chat' ? message.created_at : message.timestamp)}
+                        {formatTime(getMessageTimestamp(message))}
                       </div>
                     </>
                   )}

@@ -21,13 +21,29 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-type Message = {
+type ChatMessage = {
   id: string;
   content: string;
   created_at: string;
   user_id: string;
+  users: {
+    email: string;
+  };
   name?: string;
+  profile?: {
+    name: string;
+  };
+  type: 'chat';
 };
+
+type StatusMessage = {
+  type: 'status';
+  statusType: 'join' | 'leave';
+  userId: string;
+  timestamp: string;
+};
+
+type Message = ChatMessage | StatusMessage;
 
 interface TTSManagerProps {
   messages: Message[];
@@ -86,7 +102,9 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     if (!initialMessagesProcessed.current && messages.length > 0) {
       // Mark all existing messages as processed without reading them
       messages.forEach(msg => {
-        processedMessageIds.current.add(msg.id);
+        if (msg.type === 'chat') {
+          processedMessageIds.current.add(msg.id);
+        }
       });
       initialMessagesProcessed.current = true;
     }
@@ -96,14 +114,16 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   useEffect(() => {
     if (!ttsService || !enabled || !newMessageReceived) return;
     
-    // Skip if already processed or it's the current user's message
-    if (processedMessageIds.current.has(newMessageReceived.id) || 
+    // Skip if it's a status message or already processed or it's the current user's message
+    if (newMessageReceived.type === 'status' || 
+        processedMessageIds.current.has(newMessageReceived.id) || 
         newMessageReceived.user_id === currentUserId) {
       return;
     }
     
-    // Process the new message
+    // Process the new chat message
     const userName = newMessageReceived.name || 
+                     newMessageReceived.profile?.name ||
                      userCache[newMessageReceived.user_id]?.name || 
                      'Unknown User';
     

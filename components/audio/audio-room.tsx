@@ -52,10 +52,12 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       console.log('Left audio room');
     });
 
-    // Handle audio errors
-    meeting.self.on('audioError', (error) => {
-      console.error('Audio error:', error);
-      setError('Audio error occurred. Please check your microphone permissions.');
+    // Handle media permission errors
+    meeting.self.on('mediaPermissionError', ({ message, kind }) => {
+      console.error(`Media permission error: ${kind} - ${message}`);
+      if (kind === 'audio') {
+        setError('Microphone permission denied. Please check your browser settings.');
+      }
     });
 
     return () => {
@@ -104,11 +106,11 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
         <PopoverContent className="w-64 p-2" align="end">
           <div className="space-y-2">
             <div className="font-medium text-sm">Audio Participants</div>
-            {participants.length === 0 ? (
+            {Object.keys(participants).length === 0 ? (
               <div className="text-sm text-muted-foreground">No participants</div>
             ) : (
               <div className="space-y-1">
-                {participants.map((participant) => (
+                {Object.values(participants).map((participant: any) => (
                   <div
                     key={participant.id}
                     className="flex items-center justify-between text-sm py-1"
