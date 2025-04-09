@@ -102,7 +102,7 @@ async function fetchRecentMessages() {
 
     recentMessages = data.reverse();
     console.log(`Fetched ${recentMessages.length} recent messages`);
-    console.log("Recent messages:", JSON.stringify(recentMessages, null, 2));
+    // console.log("Recent messages:", JSON.stringify(recentMessages, null, 2));
   } catch (error) {
     console.error("Error in fetchRecentMessages:", error);
   }
@@ -765,15 +765,127 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       .join("\n");
 
     // Select a random agent or use the default prompt if no agents are available
-    let agentPrompt =
-      "IMPORTANT: Your response MUST be 1-2 sentences ONLY, maximum 200 characters total. Respond with a single casual, friendly sentence as if you're part of the conversation. Be brief and natural. Don't introduce yourself or explain that you're an AI. Don't ever use emojis.";
+    let agentPrompt = null;
     let selectedAgent = null;
-
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
+    console.log("HASLALSDALSDLASDLASLDALSDALSD");
     if (aiAgents.length > 0) {
-      // Select a random agent
-      selectedAgent = aiAgents[Math.floor(Math.random() * aiAgents.length)];
+      // Select agents that have a high confidence for a meaningful reply
+
+      const { data: lastGeneration, error: lastGenerationError } =
+        await supabase
+          .from("chat_room_generations")
+          .select()
+          .eq("room_id", roomId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+      // save it the html column to a variable
+      const lastGenerationHtml = lastGeneration[0]?.html;
+
+      const prompt = `
+        Analyze this message and determine the confidence of each agent in providing a meaningful response.
+        
+        Agents:
+        ${aiAgents
+          .map(
+            (agent) => `
+          Agent Name:
+          ${agent.name}: 
+          Agent Id: 
+          ${agent.id}
+          Agent Personality:
+          ${agent.personality_prompt}
+        `
+          )
+          .join("\n\n\n")}
+
+        Last Generation HTML:
+        ${lastGenerationHtml}
+
+        Message History:
+        ${messageHistory}
+
+        Last Message: 
+        ${lastUserMessage.content}
+
+        All things considered, should an agent chime in on the conversation given it's personality and the context of the conversation?
+        
+        Return an array of objects containing agent IDs and their confidence scores for a meaningful response.
+        `;
+
+      const result = await generateObject({
+        model: openai.responses("gpt-4o"),
+        temperature: 0.1,
+        schema: z.object({
+          agents_confidence: z
+            .array(
+              z.object({
+                agent_id: z.string(),
+                confidence: z.number(),
+              })
+            )
+            .describe(
+              "An array of objects containing agent IDs and their confidence scores for a meaningful response"
+            ),
+        }),
+        prompt,
+      });
+
+      // log out the result
+      console.log("AI agent selection result:", { result });
+
+      let selectedAgents = result.response.body.output[0].content;
+
+      console.log("Selected agents:", selectedAgents);
+
+      /*
+      Selected agents: [
+  {
+    type: 'output_text',
+    text: '{"agents_confidence":[{"agent_id":"cce2f8b4-918f-4e86-97bb-fd9d57aa7462","confidence":0.8},{"agent_id":"3f0b6122-a429-4450-bf0e-1a9470a93c23","confidence":0.6},{"agent_id":"4d87dcd3-f3b5-4e90-b328-9a7a4a7f6ed0","confidence":0.9},{"agent_id":"72a8dbcf-9ae6-45f2-b832-24bb6b5d8390","confidence":0.5},{"agent_id":"64b9c912-579e-420f-9a67-d20aef71c34e","confidence":0.7}]}',
+    annotations: []
+  }
+]
+      */
+
+      selectedAgents = JSON.parse(selectedAgents[0].text).agents_confidence;
+
+      // log out the name of the agent by mapping it to aiAgents var
+      const agentNamesAndConfidence = selectedAgents.map((agent) => {
+        const agent2 = aiAgents.find((a) => a.id === agent.agent_id);
+        return { name: agent2.name, confidence: agent.confidence };
+      });
+      console.log(
+        "Selected agent names and confidence:",
+        agentNamesAndConfidence
+      );
+
+      // find the agent with the highest confidence
+      const highestConfidenceAgent = agentNamesAndConfidence.reduce(
+        (prev, current) => {
+          return prev.confidence > current.confidence ? prev : current;
+        }
+      );
+      console.log(
+        "Selected agent with highest confidence:",
+        highestConfidenceAgent
+      );
+
+      selectedAgent = aiAgents.find(
+        (a) => a.name === highestConfidenceAgent.name
+      );
       agentPrompt = selectedAgent.personality_prompt;
       console.log(`Selected agent: ${selectedAgent.name}`);
+    }
+
+    if (!agentPrompt) {
+      console.log("No agent prompt found");
+      return false;
     }
 
     // log the message history
@@ -782,7 +894,16 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     // We already have the last message from earlier analysis
 
     // Create the prompt with stronger constraints and focus on responding to the last message
-    const prompt = `The following is a chat conversation:\n\n${messageHistory}\n\n${agentPrompt}\n\nFocus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.\n\nREMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Also be witty, regardless of your personality. Don't say what everybody always says. Extremely concise responses are required.`;
+    const prompt = `
+      The following is a chat conversation:
+      ${messageHistory}
+      
+      Expert Prompt:
+      ${agentPrompt}
+      
+      Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.
+      
+      REMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Also be witty, regardless of your personality. Don't say what everybody always says. Extremely concise responses are required.`;
 
     console.log("Sending prompt to OpenAI:", prompt);
 
@@ -803,7 +924,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     const { data, error } = await supabase.from("messages").insert({
       room_id: roomId,
       user_id: aiAssistantId,
-      content: text,
+      content: "local" + text,
     });
 
     // fetch the last generation for this room id
