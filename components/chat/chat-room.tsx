@@ -118,21 +118,35 @@ export default function ChatRoom({
       }
     });
 
-    // Listen for HTML visualizations
-    channel.bind('html-visualization', (data: any) => {
+    // Listen for new generation notifications
+    channel.bind('new-generation', async (data: any) => {
       try {
-        console.log('Received HTML visualization event:', data);
-        const visualizationData = typeof data === 'string' ? JSON.parse(data) : data;
+        console.log('Received new generation notification:', data);
+        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
         
-        // Update the visualization panel with the HTML content
-        if (visualizationData.html) {
-          console.log('Setting latest HTML content, length:', visualizationData.html.length);
-          setLatestHtmlContent(visualizationData.html);
+        if (notificationData.type !== 'visualization') {
+          return; // Only handle visualization type generations
+        }
+        
+        // Fetch the generation from the database
+        const { data: generation, error } = await supabase
+          .from('chat_room_generations')
+          .select('*')
+          .eq('id', notificationData.generation_id)
+          .single();
+
+        if (error) {
+          throw new Error(`Error fetching generation: ${error.message}`);
+        }
+        
+        if (generation?.html) {
+          console.log('Setting latest HTML content from database, length:', generation.html.length);
+          setLatestHtmlContent(generation.html);
         } else {
-          console.warn('HTML visualization received but no html field found:', visualizationData);
+          console.warn('Generation found but no html field:', generation);
         }
       } catch (error) {
-        console.error("Error processing HTML visualization:", error);
+        console.error('Error handling new generation notification:', error);
       }
     });
     

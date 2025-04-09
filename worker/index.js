@@ -717,38 +717,50 @@ Create something that directly fulfills the most recent build/create request and
 
       console.log("HTML content generated, length:", htmlContent.length);
 
-      // Send the HTML content directly to Pusher as a special event type
-      // This will not be stored in the messages table or shown in the chat
-      console.log(
-        "Sending HTML visualization to Pusher, content length:",
-        htmlContent.length
-      );
-
-      const visualizationData = {
-        id: "viz-" + Date.now(),
-        html: htmlContent,
-        summary: "Generated a visual summary of this conversation",
-        created_at: new Date().toISOString(),
-        user_id: aiAssistantId,
-      };
-
-      console.log(
-        "Visualization data prepared:",
-        JSON.stringify(visualizationData, null, 2).substring(0, 200) + "..."
-      );
-
       try {
+        // Store the generation in the database
+        const { data: generation, error: insertError } = await supabase
+          .from('chat_room_generations')
+          .insert({
+            room_id: roomId,
+            html: htmlContent,
+            summary: "Generated a visual summary of this conversation",
+            created_by: aiAssistantId,
+            type: 'visualization',
+            metadata: {
+              model: 'gemini-2.5-pro-exp-03-25',
+              messageCount: recentMessages.length
+            }
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          throw new Error(`Error storing generation: ${insertError.message}`);
+        }
+
+        console.log(
+          "Generation stored in database with ID:",
+          generation.id
+        );
+
+        // Send a notification to clients about the new generation
         await sendToPusher(
           `room-${roomId}`,
-          "html-visualization",
-          visualizationData
+          "new-generation",
+          {
+            generation_id: generation.id,
+            type: 'visualization',
+            created_at: generation.created_at
+          }
         );
+
         console.log(
-          "HTML visualization successfully sent to Pusher for room:",
-          roomId
+          "Notification sent to clients about new generation:",
+          generation.id
         );
       } catch (error) {
-        console.error("Error sending HTML visualization to Pusher:", error);
+        console.error("Error handling generation:", error);
       }
     }
   } catch (error) {
