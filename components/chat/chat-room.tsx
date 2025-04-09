@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +48,41 @@ export default function ChatRoom({
   const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
   const [latestHtmlContent, setLatestHtmlContent] = useState<string | null>(null);
+  const [generations, setGenerations] = useState<any[]>([]);
+  const [selectedGenerationId, setSelectedGenerationId] = useState<string | null>(null);
+
+  // Fetch generations for the room
+  const fetchGenerations = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_room_generations')
+        .select('*')
+        .eq('room_id', roomId)
+        .eq('type', 'visualization')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error('Error fetching generations:', error);
+        return;
+      }
+
+      setGenerations(data || []);
+      
+      // If there are generations and none is selected, select the latest one
+      if (data?.length > 0 && !selectedGenerationId) {
+        setSelectedGenerationId(data[0].id);
+        setLatestHtmlContent(data[0].html);
+      }
+    } catch (error) {
+      console.error('Error fetching generations:', error);
+    }
+  }, [roomId, selectedGenerationId]);
+
+  // Load generations when room loads
+  useEffect(() => {
+    fetchGenerations();
+  }, [fetchGenerations]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -118,7 +153,42 @@ export default function ChatRoom({
       }
     });
 
-    // Listen for HTML visualizations
+    // Listen for new generation notifications
+    channel.bind('new-generation', async (data: any) => {
+      try {
+        console.log('Received new generation notification:', data);
+        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        if (notificationData.type !== 'visualization') {
+          return; // Only handle visualization type generations
+        }
+        
+        // Fetch the generation from the database
+        const { data: generation, error } = await supabase
+          .from('chat_room_generations')
+          .select('*')
+          .eq('id', notificationData.generation_id)
+          .single();
+
+        if (error) {
+          throw new Error(`Error fetching generation: ${error.message}`);
+        }
+        
+        if (generation?.html) {
+          console.log('Setting latest HTML content from database, length:', generation.html.length);
+          // Add the new generation to the list and select it
+          setGenerations(prev => [generation, ...prev].slice(0, 20));
+          setSelectedGenerationId(generation.id);
+          setLatestHtmlContent(generation.html);
+        } else {
+          console.warn('Generation found but no html field:', generation);
+        }
+      } catch (error) {
+        console.error('Error handling new generation notification:', error);
+      }
+    });
+    
+    // Also keep the old event handler for backward compatibility
     channel.bind('html-visualization', (data: any) => {
       try {
         console.log('Received HTML visualization event:', data);
@@ -401,6 +471,29 @@ export default function ChatRoom({
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
+
+      {generations.length > 0 && (
+        <div className="border-t border-gray-200 p-2 bg-gray-50">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {generations.map((gen) => (
+              <button
+                key={gen.id}
+                onClick={() => {
+                  setSelectedGenerationId(gen.id);
+                  setLatestHtmlContent(gen.html);
+                }}
+                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
+                  selectedGenerationId === gen.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {new Date(gen.created_at).toLocaleTimeString()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form
         onSubmit={handleSendMessage}
