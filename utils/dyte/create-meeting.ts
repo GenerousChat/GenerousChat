@@ -22,29 +22,36 @@ export async function createOrJoinMeeting(roomId: string, userId: string, userNa
   try {
     const supabase = createClient();
     
-    // Get Dyte API key from environment
+    // Get Dyte credentials from environment
     const dyteApiKey = process.env.NEXT_PUBLIC_DYTE_API_KEY;
     const dyteOrgId = process.env.NEXT_PUBLIC_DYTE_ORG_ID;
     
     if (!dyteApiKey || !dyteOrgId) {
       throw new Error('Dyte API key or Org ID not configured');
     }
+    
+    // Create auth header by encoding orgId:apiKey
+    const authHeader = `Basic ${Buffer.from(`${dyteOrgId}:${dyteApiKey}`).toString('base64')}`;
+    const baseUrl = 'https://api.dyte.io/v2';
 
-    // First try to get existing meeting
-    let meeting = await fetch(`https://api.dyte.io/v2/meetings/${roomId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Basic ${btoa(dyteApiKey)}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Check if we have a mapping for this room
+    const { data: mapping } = await supabase
+      .from('dyte_meetings')
+      .select('meeting_id')
+      .eq('room_id', roomId)
+      .single();
 
-    // If meeting doesn't exist, create it
-    if (!meeting.ok) {
-      const createResponse = await fetch('https://api.dyte.io/v2/meetings', {
+    let meetingId: string;
+
+    if (mapping?.meeting_id) {
+      // Use existing meeting
+      meetingId = mapping.meeting_id;
+    } else {
+      // Create new meeting
+      const createResponse = await fetch(`${baseUrl}/meetings`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${btoa(dyteApiKey)}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -58,13 +65,22 @@ export async function createOrJoinMeeting(roomId: string, userId: string, userNa
       if (!meetingData.success) {
         throw new Error('Failed to create meeting');
       }
+      meetingId = meetingData.data.id;
+
+      // Store the mapping
+      await supabase
+        .from('dyte_meetings')
+        .insert({
+          room_id: roomId,
+          meeting_id: meetingId
+        });
     }
 
     // Add participant to the meeting
-    const addParticipantResponse = await fetch(`https://api.dyte.io/v2/meetings/${roomId}/participants`, {
+    const addParticipantResponse = await fetch(`${baseUrl}/meetings/${meetingId}/participants`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(dyteApiKey)}`,
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
