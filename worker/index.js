@@ -550,20 +550,21 @@ async function generateAIResponse(roomId) {
       // For more accurate analysis, use the AI to evaluate
       if (keywordMatch) {
         try {
-          // Use generateObject to directly get a structured response
+          // Use generateObject with a properly formatted schema
           const analysis = await generateObject({
             model: openai.responses("gpt-4o"), // Use a smaller model for efficiency
             schema: {
               type: "object",
               properties: {
                 score: {
-                  type: "number",
+                  type: "integer",
                   description:
-                    "A score from 0-100 indicating the likelihood that the user is requesting a visualization",
+                    "A score from 0 to 100 indicating the likelihood that the user is requesting a visualization",
                 },
                 reason: {
                   type: "string",
-                  description: "A brief explanation of why this score was given",
+                  description:
+                    "A brief explanation of why this score was given",
                 },
               },
               required: ["score", "reason"],
@@ -572,7 +573,7 @@ async function generateAIResponse(roomId) {
 
 Message: "${message.content}"
 
-Return a score from 0-100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
+Return a score from 0 to 100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
             temperature: 0.1,
           });
 
