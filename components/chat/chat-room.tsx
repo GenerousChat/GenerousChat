@@ -10,7 +10,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Pusher from 'pusher-js';
 import { TTSManager } from "@/components/chat/tts-manager";
 
-type Message = {
+type StatusType = 'join' | 'leave';
+
+type StatusMessage = {
+  type: 'status';
+  statusType: StatusType;
+  userId: string;
+  timestamp: string;
+};
+
+type ChatMessage = {
   id: string;
   content: string;
   created_at: string;
@@ -18,11 +27,14 @@ type Message = {
   users: {
     email: string;
   };
-  name?: string; // Added name field
+  name?: string;
   profile?: {
     name: string;
   };
+  type: 'chat';
 };
+
+type Message = ChatMessage | StatusMessage;
 
 type Participant = {
   user_id: string;
@@ -219,23 +231,18 @@ export default function ChatRoom({
         const userInfo = await getUserInfo(messageData.user_id);
         
         // Create a properly typed message object
-        const newMessage: Message = {
-          id: messageData.id,
-          content: messageData.content,
-          created_at: messageData.created_at,
-          user_id: messageData.user_id,
+        const newMessage: ChatMessage = {
+          ...messageData,
+          type: 'chat',
           users: { email: userInfo.email || '' },
           name: userInfo.name
         };
         
-        // No need to check for HTML content in regular messages anymore
-        
-        setMessages((prev) => [...prev, newMessage]);
-        // Set the new message for TTS
+        setMessages(prev => [...prev, newMessage]);
         setNewMessageReceived(newMessage);
         scrollToBottom();
       } catch (error) {
-        console.error("Error processing Pusher message:", error);
+        console.error('Error processing message:', error);
       }
     });
 
@@ -291,13 +298,38 @@ export default function ChatRoom({
     // Removed verbose state change logging
 
     // Listen for user joined events
-    channel.bind('user-joined', (data: any) => {
-      // You could update the participants list here if needed
+    channel.bind('user-joined', async (data: { user_id: string }) => {
+      // Add to participants list
+      const newParticipant = {
+        user_id: data.user_id,
+        joined_at: new Date().toISOString(),
+        users: { email: '' } // Will be populated by ParticipantList component
+      };
+      setParticipants(prev => [...prev, newParticipant]);
+      
+      // Add status message
+      const statusMsg: StatusMessage = {
+        type: 'status',
+        statusType: 'join',
+        userId: data.user_id,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, statusMsg]);
     });
 
     // Listen for user left events
-    channel.bind('user-left', (data: any) => {
-      // You could update the participants list here if needed
+    channel.bind('user-left', (data: { user_id: string }) => {
+      // Remove from participants list
+      setParticipants(prev => prev.filter(p => p.user_id !== data.user_id));
+      
+      // Add status message
+      const statusMsg: StatusMessage = {
+        type: 'status',
+        statusType: 'leave',
+        userId: data.user_id,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, statusMsg]);
     });
 
     // Clean up on unmount
@@ -510,33 +542,31 @@ export default function ChatRoom({
           ) : (
             messages.map((message) => (
               <div
-                key={message.id}
-                className={`flex ${
+                key={message.type === 'chat' ? message.id : message.timestamp}
+                className={`flex ${message.type === 'status' ? 'justify-center' : 
                   isCurrentUser(message.user_id) ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    isCurrentUser(message.user_id)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
+                  className={message.type === 'status' ? 'text-xs text-gray-500 py-2' : `max-w-[80%] rounded-lg p-3 ${isCurrentUser(message.user_id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}
                 >
-                  {!isCurrentUser(message.user_id) && (
-                    <div className="font-medium text-xs mb-1">
-                      {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
+                  {message.type === 'status' ? (
+                    <div>
+                      {userCache[message.userId]?.name || 'Someone'} has {message.statusType === 'join' ? 'joined' : 'left'} the chat
                     </div>
+                  ) : (
+                    <>
+                      {!isCurrentUser(message.user_id) && (
+                        <div className="font-medium text-xs mb-1">
+                          {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
+                        </div>
+                      )}
+                      <div className="break-words">{message.content}</div>
+                      <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                        {formatTime(message.type === 'chat' ? message.created_at : message.timestamp)}
+                      </div>
+                    </>
                   )}
-                  <div className="break-words">{message.content}</div>
-                  <div
-                    className={`text-xs mt-1 ${
-                      isCurrentUser(message.user_id)
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {formatTime(message.created_at)}
-                  </div>
                 </div>
               </div>
             ))
