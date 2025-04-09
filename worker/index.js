@@ -686,11 +686,11 @@ ${messageHistory}
 1. Ensure responsive design that works well in the sidebar panel
 2. Create a visualization that directly fulfills the most recent build/create request
 3. Do not include ```html or ``` javascript code blocks in the output as it will be rendered directly
-4. Balance aesthetics with functionality - beautiful but purposeful
-5. Use only technologies that truly fit the conversation needs
-6. Add thoughtful interactivity that improves understanding
-7. Provide clear visual cues for how to interact with your creation
-8. Optimize performance (lazy load libraries, efficient code)
+4. Optimize performance (lazy load libraries, efficient code) 
+5. Balance aesthetics with functionality - beautiful but purposeful
+6. Use libraries and technologies that fit the conversation needs
+7. Add thoughtful interactivity that improves understanding
+8. Provide clear visual cues for how to interact with your creation
 9. Include helpful annotations where appropriate
 10. Handle edge cases gracefully with fallbacks
 
