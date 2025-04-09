@@ -275,6 +275,8 @@ async function setupSupabaseListeners() {
             console.log(
               "Message is from an AI agent, skipping AI response generation"
             );
+
+            // buttttttt
           }
         } catch (error) {
           console.error("Error forwarding message to Pusher:", error);
@@ -888,45 +890,6 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       return false;
     }
 
-    // log the message history
-    console.log("Message history:", messageHistory);
-
-    // We already have the last message from earlier analysis
-
-    // Create the prompt with stronger constraints and focus on responding to the last message
-    const prompt = `
-      The following is a chat conversation:
-      ${messageHistory}
-      
-      Expert Prompt:
-      ${agentPrompt}
-      
-      Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.
-      
-      REMEMBER: Your entire response must be 1-2 sentences only and no more than 200 characters total. Also be witty, regardless of your personality. Don't say what everybody always says. Extremely concise responses are required.`;
-
-    console.log("Sending prompt to OpenAI:", prompt);
-
-    // Generate text using OpenAI with stricter constraints
-    const { text } = await generateText({
-      model: openai.responses("gpt-4o"),
-      prompt: prompt,
-      maxTokens: 75, // Reduced to enforce shorter responses
-      temperature: 0.7, // Add some randomness but not too much
-    });
-
-    console.log("AI generated response:", text);
-
-    // Always send a regular text message first
-    const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
-
-    // Save the regular AI response to the Supabase database
-    const { data, error } = await supabase.from("messages").insert({
-      room_id: roomId,
-      user_id: aiAssistantId,
-      content: "local" + text,
-    });
-
     // fetch the last generation for this room id
     const { data: lastGeneration, error: lastGenerationError } = await supabase
       .from("chat_room_generations")
@@ -938,12 +901,56 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     // save it the html column to a variable
     const lastGenerationHtml = lastGeneration[0]?.html;
 
+    // log the message history
+    console.log("Message history:", messageHistory);
+
+    // We already have the last message from earlier analysis
+
+    // Create the prompt with stronger constraints and focus on responding to the last message
+    const prompt = `
+      The following is a chat conversation:
+      ${messageHistory}
+      
+      Last Generation HTML:
+      ${lastGenerationHtml}
+
+      Expert Prompt:
+      ${agentPrompt}
+
+      Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.
+      
+      `;
+
+    console.log("Sending prompt to OpenAI:", prompt);
+
+    // Generate text using OpenAI with stricter constraints
+    const { text } = await generateText({
+      model: openai.responses("gpt-4o"),
+      prompt: prompt,
+      maxTokens: 400, // Reduced to enforce shorter responses
+      temperature: 0.8, // Add some randomness but not too much
+    });
+
+    console.log("AI generated response:", text);
+
+    // Always send a regular text message first
+    const aiAssistantId = selectedAgent ? selectedAgent.id : aiAgentIds[0];
+
+    // Save the regular AI response to the Supabase database
+    const { data, error } = await supabase.from("messages").insert({
+      room_id: roomId,
+      user_id: aiAssistantId,
+      content: "local - " + text,
+    });
+
     if (error) {
       console.error("Error saving AI response to database:", error);
       return;
     }
 
     console.log("AI response saved to database for room:", roomId);
+
+    const expertAgentText = text;
 
     // If we should generate HTML, create and send a special HTML visualization message
     if (shouldGenerateHtml) {
@@ -1006,6 +1013,9 @@ ${messageHistory}
 - Include fallback content if libraries fail to load
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
+
+## Expert Agent Response:
+${expertAgentText}
 
 MAKE SURE YOUR SOLUTION INVOLVES EVERYTHING, DON"T WORRY ABOUT HOW BIG THE FILE IS
 
