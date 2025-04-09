@@ -681,11 +681,11 @@ IMPORTANT: Never use complex libraries when simpler approaches work better! Choo
 ${messageHistory}
 
 ## Your Creation Requirements:
-1. Use only technologies that truly fit the conversation needs
+1. Ensure responsive design that works well in the sidebar panel
 2. Create a visualization that directly fulfills the most recent build/create request
 3. Make it immediately useful by focusing on exactly what was requested in the build/create message
 4. Balance aesthetics with functionality - beautiful but purposeful
-5. Ensure responsive design that works well in the sidebar panel
+5. Use only technologies that truly fit the conversation needs
 6. Add thoughtful interactivity that improves understanding
 7. Provide clear visual cues for how to interact with your creation
 8. Optimize performance (lazy load libraries, efficient code)
