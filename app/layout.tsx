@@ -17,7 +17,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "WeBoard - a Collaborative Development Canvas",
+  title: "Generous - a Collaborative Development Canvas",
   description: "Build applications visually with your team and AI assistance in real-time.",
 };
 
@@ -71,7 +71,7 @@ export default async function RootLayout({
                     </div>
                   </BackgroundGradient>
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-                    WeBoard
+                    Generous
                   </span>
                 </Link>
                 
