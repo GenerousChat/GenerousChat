@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo, useReducer } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +31,55 @@ type Participant = {
   };
 };
 
+// Optimized input component that handles its own state
+const OptimizedInput = memo(({ onSubmit, isLoading }: {
+  onSubmit: (message: string) => void;
+  isLoading: boolean;
+}) => {
+  // Use useRef instead of useState to avoid re-renders during typing
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [localMessage, setLocalMessage] = useState("");
+  
+  // Handle submit without re-rendering parent
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localMessage.trim() || isLoading) return;
+    
+    onSubmit(localMessage);
+    setLocalMessage("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+  
+  // Handle key press without re-rendering parent
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+  
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="border-t p-4 flex gap-2 items-end"
+    >
+      <Textarea
+        ref={inputRef}
+        value={localMessage}
+        onChange={(e) => setLocalMessage(e.target.value)}
+        placeholder="Type your message..."
+        className="min-h-[60px] resize-none"
+        onKeyDown={handleKeyDown}
+      />
+      <Button type="submit" disabled={isLoading || !localMessage.trim()}>
+        {isLoading ? "Sending..." : "Send"}
+      </Button>
+    </form>
+  );
+});
+
 export default function ChatRoom({
   roomId,
   initialMessages,
@@ -43,7 +92,7 @@ export default function ChatRoom({
   participants: Participant[];
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [newMessage, setNewMessage] = useState("");
+  // Removed newMessage state as it's now handled by the OptimizedInput component
   const [isLoading, setIsLoading] = useState(false);
   const [userCache, setUserCache] = useState<Record<string, { name: string, email?: string, isAgent: boolean }>>({});
   const [newMessageReceived, setNewMessageReceived] = useState<Message | null>(null);
@@ -105,8 +154,8 @@ export default function ChatRoom({
 
   // Set up Pusher subscription for real-time messages
   useEffect(() => {
-    // Initialize Pusher with logging enabled for debugging
-    Pusher.logToConsole = true; // Remove this in production
+    // Initialize Pusher without excessive logging
+    Pusher.logToConsole = false;
     
     const pusher = new Pusher('96f9360f34a831ca1901', {
       cluster: 'us3',
@@ -115,11 +164,7 @@ export default function ChatRoom({
     // Subscribe to the room channel
     const channel = pusher.subscribe(`room-${roomId}`);
     
-    // Log connection status
-    pusher.connection.bind('connected', () => {
-      console.log('Connected to Pusher!', `Subscribed to channel: room-${roomId}`);
-    });
-    
+    // Simplified connection logging
     pusher.connection.bind('error', (err: any) => {
       console.error('Pusher connection error:', err);
     });
@@ -156,7 +201,6 @@ export default function ChatRoom({
     // Listen for new generation notifications
     channel.bind('new-generation', async (data: any) => {
       try {
-        console.log('Received new generation notification:', data);
         const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
         
         if (notificationData.type !== 'visualization') {
@@ -175,7 +219,6 @@ export default function ChatRoom({
         }
         
         if (generation?.html) {
-          console.log('Setting latest HTML content from database, length:', generation.html.length);
           // Add the new generation to the list and select it
           setGenerations(prev => [generation, ...prev].slice(0, 20));
           setSelectedGenerationId(generation.id);
@@ -191,12 +234,10 @@ export default function ChatRoom({
     // Also keep the old event handler for backward compatibility
     channel.bind('html-visualization', (data: any) => {
       try {
-        console.log('Received HTML visualization event:', data);
         const visualizationData = typeof data === 'string' ? JSON.parse(data) : data;
         
         // Update the visualization panel with the HTML content
         if (visualizationData.html) {
-          console.log('Setting latest HTML content, length:', visualizationData.html.length);
           setLatestHtmlContent(visualizationData.html);
         } else {
           console.warn('HTML visualization received but no html field found:', visualizationData);
@@ -206,20 +247,15 @@ export default function ChatRoom({
       }
     });
     
-    // Log when Pusher connection state changes
-    pusher.connection.bind('state_change', (states: any) => {
-      console.log('Pusher connection state changed from', states.previous, 'to', states.current);
-    });
+    // Removed verbose state change logging
 
     // Listen for user joined events
     channel.bind('user-joined', (data: any) => {
-      console.log('User joined the room:', data);
       // You could update the participants list here if needed
     });
 
     // Listen for user left events
     channel.bind('user-left', (data: any) => {
-      console.log('User left the room:', data);
       // You could update the participants list here if needed
     });
 
@@ -234,24 +270,22 @@ export default function ChatRoom({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
+  // Optimized to handle message sending without state updates during typing
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim()) return;
 
     setIsLoading(true);
     try {
       const { error } = await supabase.from("messages").insert({
         room_id: roomId,
         user_id: currentUser.id,
-        content: newMessage,
+        content: message,
       });
 
       if (error) {
         console.error("Error sending message:", error);
         return;
       }
-
-      setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -412,10 +446,7 @@ export default function ChatRoom({
     </html>
   `;
   
-  // Log when latestHtmlContent changes
-  useEffect(() => {
-    console.log('latestHtmlContent updated:', latestHtmlContent ? 'HTML content present' : 'No HTML content');
-  }, [latestHtmlContent]);
+  // Removed excessive logging that might impact performance
 
   return (
     <div className="flex h-full">
@@ -495,26 +526,10 @@ export default function ChatRoom({
         </div>
       )}
 
-      <form
+      <OptimizedInput 
         onSubmit={handleSendMessage}
-        className="border-t p-4 flex gap-2 items-end"
-      >
-        <Textarea
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="min-h-[60px] resize-none"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage(e);
-            }
-          }}
-        />
-        <Button type="submit" disabled={isLoading || !newMessage.trim()}>
-          {isLoading ? "Sending..." : "Send"}
-        </Button>
-      </form>
+        isLoading={isLoading} 
+      />
     </div>
     
     {/* Visualization Panel (Right Side) */}
