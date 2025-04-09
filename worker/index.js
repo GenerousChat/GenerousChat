@@ -569,6 +569,12 @@ async function generateAIResponse(roomId) {
         "reengineer",
         "restructure",
         "reconfigure",
+        "reorganize",
+        "rearrange",
+        "recompose",
+        "reconstruct",
+        "refactor",
+        "can you",
       ];
 
       // Simple keyword-based analysis
