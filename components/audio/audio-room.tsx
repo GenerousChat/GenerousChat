@@ -34,7 +34,7 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
         roomJoined,
         audioEnabled,
         participantsCount: Object.keys(participants).length,
-        meetingState: meeting?.meta?.meetingStarted ? 'started' : 'not started',
+        meetingState: meeting?.self?.roomJoined ? 'started' : 'not started',
         selfId: meeting?.self?.id,
         isJoining,
         joinAttempted: joinAttemptedRef.current
@@ -147,8 +147,8 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       }
     };
 
-    const onAudioUpdate = (isEnabled: boolean) => {
-      console.log('Audio state updated:', isEnabled ? 'enabled' : 'disabled');
+    const onAudioUpdate = (payload: { audioEnabled: boolean; audioTrack: MediaStreamTrack }) => {
+      console.log('Audio state updated:', payload.audioEnabled ? 'enabled' : 'disabled');
     };
 
     // Participant events
@@ -169,9 +169,9 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
     meeting.self.on('roomLeft', onRoomLeft);
     meeting.self.on('mediaPermissionError', onMediaPermissionError);
     meeting.self.on('audioUpdate', onAudioUpdate);
-    meeting.participants.on('participantJoined', onParticipantJoined);
-    meeting.participants.on('participantLeft', onParticipantLeft);
-    meeting.participants.on('activeSpeakerChanged', onActiveSpeakerChanged);
+    meeting.participants.joined.on('participantJoined', onParticipantJoined);
+    meeting.participants.joined.on('participantLeft', onParticipantLeft);
+    meeting.participants.active.on('audioUpdate', onActiveSpeakerChanged);
 
     // Cleanup listeners
     return () => {
@@ -179,9 +179,9 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       meeting.self.off('roomLeft', onRoomLeft);
       meeting.self.off('mediaPermissionError', onMediaPermissionError);
       meeting.self.off('audioUpdate', onAudioUpdate);
-      meeting.participants.off('participantJoined', onParticipantJoined);
-      meeting.participants.off('participantLeft', onParticipantLeft);
-      meeting.participants.off('activeSpeakerChanged', onActiveSpeakerChanged);
+      meeting.participants.joined.off('participantJoined', onParticipantJoined);
+      meeting.participants.joined.off('participantLeft', onParticipantLeft);
+      meeting.participants.active.off('audioUpdate', onActiveSpeakerChanged);
     };
   }, [meeting]);
 

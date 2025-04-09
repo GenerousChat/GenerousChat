@@ -184,7 +184,7 @@ export default function ChatRoom({
             console.log('Meeting state:', {
               roomJoined: meeting.self.roomJoined,
               audioEnabled: meeting.self.audioEnabled,
-              meetingStarted: meeting.meta.meetingStarted,
+              meetingStarted: meeting.self.roomJoined,
               participantCount: Object.keys(meeting.participants.active).length
             });
           });
@@ -194,7 +194,7 @@ export default function ChatRoom({
         
         // Track participant changes
         if (meeting && meeting.participants) {
-          meeting.participants.on('participantJoined', (participant) => {
+          meeting.participants.joined.on('participantJoined', (participant) => {
             console.log('ChatRoom: Participant joined:', {
               name: participant.name,
               id: participant.id,
