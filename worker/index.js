@@ -849,8 +849,8 @@ Create something that directly fulfills the most recent build/create request and
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
         // model: google("gemini-2.5-pro-exp-03-25"),
-        // model: openai.responses("o3-mini"),
-        model: openai.responses("o1"),
+        model: openai.responses("o3-mini"),
+        // model: openai.responses("o1"),
         prompt: htmlPrompt,
         maxTokens: 35500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
