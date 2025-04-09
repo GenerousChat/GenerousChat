@@ -709,8 +709,8 @@ Create something that directly fulfills the most recent build/create request and
 
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
-        model: google("gemini-2.5-pro-exp-03-25"),
-        // model: openai.responses("o3-mini"),
+        // model: google("gemini-2.5-pro-exp-03-25"),
+        model: openai.responses("o3-mini"),
         prompt: htmlPrompt,
         maxTokens: 4500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
@@ -721,17 +721,17 @@ Create something that directly fulfills the most recent build/create request and
       try {
         // Store the generation in the database
         const { data: generation, error: insertError } = await supabase
-          .from('chat_room_generations')
+          .from("chat_room_generations")
           .insert({
             room_id: roomId,
             html: htmlContent,
             summary: "Generated a visual summary of this conversation",
             created_by: aiAssistantId,
-            type: 'visualization',
+            type: "visualization",
             metadata: {
-              model: 'gemini-2.5-pro-exp-03-25',
-              messageCount: recentMessages.length
-            }
+              model: "gemini-2.5-pro-exp-03-25",
+              messageCount: recentMessages.length,
+            },
           })
           .select()
           .single();
@@ -740,21 +740,14 @@ Create something that directly fulfills the most recent build/create request and
           throw new Error(`Error storing generation: ${insertError.message}`);
         }
 
-        console.log(
-          "Generation stored in database with ID:",
-          generation.id
-        );
+        console.log("Generation stored in database with ID:", generation.id);
 
         // Send a notification to clients about the new generation
-        await sendToPusher(
-          `room-${roomId}`,
-          "new-generation",
-          {
-            generation_id: generation.id,
-            type: 'visualization',
-            created_at: generation.created_at
-          }
-        );
+        await sendToPusher(`room-${roomId}`, "new-generation", {
+          generation_id: generation.id,
+          type: "visualization",
+          created_at: generation.created_at,
+        });
 
         console.log(
           "Notification sent to clients about new generation:",
