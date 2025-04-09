@@ -561,8 +561,14 @@ async function generateAIResponse(roomId) {
           const result = await generateObject({
             model: openai.responses("gpt-4o"),
             schema: z.object({
-              score: z.number().describe("A score from 0 to 100 indicating the likelihood that the user is requesting a visualization"),
-              reason: z.string().describe("A brief explanation of why this score was given")
+              score: z
+                .number()
+                .describe(
+                  "A score from 0 to 100 indicating the likelihood that the user is requesting a visualization"
+                ),
+              reason: z
+                .string()
+                .describe("A brief explanation of why this score was given"),
             }),
             prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
 
@@ -571,41 +577,48 @@ Message: "${message.content}"
 Return a score from 0 to 100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
             temperature: 0.1,
           });
-          
+
           // Debug the result structure
-          console.log("AI analysis result structure:", JSON.stringify(result, null, 2));
-          
+          console.log(
+            "AI analysis result structure:",
+            JSON.stringify(result, null, 2)
+          );
+
           // Safely access properties with fallbacks
-          if (result && typeof result === 'object') {
+          if (result && typeof result === "object") {
             // Try to find score and reason properties at any level based on the actual structure
             let score, reason;
-            
+
             // Check for direct properties
-            if ('score' in result) {
+            if ("score" in result) {
               score = result.score;
               reason = result.reason;
-            } 
+            }
             // Check for object.score structure (this is the actual structure based on the debug output)
-            else if (result.object && typeof result.object === 'object') {
+            else if (result.object && typeof result.object === "object") {
               score = result.object.score;
               reason = result.object.reason;
-            } 
+            }
             // Check for analysis structure
-            else if (result.analysis && typeof result.analysis === 'object') {
+            else if (result.analysis && typeof result.analysis === "object") {
               score = result.analysis.score;
               reason = result.analysis.reason;
             }
-            
-            if (typeof score === 'number') {
+
+            if (typeof score === "number") {
               confidence = score / 100;
               console.log(
-                `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || 'No reason provided'}`
+                `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
               );
             } else {
-              console.log("Could not find valid score in AI response, using keyword-based confidence");
+              console.log(
+                "Could not find valid score in AI response, using keyword-based confidence"
+              );
             }
           } else {
-            console.log("AI analysis returned invalid result, using keyword-based confidence");
+            console.log(
+              "AI analysis returned invalid result, using keyword-based confidence"
+            );
           }
         } catch (aiError) {
           console.error("Error getting AI analysis of message:", aiError);
@@ -823,6 +836,8 @@ ${messageHistory}
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
 
+MAKE SURE YOUR SOLUTION INVOLVES EVERYTHING, DON"T WORRY ABOUT HOW BIG THE FILE IS
+
 ## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
 
 Create something that directly fulfills the most recent build/create request and makes users say "This is exactly what I asked for!"`;
@@ -832,9 +847,10 @@ Create something that directly fulfills the most recent build/create request and
       // Generate HTML content using OpenAI
       const { text: htmlContent } = await generateText({
         // model: google("gemini-2.5-pro-exp-03-25"),
-        model: openai.responses("o3-mini"),
+        // model: openai.responses("o3-mini"),
+        model: openai.responses("o1"),
         prompt: htmlPrompt,
-        maxTokens: 4500, // Allow more tokens for HTML content
+        maxTokens: 35500, // Allow more tokens for HTML content
         temperature: 0.8, // More creativity for HTML generation
       });
 
