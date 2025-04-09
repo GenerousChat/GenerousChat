@@ -582,7 +582,8 @@ export default function ChatRoom({
           <iframe
             srcDoc={latestHtmlContent || defaultHtmlContent}
             className="w-full h-full border-0"
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
+            allow="camera; microphone; geolocation; fullscreen"
             title="Conversation Visualization"
           />
         </div>

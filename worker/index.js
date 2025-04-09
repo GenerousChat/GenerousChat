@@ -550,37 +550,36 @@ async function generateAIResponse(roomId) {
       // For more accurate analysis, use the AI to evaluate
       if (keywordMatch) {
         try {
-          // Use generateObject with a properly formatted schema
-          const analysis = await generateObject({
-            model: openai.responses("gpt-4o"), // Use a smaller model for efficiency
-            schema: {
-              type: "object",
-              properties: {
-                score: {
-                  type: "integer",
-                  description:
-                    "A score from 0 to 100 indicating the likelihood that the user is requesting a visualization",
-                },
-                reason: {
-                  type: "string",
-                  description:
-                    "A brief explanation of why this score was given",
-                },
-              },
-              required: ["score", "reason"],
-            },
-            prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
+          // Use generateText instead of generateObject to avoid schema issues
+          const analysisPrompt = `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
 
 Message: "${message.content}"
 
-Return a score from 0 to 100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
+Return a JSON object with:
+1. score: A number from 0 to 100 indicating the likelihood that the user is requesting a visualization
+2. reason: A brief explanation of why this score was given
+
+Format your response as valid JSON only, like: {"score": 75, "reason": "The message contains..."}`;
+
+          const { text: analysisText } = await generateText({
+            model: openai.responses("gpt-4o"), // Use a smaller model for efficiency
+            prompt: analysisPrompt,
             temperature: 0.1,
           });
 
-          confidence = analysis.score / 100;
-          console.log(
-            `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`
-          );
+          // Parse the JSON response
+          try {
+            const analysis = JSON.parse(analysisText.trim());
+            confidence = analysis.score / 100;
+            console.log(
+              `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`
+            );
+          } catch (parseError) {
+            console.error("Error parsing AI analysis response:", parseError);
+            console.log("Raw AI response:", analysisText);
+            // Fallback to keyword-based confidence if parsing fails
+            confidence = keywordMatch ? 0.5 : 0.1;
+          }
         } catch (aiError) {
           console.error("Error getting AI analysis of message:", aiError);
         }
