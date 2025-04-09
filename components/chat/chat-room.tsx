@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, memo, useReducer } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,17 +39,52 @@ const OptimizedInput = memo(({ onSubmit, isLoading }: {
   // Use useRef instead of useState to avoid re-renders during typing
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [localMessage, setLocalMessage] = useState("");
+  const [localLoading, setLocalLoading] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
-  // Handle submit without re-rendering parent
+  // Reset local loading state when parent loading state changes
+  useEffect(() => {
+    if (!isLoading && localLoading) {
+      setLocalLoading(false);
+    }
+  }, [isLoading, localLoading]);
+  
+  // Handle submit with optimistic UI updates
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!localMessage.trim() || isLoading) return;
+    if (!localMessage.trim() || localLoading) return;
     
-    onSubmit(localMessage);
+    // Provide immediate visual feedback
+    setLocalLoading(true);
+    
+    // Add ripple effect to button
+    if (buttonRef.current) {
+      const button = buttonRef.current;
+      const ripple = document.createElement('span');
+      const rect = button.getBoundingClientRect();
+      
+      ripple.className = 'absolute inset-0 bg-white/20 rounded-md animate-ripple';
+      button.appendChild(ripple);
+      
+      // Remove ripple after animation
+      setTimeout(() => {
+        if (ripple.parentNode === button) {
+          button.removeChild(ripple);
+        }
+      }, 600);
+    }
+    
+    // Capture the message before clearing it
+    const messageToSend = localMessage;
+    
+    // Clear input immediately for better UX
     setLocalMessage("");
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    
+    // Send the message
+    onSubmit(messageToSend);
   };
   
   // Handle key press without re-rendering parent
@@ -73,8 +108,13 @@ const OptimizedInput = memo(({ onSubmit, isLoading }: {
         className="min-h-[60px] resize-none"
         onKeyDown={handleKeyDown}
       />
-      <Button type="submit" disabled={isLoading || !localMessage.trim()}>
-        {isLoading ? "Sending..." : "Send"}
+      <Button 
+        ref={buttonRef}
+        type="submit" 
+        disabled={localLoading || !localMessage.trim()}
+        className="relative overflow-hidden transition-all duration-200 active:scale-95"
+      >
+        {localLoading ? "Sending..." : "Send"}
       </Button>
     </form>
   );
