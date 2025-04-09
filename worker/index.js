@@ -790,15 +790,15 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Creative explanations → Use SVG/Canvas/p5.js for illustrations
 - Interactive tools → Use appropriate JS framework for the specific tool
 - Math concepts → use MathJax or KaTeX for math, or custom SVG
-- Games/simulations → Use Phaser or p5.js, keep output small and performant
+- Games/simulations → Use Phaser or p5.js, 
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
 - Physics simulations → Use Matter.js
 - Simple animations → Use CSS animations or GSAP
 - Scientific visualizations → Use Plotly.js or Vega-Lite
 - Youtube videos → Use lite YouTube embed
-- Simple text/concepts → Use elegant typography and minimal JS
+- Simple text/concepts → Use elegant typography 
 
-IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
+IMPORTANT: Use complex libraries when simpler approaches are less visually appealing. Choose technology based on conversation needs, and always prioritize user experience and aesthetics.
 
 ## Conversation:
 ${messageHistory}
