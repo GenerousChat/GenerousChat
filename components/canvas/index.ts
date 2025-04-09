@@ -4,4 +4,4 @@ export * from './canvas-utils';
 export * from './canvas-visualization';
 export * from './error-message';
 export * from './loading-overlay';
-export * from './use-pusher-channel';
+export * from './use-canvas-data';

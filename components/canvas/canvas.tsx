@@ -9,20 +9,29 @@ import {
   CanvasInput,
   LoadingOverlay,
   ErrorMessage,
-  usePusherChannel,
   CanvasMessage,
   createLoadingVisualization,
   createErrorVisualization
 } from "./index";
+import { useCanvasData } from "./use-canvas-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/magicui";
-import { Button } from "@/components/ui/button";
+
+// Add debugging flag
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[Canvas]', ...args);
+  }
+}
 
 export default function Canvas({
   currentUser,
 }: {
   currentUser: User;
 }) {
+  log('Canvas component rendering, user:', currentUser.id);
+  
   const [canvasMessages, setCanvasMessages] = useState<CanvasMessage[]>([]);
   const [canvasId] = useState<string>(`canvas-${Date.now()}`);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
@@ -31,9 +40,11 @@ export default function Canvas({
   
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+  
+  log('Canvas ID:', canvasId);
 
-  // Set up Pusher channel and handle real-time updates
-  usePusherChannel({
+  // Use our data hook for fetching messages and visualizations
+  useCanvasData({
     canvasId,
     setCanvasMessages,
     setHtmlContent,
@@ -46,9 +57,12 @@ export default function Canvas({
   const handleSendMessage = async (newMessage: string) => {
     if (!newMessage.trim()) return;
     
+    log('Sending new message:', newMessage);
     setVisualizationError(null);
     
     try {
+      // Save message to database
+      log('Saving message to Supabase...');
       const { data, error } = await supabase
         .from("canvas_messages")
         .insert({
@@ -59,8 +73,12 @@ export default function Canvas({
         .select()
         .single();
 
-      if (error) throw new Error(`Error saving message: ${error.message}`);
+      if (error) {
+        log('Error saving message to Supabase:', error);
+        throw new Error(`Error saving message: ${error.message}`);
+      }
 
+      log('Message saved successfully, ID:', data.id);
       const messageObject = {
         id: data.id,
         user_id: currentUser.id,
@@ -68,29 +86,26 @@ export default function Canvas({
         created_at: data.created_at
       };
       
+      // Update local state immediately
       setCanvasMessages(prev => [...prev, messageObject]);
       
-      // Send to Pusher
-      await fetch('/api/pusher/canvas-element', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          canvasId,
-          type: 'message',
-          message: messageObject
-        }),
-      });
-      
-      // Always trigger visualization generation on every text input
-      console.log('Requesting visualization');
+      // Start loading state and show loading visualization
+      log('Requesting visualization...');
       setIsLoading(true);
       
       // Show loading visualization immediately for better UX
       const loadingHtml = createLoadingVisualization(newMessage);
       setHtmlContent(loadingHtml);
       
-      // Request visualization
+      // Request visualization directly from our API
       try {
+        log('Sending request to /api/canvas/generate-visualization...');
+        log('Request payload:', {
+          canvasId,
+          messageCount: canvasMessages.length + 1,
+          promptLength: newMessage.length
+        });
+        
         const response = await fetch('/api/canvas/generate-visualization', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -101,22 +116,28 @@ export default function Canvas({
           }),
         });
         
+        log('Response status:', response.status);
+        
         if (!response.ok) {
           const errorText = await response.text();
+          log('Error response:', errorText);
           throw new Error(`Visualization request failed: ${errorText}`);
         }
         
         const result = await response.json();
-        console.log('Visualization request result:', result);
+        log('Visualization request result:', result);
         
         // If direct HTML response is provided, use it immediately
         if (result.html) {
+          log('HTML content received, length:', result.html.length);
           setHtmlContent(result.html);
           setIsLoading(false);
+        } else {
+          log('No HTML content in response');
         }
-        // Otherwise the server will send through Pusher
       } catch (error: any) {
         console.error("Error requesting visualization:", error);
+        log('Error details:', error.message);
         setVisualizationError(error.message || "Failed to generate visualization");
         setIsLoading(false);
         
@@ -125,6 +146,7 @@ export default function Canvas({
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
+      log('Error details:', error.message);
       setVisualizationError(error.message || "Failed to send message");
       setIsLoading(false);
     }
@@ -133,7 +155,9 @@ export default function Canvas({
   // Listen for iframe messages
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      log('Received message from iframe:', event.data);
       if (event.data === 'close-visualization') {
+        log('Closing visualization');
         setHtmlContent(null);
         setIsLoading(false);
       }
@@ -142,6 +166,11 @@ export default function Canvas({
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  log('Canvas messages count:', canvasMessages.length);
+  log('HTML content status:', htmlContent ? 'present' : 'not present');
+  log('Loading status:', isLoading);
+  log('Error status:', visualizationError ? 'error' : 'no error');
 
   return (
     <div className="flex flex-col h-full">
@@ -182,7 +211,6 @@ export default function Canvas({
                   >
                     Enter a prompt below to generate an interactive data visualization.
                   </motion.p>
-                  {/* Example suggestions removed */}
                 </CardContent>
               </Card>
             </BlurFade>
