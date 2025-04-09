@@ -2,16 +2,28 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useDyteMeeting, useDyteSelector } from '@dytesdk/react-web-core';
-import { provideDyteDesignSystem } from '@dytesdk/react-ui-kit';
+import { 
+  provideDyteDesignSystem, 
+  DyteAudioVisualizer,
+  DyteButton,
+  DyteIcon,
+  defaultIconPack
+} from '@dytesdk/react-ui-kit';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Users } from 'lucide-react';
+import { Mic, MicOff, Users, Settings } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface AudioRoomProps {
   roomId: string;
   userId: string;
   userName: string;
+}
+
+interface CurrentDevices {
+  audio?: MediaDeviceInfo;
+  speaker?: MediaDeviceInfo;
 }
 
 export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) {
@@ -21,7 +33,14 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
   const participants = useDyteSelector((meeting) => meeting?.participants?.active || {});
   const [error, setError] = useState<string>('');
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  
+  // Audio device state
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [speakerDevices, setSpeakerDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDevices, setCurrentDevices] = useState<CurrentDevices>({});
+  const testAudioEl = useRef<HTMLAudioElement>(null);
   
   // Use refs to track state without triggering re-renders
   const joiningRef = useRef(false);
@@ -110,6 +129,7 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
 
   // Enable audio once room is joined
   useEffect(() => {
+    console.log("================", {roomJoined, audioEnabled, meeting});
     if (!roomJoined || audioEnabled || !meeting?.self) return;
     
     const enableAudio = async () => {
@@ -125,6 +145,35 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
     
     enableAudio();
   }, [roomJoined, audioEnabled, meeting]);
+
+  // Initialize audio devices
+  useEffect(() => {
+    if (!meeting) return;
+    
+    const deviceListUpdateCallback = async () => {
+      try {
+        setAudioDevices(await meeting.self.getAudioDevices());
+        setSpeakerDevices(await meeting.self.getSpeakerDevices());
+      } catch (error) {
+        console.error('Error getting devices:', error);
+      }
+    };
+    
+    meeting.self.addListener('deviceListUpdate', deviceListUpdateCallback);
+    
+    // Populate initial values
+    deviceListUpdateCallback();
+    
+    // Set current devices
+    setCurrentDevices({
+      audio: meeting.self.getCurrentDevices().audio,
+      speaker: meeting.self.getCurrentDevices().speaker,
+    });
+    
+    return () => {
+      meeting.self.removeListener('deviceListUpdate', deviceListUpdateCallback);
+    };
+  }, [meeting]);
 
   // Set up event listeners once
   useEffect(() => {
@@ -199,97 +248,225 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
     }
   };
 
+  const setDevice = (kind: 'audio' | 'speaker', deviceId: string) => {
+    try {
+      const device =
+        kind === 'audio'
+          ? audioDevices.find((d) => d.deviceId === deviceId)
+          : speakerDevices.find((d) => d.deviceId === deviceId);
+      
+      setCurrentDevices((oldDevices) => ({
+        ...oldDevices,
+        [kind]: device,
+      }));
+      
+      if (device != null) {
+        meeting.self.setDevice(device);
+        if (device.kind === 'audiooutput' && testAudioEl.current) {
+          if ((testAudioEl.current as any)?.setSinkId) {
+            (testAudioEl.current as any)?.setSinkId(device.deviceId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error setting device:', error);
+      setError(`Failed to set ${kind} device`);
+    }
+  };
+
+  const testAudio = () => {
+    testAudioEl?.current?.play();
+  };
+
   // Don't return early if there's an error, just show it alongside the controls
   // This allows recovery if the room eventually connects
 
   return (
-    <div className="fixed bottom-4 right-4 flex items-center gap-2">
-      {error ? (
-        <div className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-          {error}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 rounded-full ml-1 p-0" 
-            onClick={() => {
-              setError('');
-              // Try joining again if not already joined
-              if (!roomJoined && !joiningRef.current) {
-                joinAttemptedRef.current = false;
-                // This will trigger the join effect again
-              }
-            }}
-          >
-            ×
-          </Button>
-        </div>
-      ) : roomJoined ? (
-        <>
-          <Popover open={showParticipants} onOpenChange={setShowParticipants}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Users className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2" align="end">
-              <div className="space-y-2">
-                <div className="font-medium text-sm">Audio Participants</div>
-                {Object.keys(participants).length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No participants</div>
-                ) : (
-                  <div className="space-y-1">
-                    {Object.values(participants).map((participant: any) => {
-                      // Ensure we have a valid key by using userId or a fallback
-                      const participantKey = participant.id || participant.userId || `participant-${Math.random()}`;
-                      return (
-                        <div
-                          key={participantKey}
-                          className="flex items-center justify-between text-sm py-1"
-                        >
-                          <span>{participant.name}</span>
-                          {participant.audioEnabled ? (
-                            <Mic className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <MicOff className="h-3 w-3 text-gray-400" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={toggleAudio}
-          >
-            {audioEnabled ? (
-              <Mic className="h-4 w-4" />
-            ) : (
-              <MicOff className="h-4 w-4" />
-            )}
-          </Button>
-
-          <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            Audio Connected
+    <>
+      {/* Hidden audio element for testing speakers */}
+      <audio
+        preload="auto"
+        src="https://assets.dyte.io/ui-kit/speaker-test.mp3"
+        ref={testAudioEl}
+      />
+      
+      <div className="fixed bottom-4 right-4 flex items-center gap-2">
+        {error ? (
+          <div className="bg-destructive text-destructive-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+            {error}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 rounded-full ml-1 p-0" 
+              onClick={() => {
+                setError('');
+                // Try joining again if not already joined
+                if (!roomJoined && !joiningRef.current) {
+                  joinAttemptedRef.current = false;
+                  // This will trigger the join effect again
+                }
+              }}
+            >
+              ×
+            </Button>
           </div>
-        </>
-      ) : (
-        <div className="bg-amber-500 text-white px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          {isJoining ? 'Connecting...' : 'Waiting for audio'}
-        </div>
-      )}
-    </div>
+        ) : roomJoined ? (
+          <>
+            <Dialog open={showSettings} onOpenChange={setShowSettings}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Audio Settings</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col p-4 space-y-4">
+                  {meeting.self.permissions.canProduceAudio === 'ALLOWED' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Microphone</label>
+                      <div className="space-y-2">
+                        <select
+                          className="w-full text-ellipsis bg-background border border-input p-2 rounded-md text-sm"
+                          onChange={(e) =>
+                            setDevice('audio', (e.target as HTMLSelectElement).value)
+                          }
+                        >
+                          {audioDevices.map(({ deviceId, label }, index) => (
+                            <option
+                              key={deviceId || `mic-${index}`}
+                              value={deviceId}
+                              selected={currentDevices.audio?.deviceId === deviceId}
+                            >
+                              {label || `Microphone ${index + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                        {meeting?.self && (
+                          <div className="h-10 border border-input rounded-md overflow-hidden p-2">
+                            <DyteAudioVisualizer participant={meeting.self} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {speakerDevices.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Speaker Output</label>
+                      <div className="space-y-2">
+                        <select
+                          className="w-full text-ellipsis bg-background border border-input p-2 rounded-md text-sm"
+                          onChange={(e) =>
+                            setDevice('speaker', (e.target as HTMLSelectElement).value)
+                          }
+                        >
+                          {speakerDevices.map(({ deviceId, label }, index) => (
+                            <option
+                              key={deviceId || `speaker-${index}`}
+                              value={deviceId}
+                              selected={currentDevices.speaker?.deviceId === deviceId}
+                            >
+                              {label || `Speaker ${index + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                          onClick={testAudio}
+                        >
+                          Test Speaker
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Popover open={showParticipants} onOpenChange={setShowParticipants}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Users className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2" align="end">
+                <div className="space-y-2">
+                  <div className="font-medium text-sm">Audio Participants</div>
+                  {Object.keys(participants).length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No participants</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {Object.values(participants).map((participant: any) => {
+                        // Ensure we have a valid key by using userId or a fallback
+                        const participantKey = participant.id || participant.userId || `participant-${Math.random()}`;
+                        return (
+                          <div
+                            key={participantKey}
+                            className="flex items-center justify-between text-sm py-1"
+                          >
+                            <span>{participant.name}</span>
+                            {participant.audioEnabled ? (
+                              <div className="flex items-center gap-1">
+                                <Mic className="h-3 w-3 text-green-500" />
+                                {participant.audioEnabled && (
+                                  <div className="h-3">
+                                    <DyteAudioVisualizer participant={participant} />
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <MicOff className="h-3 w-3 text-gray-400" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={toggleAudio}
+            >
+              {audioEnabled ? (
+                <Mic className="h-4 w-4" />
+              ) : (
+                <MicOff className="h-4 w-4" />
+              )}
+            </Button>
+
+            <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              Audio Connected
+              {audioEnabled && meeting?.self && (
+                <div className="h-4 w-10">
+                  <DyteAudioVisualizer participant={meeting.self} />
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="bg-amber-500 text-white px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            {isJoining ? 'Connecting...' : 'Waiting for audio'}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
