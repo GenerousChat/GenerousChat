@@ -674,6 +674,7 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Educational concepts → Create interactive diagrams that teach
 - Games/simulations → Use Phaser or p5.js, keep output small and performant
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
+- Biological/chemical structures → Use ChemDoodle or similar libraries
 - Simple text/concepts → Use elegant typography and minimal JS
 
 IMPORTANT: Never use complex libraries when simpler approaches work better! Choose technology based on conversation needs, not just to showcase a library.
