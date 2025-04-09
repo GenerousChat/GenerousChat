@@ -170,10 +170,111 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       speaker: meeting.self.getCurrentDevices().speaker,
     });
     
+    // Apply the speaker device to the meeting
+    if (currentDevices.speaker) {
+      meeting.self.setDevice(currentDevices.speaker);
+    }
+    
     return () => {
       meeting.self.removeListener('deviceListUpdate', deviceListUpdateCallback);
     };
   }, [meeting]);
+  
+  // Handle remote participants' audio
+  useEffect(() => {
+    if (!meeting || !roomJoined) return;
+    
+    console.log('Setting up remote audio handling');
+    
+    // Function to handle when a participant joins
+    const handleParticipantJoined = (participant: any) => {
+      console.log('Remote participant joined:', participant.name);
+      
+      // Apply speaker device to participant's audio if available
+      if (currentDevices.speaker && participant.audioEnabled) {
+        try {
+          // Attempt to route this participant's audio to the selected speaker
+          if (participant.audioTrack) {
+            console.log('Routing audio for participant:', participant.name);
+            // This is a workaround to ensure audio is routed correctly
+            const audioEl = document.createElement('audio');
+            audioEl.srcObject = new MediaStream([participant.audioTrack]);
+            audioEl.autoplay = true;
+            
+            // Apply the selected speaker if browser supports it
+            if ((audioEl as any).setSinkId && currentDevices.speaker) {
+              (audioEl as any).setSinkId(currentDevices.speaker.deviceId)
+                .catch((err: any) => console.error('Error setting audio output device:', err));
+            }
+            
+            // Keep a reference to clean up later
+            participant._audioEl = audioEl;
+          }
+        } catch (error) {
+          console.error('Error setting up remote audio:', error);
+        }
+      }
+    };
+    
+    // Apply to all existing participants
+    Object.values(participants).forEach((participant: any) => {
+      handleParticipantJoined(participant);
+    });
+    
+    // Listen for new participants
+    meeting.participants.joined.on('participantJoined', handleParticipantJoined);
+    
+    // Handle audio updates for existing participants
+    const handleAudioUpdate = (participant: any, { audioEnabled, audioTrack }: any) => {
+      console.log('Audio update for participant:', participant.name, { audioEnabled });
+      
+      if (audioEnabled && audioTrack && currentDevices.speaker) {
+        // Clean up previous audio element if it exists
+        if (participant._audioEl) {
+          participant._audioEl.pause();
+          participant._audioEl.srcObject = null;
+          delete participant._audioEl;
+        }
+        
+        // Create new audio element with updated track
+        const audioEl = document.createElement('audio');
+        audioEl.srcObject = new MediaStream([audioTrack]);
+        audioEl.autoplay = true;
+        
+        // Apply the selected speaker if browser supports it
+        if ((audioEl as any).setSinkId && currentDevices.speaker) {
+          (audioEl as any).setSinkId(currentDevices.speaker.deviceId)
+            .catch((err: any) => console.error('Error setting audio output device:', err));
+        }
+        
+        // Keep a reference to clean up later
+        participant._audioEl = audioEl;
+      } else if (!audioEnabled && participant._audioEl) {
+        // Clean up when audio is disabled
+        participant._audioEl.pause();
+        participant._audioEl.srcObject = null;
+        delete participant._audioEl;
+      }
+    };
+    
+    // Listen for audio updates
+    meeting.participants.joined.on('audioUpdate', handleAudioUpdate);
+    
+    return () => {
+      // Clean up listeners and audio elements
+      meeting.participants.joined.off('participantJoined', handleParticipantJoined);
+      meeting.participants.joined.off('audioUpdate', handleAudioUpdate);
+      
+      // Clean up all audio elements
+      Object.values(participants).forEach((participant: any) => {
+        if (participant._audioEl) {
+          participant._audioEl.pause();
+          participant._audioEl.srcObject = null;
+          delete participant._audioEl;
+        }
+      });
+    };
+  }, [meeting, roomJoined, participants, currentDevices.speaker]);
 
   // Set up event listeners once
   useEffect(() => {
@@ -197,16 +298,23 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
     };
 
     const onAudioUpdate = (payload: { audioEnabled: boolean; audioTrack: MediaStreamTrack }) => {
-      console.log('Audio state updated:', payload.audioEnabled ? 'enabled' : 'disabled');
+      console.log('Self audio state updated:', payload.audioEnabled ? 'enabled' : 'disabled');
     };
 
     // Participant events
     const onParticipantJoined = (participant: any) => {
-      console.log('Participant joined:', participant.name);
+      console.log('Participant joined event:', participant.name);
     };
 
     const onParticipantLeft = (participant: any) => {
-      console.log('Participant left:', participant.name);
+      console.log('Participant left event:', participant.name);
+      
+      // Clean up audio element if it exists
+      if (participant._audioEl) {
+        participant._audioEl.pause();
+        participant._audioEl.srcObject = null;
+        delete participant._audioEl;
+      }
     };
 
     const onActiveSpeakerChanged = (participant: any) => {
@@ -261,11 +369,31 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
       }));
       
       if (device != null) {
+        // Set the device in the meeting
         meeting.self.setDevice(device);
-        if (device.kind === 'audiooutput' && testAudioEl.current) {
-          if ((testAudioEl.current as any)?.setSinkId) {
+        
+        // For audio output devices, we need special handling
+        if (device.kind === 'audiooutput') {
+          // Apply to test audio element
+          if (testAudioEl.current && (testAudioEl.current as any)?.setSinkId) {
             (testAudioEl.current as any)?.setSinkId(device.deviceId);
           }
+          
+          // Apply to all participant audio elements
+          Object.values(participants).forEach((participant: any) => {
+            if (participant._audioEl && (participant._audioEl as any).setSinkId) {
+              (participant._audioEl as any).setSinkId(device.deviceId)
+                .catch((err: any) => console.error('Error setting participant audio output device:', err));
+            }
+          });
+          
+          // Also apply to any audio elements created by Dyte internally
+          document.querySelectorAll('audio').forEach((audioEl) => {
+            if ((audioEl as any).setSinkId) {
+              (audioEl as any).setSinkId(device.deviceId)
+                .catch((err: any) => console.error('Error setting audio element output device:', err));
+            }
+          });
         }
       }
     } catch (error) {
