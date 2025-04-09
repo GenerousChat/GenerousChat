@@ -927,7 +927,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 400, // Reduced to enforce shorter responses
+      maxTokens: 4000, // Reduced to enforce shorter responses
       temperature: 0.8, // Add some randomness but not too much
     });
 
