@@ -15,6 +15,7 @@ const { createClient } = require("@supabase/supabase-js");
 const { generateText, generateObject } = require("ai");
 const { openai } = require("@ai-sdk/openai");
 const { google } = require("@ai-sdk/google");
+const { z } = require("zod");
 
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -550,35 +551,55 @@ async function generateAIResponse(roomId) {
       // For more accurate analysis, use the AI to evaluate
       if (keywordMatch) {
         try {
-          // Use generateText instead of generateObject to avoid schema issues
-          const analysisPrompt = `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
+          // Use generateObject with Zod schema as per the latest docs
+          const result = await generateObject({
+            model: openai.responses("gpt-4o"),
+            schema: z.object({
+              score: z.number().describe("A score from 0 to 100 indicating the likelihood that the user is requesting a visualization"),
+              reason: z.string().describe("A brief explanation of why this score was given")
+            }),
+            prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
 
 Message: "${message.content}"
 
-Return a JSON object with:
-1. score: A number from 0 to 100 indicating the likelihood that the user is requesting a visualization
-2. reason: A brief explanation of why this score was given
-
-Format your response as valid JSON only, like: {"score": 75, "reason": "The message contains..."}`;
-
-          const { text: analysisText } = await generateText({
-            model: openai.responses("gpt-4o"), // Use a smaller model for efficiency
-            prompt: analysisPrompt,
+Return a score from 0 to 100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
             temperature: 0.1,
           });
-
-          // Parse the JSON response
-          try {
-            const analysis = JSON.parse(analysisText.trim());
-            confidence = analysis.score / 100;
-            console.log(
-              `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${analysis.reason}`
-            );
-          } catch (parseError) {
-            console.error("Error parsing AI analysis response:", parseError);
-            console.log("Raw AI response:", analysisText);
-            // Fallback to keyword-based confidence if parsing fails
-            confidence = keywordMatch ? 0.5 : 0.1;
+          
+          // Debug the result structure
+          console.log("AI analysis result structure:", JSON.stringify(result, null, 2));
+          
+          // Safely access properties with fallbacks
+          if (result && typeof result === 'object') {
+            // Try to find score and reason properties at any level based on the actual structure
+            let score, reason;
+            
+            // Check for direct properties
+            if ('score' in result) {
+              score = result.score;
+              reason = result.reason;
+            } 
+            // Check for object.score structure (this is the actual structure based on the debug output)
+            else if (result.object && typeof result.object === 'object') {
+              score = result.object.score;
+              reason = result.object.reason;
+            } 
+            // Check for analysis structure
+            else if (result.analysis && typeof result.analysis === 'object') {
+              score = result.analysis.score;
+              reason = result.analysis.reason;
+            }
+            
+            if (typeof score === 'number') {
+              confidence = score / 100;
+              console.log(
+                `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || 'No reason provided'}`
+              );
+            } else {
+              console.log("Could not find valid score in AI response, using keyword-based confidence");
+            }
+          } else {
+            console.log("AI analysis returned invalid result, using keyword-based confidence");
           }
         } catch (aiError) {
           console.error("Error getting AI analysis of message:", aiError);
