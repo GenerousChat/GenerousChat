@@ -795,7 +795,7 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Once found, implement exactly what that message requested
 - Use conversation history only as supporting context for implementing the request
 
-## Technology Selection - Match the right tool to the conversation:
+## Technology Selection - Match the right tool to the request and load required libraries:
 
 - Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
 - Timelines/processes → Use TimelineJS or custom animations
