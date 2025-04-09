@@ -685,7 +685,7 @@ ${messageHistory}
 ## Your Creation Requirements:
 1. Ensure responsive design that works well in the sidebar panel
 2. Create a visualization that directly fulfills the most recent build/create request
-3. Do not include ```html or ``` javascript code blocks in the output as it will be rendered directly
+3. DO NOT INCLUDE markdown code comment blocks in the output as it will be rendered directly
 4. Optimize performance (lazy load libraries, efficient code) 
 5. Balance aesthetics with functionality - beautiful but purposeful
 6. Use libraries and technologies that fit the conversation needs
