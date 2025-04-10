@@ -271,31 +271,63 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       .replace('${messageHistory}', messageHistory)
       .replace('${lastUserMessage.content}', lastUserMessage.content);
 
-    const result = await generateObject({
-      model: openai.responses('gpt-4o'),
-      temperature: 0.1,
-      schema: z.object({
-        agents_confidence: z.array(
-          z.object({
-            agent_id: z.string(),
-            confidence: z.number(),
-          })
-        ),
-      }),
-      prompt,
-    });
+    try {
+      const result = await generateObject({
+        model: openai.responses('gpt-4o'),
+        temperature: 0.1,
+        schema: z.object({
+          agents_confidence: z.array(
+            z.object({
+              agent_id: z.string(),
+              confidence: z.number(),
+            })
+          ),
+        }),
+        prompt,
+      });
 
-    let selectedAgents = JSON.parse(
-      result.response.body.output[0].text
-    ).agents_confidence;
+      // Safely access the agents_confidence array from the result
+      // Different AI SDK versions might return different response structures
+      let selectedAgents;
+      
+      // First check if we have the direct output object structure
+      if (result && result.agents_confidence) {
+        selectedAgents = result.agents_confidence;
+      }
+      // Then check for nested response structure in newer SDK versions
+      else if (result?.response?.body?.output) {
+        // Handle case where output is already an array of objects with content field
+        const output = result.response.body.output[0];
+        
+        if (output && output.text) {
+          try {
+            // Safely parse JSON from text
+            const parsedContent = JSON.parse(output.text);
+            selectedAgents = parsedContent.agents_confidence;
+          } catch (parseError) {
+            console.error('Failed to parse JSON from AI response:', parseError);
+            return null;
+          }
+        }
+      }
+      
+      // If we couldn't extract the agents_confidence, log error and return null
+      if (!selectedAgents || !Array.isArray(selectedAgents) || selectedAgents.length === 0) {
+        console.error('Could not extract valid agents_confidence array from AI response:', result);
+        return null;
+      }
 
-    const highestConfidenceAgent = selectedAgents.reduce((prev, current) =>
-      prev.confidence > current.confidence ? prev : current
-    );
+      const highestConfidenceAgent = selectedAgents.reduce((prev, current) =>
+        prev.confidence > current.confidence ? prev : current
+      );
 
-    return this.aiAgents.find(
-      (agent) => agent.id === highestConfidenceAgent.agent_id
-    );
+      return this.aiAgents.find(
+        (agent) => agent.id === highestConfidenceAgent.agent_id
+      );
+    } catch (error) {
+      console.error('Error selecting agent:', error);
+      return null;
+    }
   }
 
   async generateVisualization(
