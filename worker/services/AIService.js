@@ -14,6 +14,8 @@ class AIService {
     this.aiResponseInProgress = false;
     this.aiAgents = [];
     this.aiAgentIds = new Set();
+    // Track which messages have already received responses
+    this.processedMessages = new Map();
   }
 
   async handleAIResponse(roomId, messageHistory, lastUserMessage, agentPrompt = null) {
@@ -23,6 +25,19 @@ class AIService {
         console.log("Last message was from an AI agent, skipping response");
         return;
       }
+      
+      // Check if this specific message has already received a response
+      if (this.processedMessages.has(lastUserMessage.id)) {
+        console.log(`Already responded to message ${lastUserMessage.id}, skipping duplicate response`);
+        return;
+      }
+      
+      // Mark this message as processed to prevent duplicate responses
+      this.processedMessages.set(lastUserMessage.id, Date.now());
+      console.log(`Marked message ${lastUserMessage.id} as processed. Total processed: ${this.processedMessages.size}`);
+      
+      // Cleanup old processed messages to prevent memory leaks (entries older than 1 hour)
+      this._cleanupProcessedMessages();
       
       // 1. Check if the message indicates a visualization intent
       const visualizationConfidence = await this.analyzeMessageForVisualizationIntent(lastUserMessage);
@@ -123,6 +138,9 @@ class AIService {
 
   async init() {
     await this.fetchAIAgents();
+    
+    // Set up periodic cleanup of the processed messages tracker
+    setInterval(() => this._cleanupProcessedMessages(), 60 * 60 * 1000); // Clean up every hour
   }
 
   async fetchAIAgents() {
@@ -404,6 +422,27 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     });
 
     return text;
+  }
+
+  /**
+   * Private method to clean up old entries from processed messages tracker
+   * to prevent memory leaks
+   */
+  _cleanupProcessedMessages() {
+    const now = Date.now();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    
+    let cleanupCount = 0;
+    for (const [messageId, timestamp] of this.processedMessages.entries()) {
+      if (timestamp < oneHourAgo) {
+        this.processedMessages.delete(messageId);
+        cleanupCount++;
+      }
+    }
+    
+    if (cleanupCount > 0) {
+      console.log(`Cleaned up ${cleanupCount} old message entries. Current tracked: ${this.processedMessages.size}`);
+    }
   }
 }
 
