@@ -893,62 +893,9 @@ Create something that directly fulfills the most recent build/create/update requ
   }
 }
 
-// Initialize the application
-async function init() {
-  try {
-    console.log("===== INITIALIZING APPLICATION =====");
-    console.log("Environment variables:");
-    console.log(
-      "- PUSHER_SECRET:",
-      process.env.PUSHER_SECRET ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- NEXT_PUBLIC_SUPABASE_URL:",
-      process.env.NEXT_PUBLIC_SUPABASE_URL ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- NEXT_PUBLIC_SUPABASE_ANON_KEY:",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- SUPABASE_SERVICE_KEY:",
-      process.env.SUPABASE_SERVICE_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- OPENAI_API_KEY:",
-      process.env.OPENAI_API_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- HTML_CONTENT_CHANCE:",
-      process.env.HTML_CONTENT_CHANCE
-        ? process.env.HTML_CONTENT_CHANCE + "%"
-        : "90% (default)"
-    );
-    console.log(
-      "- Using Supabase key type:",
-      process.env.SUPABASE_SERVICE_KEY
-        ? "SERVICE ROLE (privileged)"
-        : "ANON (limited)"
-    );
-    // Fetch recent messages first
-    await fetchRecentMessages();
-
-    // Fetch AI agents
-    await fetchAIAgents();
-
-    // Set up Supabase listeners
-    await setupSupabaseListeners();
-
-    // Start the server
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-      console.log(`Supabase to Pusher bridge worker running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Error initializing the application:", error);
-    process.exit(1);
-  }
-}
+// This duplicate init function is being removed as it contains undefined function calls.
+// The properly implemented init function is defined earlier in the file.
+// Keeping this comment as a placeholder for reference.
 
 // Start the application
 init();
