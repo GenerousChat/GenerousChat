@@ -264,16 +264,16 @@ async function init() {
     logger.info(`- HTML_CONTENT_CHANCE: ${appConfig.htmlContentChance}%`);
     logger.info(`- PORT: ${appConfig.port}`);
 
-    // Initialize Supabase service
-    await SupabaseService.init();
+    // Initialize Supabase service by creating an instance
+    const supabaseService = new SupabaseService();
     
     // Initialize message tracker with recent messages
-    const messages = await SupabaseService.fetchRecentMessages();
+    const messages = await supabaseService.fetchRecentMessages();
     MessageTracker.initialize(messages);
     
     // Initialize AI service with agents from database
-    const agents = await SupabaseService.fetchAIAgents();
-    await AIService.init(SupabaseService, agents, MessageTracker, PusherService, {
+    const agents = await supabaseService.fetchAIAgents();
+    await AIService.init(supabaseService, agents, MessageTracker, PusherService, {
       htmlContentChance: appConfig.htmlContentChance
     });
     
