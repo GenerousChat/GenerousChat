@@ -60,7 +60,8 @@ class AIService {
             type: "visualization",
             metadata: {
               model: "o3-mini",
-              messageCount: messageHistory.split('\n').length
+              messageCount: typeof messageHistory === 'string' ? messageHistory.split('\n').length : 
+                Array.isArray(messageHistory) ? messageHistory.length : 0
             }
           })
           .select()
