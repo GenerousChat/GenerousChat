@@ -44,3 +44,18 @@
 {"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:20:10.618Z"}
 {"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:20:10.957Z"}
 {"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:20:16.844Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:27:53.112Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:27:53.527Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:27:53.537Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:27:53.863Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:27:58.074Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:28:26.091Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:28:26.499Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:28:26.510Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:28:26.856Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:28:29.819Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:31:50.063Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:31:50.885Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:31:50.895Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:31:51.228Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:31:56.686Z"}

@@ -1,6 +1,7 @@
 const { generateText, generateObject } = require('ai');
 const { openai } = require('@ai-sdk/openai');
 const { z } = require('zod');
+const PusherService = require('./PusherService');
 const {
   visualizationPrompt,
   agentConfidencePrompt,
