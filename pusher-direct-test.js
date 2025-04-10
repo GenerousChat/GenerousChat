@@ -3,10 +3,10 @@ const Pusher = require('pusher');
 
 // Replace with your actual Pusher credentials
 const pusher = new Pusher({
-  appId: '1971423',
-  key: '96f9360f34a831ca1901',
-  secret: process.env.PUSHER_SECRET || 'YOUR_PUSHER_SECRET', // Set this via environment variable
-  cluster: 'us3',
+  appId: process.env.PUSHER_APP_ID,
+  key: process.env.PUSHER_KEY,
+  secret: process.env.PUSHER_SECRET,
+  cluster: process.env.PUSHER_CLUSTER,
   useTLS: true
 });
 

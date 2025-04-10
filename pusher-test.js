@@ -4,11 +4,11 @@ const https = require('https');
 
 // Pusher configuration - same as in your worker
 const pusherConfig = {
-  appId: '1971423',
-  key: '96f9360f34a831ca1901',
-  secret: process.env.PUSHER_SECRET || 'YOUR_PUSHER_SECRET', // Replace with your actual secret
-  cluster: 'us3'
-};
+  appId: process.env.PUSHER_APP_ID,
+  key: process.env.PUSHER_KEY,
+  secret: process.env.PUSHER_SECRET,
+  cluster: process.env.PUSHER_CLUSTER,
+}
 
 // Function to calculate MD5 hash
 function md5(str) {
