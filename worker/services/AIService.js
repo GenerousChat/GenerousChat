@@ -74,27 +74,40 @@ class AIService {
         }
       }
       
-      // 5. Send the AI response to the appropriate Pusher channel
-      await PusherService.sendEvent(`room-${roomId}`, 'new-message', {
+      // 5. Store the AI response in the database
+      const aiAssistantId = selectedAgent ? selectedAgent.id : null;
+      const { data: messageData, error: messageError } = await this.supabase.from("messages").insert({
+        room_id: roomId,
+        user_id: aiAssistantId,
         content: textResponse,
-        timestamp: new Date().toISOString(),
-        agent: selectedAgent ? {
-          id: selectedAgent.id,
-          name: selectedAgent.name,
-          avatar: selectedAgent.avatar
-        } : null,
-        has_generation: !!generationHtml
-      });
+      }).select().single();
+
+      if (messageError) {
+        console.error('Error saving AI response to database:', messageError);
+      } else {
+        console.log("AI response saved to database with ID:", messageData.id);
+        
+        // Send the AI response to the appropriate Pusher channel
+        await PusherService.sendEvent(`room-${roomId}`, 'new-message', {
+          id: messageData.id,
+          content: textResponse,
+          created_at: messageData.created_at,
+          user_id: aiAssistantId
+        });
+      }
       
       // 6. If there's a new generation, notify clients to update
       if (generationHtml) {
-        await PusherService.sendEvent(`room-${roomId}`, 'new-generation', {
-          generation_id: generation.id,
-          type: "visualization",
-          created_at: generation.created_at
+        // Send HTML visualization as a special event type (matching old code)
+        await PusherService.sendEvent(`room-${roomId}`, 'html-visualization', {
+          id: generation.id,
+          html: generationHtml,
+          summary: "Generated a visual summary of this conversation",
+          created_at: generation.created_at,
+          user_id: selectedAgent ? selectedAgent.id : null
         });
         
-        console.log("Notification sent to clients about new generation");
+        console.log("HTML visualization sent to clients via Pusher");
       }
       
     } catch (error) {
