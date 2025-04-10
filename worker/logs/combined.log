@@ -1,0 +1,46 @@
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:06:19.547Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:06:21.044Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:06:21.056Z"}
+{"level":"info","message":"Subscription status changed: TIMED_OUT","service":"worker-service","timestamp":"2025-04-10T13:06:31.046Z"}
+{"level":"info","message":"Subscription status changed: CLOSED","service":"worker-service","timestamp":"2025-04-10T13:06:34.049Z"}
+{"level":"info","message":"Subscription status changed: TIMED_OUT","service":"worker-service","timestamp":"2025-04-10T13:06:44.051Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:07:03.485Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:07:03.901Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:07:03.911Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:07:04.055Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:07:09.211Z"}
+{"level":"error","message":"Error handling message: Failed to send event: 400 - Token validated, but invalid for app 1532500\n","service":"worker-service","stack":"Error: Failed to send event: 400 - Token validated, but invalid for app 1532500\n\n    at IncomingMessage.<anonymous> (/Users/ajaxdavis/repos/hackathon/worker/services/PusherService.js:56:22)\n    at IncomingMessage.emit (node:events:539:35)\n    at endReadableNT (node:internal/streams/readable:1344:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)","timestamp":"2025-04-10T13:07:10.064Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:08:58.615Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:08:59.579Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:09:03.234Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:09:03.635Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:09:03.642Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:09:03.998Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:09:08.206Z"}
+{"level":"error","message":"Error handling message: handleAIResponse is not defined","service":"worker-service","stack":"ReferenceError: handleAIResponse is not defined\n    at Object.callback (/Users/ajaxdavis/repos/hackathon/worker/index.js:64:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-10T13:09:09.026Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:11:46.426Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:11:47.336Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:11:47.347Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:11:47.688Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:11:53.654Z"}
+{"level":"error","message":"Error handling message: handleAIResponse is not defined","service":"worker-service","stack":"ReferenceError: handleAIResponse is not defined\n    at Object.callback (/Users/ajaxdavis/repos/hackathon/worker/index.js:64:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-10T13:11:54.456Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:16:24.678Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:16:25.517Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:16:25.526Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:16:25.864Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:16:30.972Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:17:12.315Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:17:16.678Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:17:17.084Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:17:17.094Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:17:17.425Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:17:19.028Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:18:54.382Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:18:59.803Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:18:59.814Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:19:00.189Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-10T13:20:10.188Z"}
+{"level":"info","message":"Setting up Supabase real-time listeners...","service":"worker-service","timestamp":"2025-04-10T13:20:10.608Z"}
+{"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:20:10.618Z"}
+{"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:20:10.957Z"}
+{"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:20:16.844Z"}

@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const pusherRoutes = require('./pusher');
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Import other route files and use them with the router
+// Example: const userRoutes = require('./user');
+// router.use('/users', userRoutes);
 
-// Mount routes
-router.use('/pusher', pusherRoutes);
-
+// Export the router
 module.exports = router;
