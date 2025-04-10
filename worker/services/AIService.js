@@ -18,6 +18,12 @@ class AIService {
 
   async handleAIResponse(roomId, messageHistory, lastUserMessage, agentPrompt = null) {
     try {
+      // Check if the message is from an AI agent - if so, don't respond
+      if (this.aiAgentIds.has(lastUserMessage.user_id)) {
+        console.log("Last message was from an AI agent, skipping response");
+        return;
+      }
+      
       // 1. Check if the message indicates a visualization intent
       const visualizationConfidence = await this.analyzeMessageForVisualizationIntent(lastUserMessage);
       console.log(`Visualization confidence: ${visualizationConfidence * 100}%`);
