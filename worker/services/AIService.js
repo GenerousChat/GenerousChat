@@ -26,7 +26,7 @@ class AIService {
       );
       console.log(`AI Response: ${response}`);
       // Send the AI response to the appropriate Pusher channel
-      await PusherService.sendEvent(`room-${roomId}`, 'ai-response', {
+      await PusherService.sendEvent(`room-${roomId}`, 'new-message', {
         content: response,
         timestamp: new Date().toISOString(),
       });
