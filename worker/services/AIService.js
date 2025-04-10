@@ -16,20 +16,86 @@ class AIService {
     this.aiAgentIds = new Set();
   }
 
-  async handleAIResponse(roomId, messageHistory, lastUserMessage, agentPrompt) {
+  async handleAIResponse(roomId, messageHistory, lastUserMessage, agentPrompt = null) {
     try {
-      const response = await this.generateResponse(
+      // 1. Check if the message indicates a visualization intent
+      const visualizationConfidence = await this.analyzeMessageForVisualizationIntent(lastUserMessage);
+      console.log(`Visualization confidence: ${visualizationConfidence * 100}%`);
+      
+      // 2. Select the most appropriate agent for this message
+      const selectedAgent = await this.selectAgent(roomId, messageHistory, lastUserMessage);
+      console.log(`Selected agent: ${selectedAgent ? selectedAgent.name : 'Default'}`);
+      
+      // Use the selected agent's prompt or fallback to provided agentPrompt
+      const effectivePrompt = selectedAgent ? selectedAgent.personality_prompt : agentPrompt;
+      
+      // 3. Generate the text response
+      const textResponse = await this.generateResponse(
         roomId,
         messageHistory,
         lastUserMessage,
-        agentPrompt
+        effectivePrompt
       );
-      console.log(`AI Response: ${response}`);
-      // Send the AI response to the appropriate Pusher channel
+      console.log(`AI Response: ${textResponse}`);
+      
+      // 4. Determine if we need to generate visualization
+      let generationHtml = null;
+      if (visualizationConfidence > 0.7) { // Threshold for visualization generation
+        console.log("Visualization intent detected, generating visualization");
+        generationHtml = await this.generateVisualization(
+          roomId, 
+          messageHistory, 
+          lastUserMessage, 
+          textResponse
+        );
+        
+        // Store the new generation in the database
+        const { data: generation, error: insertError } = await this.supabase
+          .from('chat_room_generations')
+          .insert({
+            room_id: roomId,
+            html: generationHtml,
+            summary: "Generated visualization based on conversation",
+            created_by: selectedAgent ? selectedAgent.id : null,
+            type: "visualization",
+            metadata: {
+              model: "o3-mini",
+              messageCount: messageHistory.split('\n').length
+            }
+          })
+          .select()
+          .single();
+          
+        if (insertError) {
+          console.error('Error storing generation:', insertError);
+        } else {
+          console.log("Generation stored in database with ID:", generation.id);
+        }
+      }
+      
+      // 5. Send the AI response to the appropriate Pusher channel
       await PusherService.sendEvent(`room-${roomId}`, 'new-message', {
-        content: response,
+        content: textResponse,
         timestamp: new Date().toISOString(),
+        agent: selectedAgent ? {
+          id: selectedAgent.id,
+          name: selectedAgent.name,
+          avatar: selectedAgent.avatar
+        } : null,
+        has_generation: !!generationHtml
       });
+      
+      // 6. If there's a new generation, notify clients to update
+      if (generationHtml) {
+        await PusherService.sendEvent(`room-${roomId}`, 'new-generation', {
+          generation_id: generation.id,
+          type: "visualization",
+          created_at: generation.created_at
+        });
+        
+        console.log("Notification sent to clients about new generation");
+      }
+      
     } catch (error) {
       console.error('Error handling AI response:', error);
     }
