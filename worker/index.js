@@ -9,485 +9,293 @@ try {
   console.log("Could not load ../.env file, will use environment variables");
 }
 
-const crypto = require("crypto");
-const https = require("https");
-const { createClient } = require("@supabase/supabase-js");
-const { generateText, generateObject } = require("ai");
-const { openai } = require("@ai-sdk/openai");
-const { google } = require("@ai-sdk/google");
-const { z } = require("zod");
+// Import required services and dependencies
+const express = require("express");
+const config = require("./config");
+const SupabaseService = require("./services/SupabaseService");
+const PusherService = require("./services/PusherService");
+const AIService = require("./services/AIService");
+const MessageTracker = require("./services/MessageTracker");
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-// Prefer service role key when available, fall back to anon key
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const keyType = process.env.SUPABASE_SERVICE_KEY ? "service role" : "anon";
+// Apply logger if available
+let logger = console;
+try {
+  logger = require("./config/logger");
+} catch (error) {
+  console.log("Using default console logger");
+}
 
-// Initialize Supabase client
-console.log(
-  `Initializing Supabase client with URL: ${supabaseUrl ? "URL is set" : "URL is NOT set"} and ${keyType} key: ${supabaseKey ? "Key is set" : "Key is NOT set"}`
-);
-const supabase = createClient(supabaseUrl, supabaseKey);
-console.log("Supabase client initialized with", keyType, "key");
-
-// Pusher configuration
-const pusherConfig = {
-  appId: "1971423",
-  key: "96f9360f34a831ca1901",
-  secret: process.env.PUSHER_SECRET || "c508bc54a2ca619cfab8",
-  cluster: "us3",
+// Apply middleware if available
+let errorHandler = (err, req, res, next) => {
+  logger.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
 };
 
-// Store the last 50 messages
-let recentMessages = [];
+try {
+  errorHandler = require("./middleware/error-handler");
+} catch (error) {
+  console.log("Using default error handler");
+}
 
-// Flag to track if AI is currently generating a response
-let aiResponseInProgress = false;
-
-// Timeout to prevent AI from responding too frequently
-let aiResponseTimeout = null;
-
-// Store AI agents fetched from the database
-let aiAgents = [];
-
-// Set to store AI agent user IDs to prevent AI from responding to its own messages
-let aiAgentIds = new Set();
-
-// Configuration for HTML content generation
-const config = {
+// Configuration for the application
+const appConfig = {
   // Percentage chance (0-100) to generate HTML content instead of a text response
   htmlContentChance: process.env.HTML_CONTENT_CHANCE || 90,
+  port: process.env.PORT || 3001
 };
-
-// Fetch AI agents from the database
-async function fetchAIAgents() {
-  try {
-    const { data, error } = await supabase
-      .from("agents")
-      .select("*")
-      .order("name");
-
-    if (error) {
-      console.error("Error fetching AI agents:", error);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      aiAgents = data;
-      // Update the set of AI agent IDs
-      aiAgentIds = new Set(data.map((agent) => agent.id));
-      console.log(`Fetched ${aiAgents.length} AI agents`);
-    } else {
-      console.log("No AI agents found in the database");
-    }
-  } catch (error) {
-    console.error("Error in fetchAIAgents:", error);
-  }
-}
-
-// Fetch the last 50 messages from Supabase
-async function fetchRecentMessages() {
-  try {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error("Error fetching recent messages:", error);
-      return;
-    }
-
-    recentMessages = data.reverse();
-    console.log(`Fetched ${recentMessages.length} recent messages`);
-    // console.log("Recent messages:", JSON.stringify(recentMessages, null, 2));
-  } catch (error) {
-    console.error("Error in fetchRecentMessages:", error);
-  }
-}
-
-// Function to calculate MD5 hash
-function md5(str) {
-  return crypto.createHash("md5").update(str).digest("hex");
-}
-
-// Function to generate Pusher authentication signature
-function generatePusherSignature(stringToSign, secret) {
-  return crypto.createHmac("sha256", secret).update(stringToSign).digest("hex");
-}
-
-// Function to send event to Pusher
-async function sendToPusher(channel, eventName, data) {
-  return new Promise((resolve, reject) => {
-    try {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const eventData = JSON.stringify(data);
-      console.log(
-        `Preparing to send Pusher event: ${eventName} to channel: ${channel}`
-      );
-      console.log(
-        `Event data type: ${typeof data}, stringified length: ${eventData.length}`
-      );
-
-      const body = JSON.stringify({
-        name: eventName,
-        channel: channel,
-        data: eventData,
-      });
-
-      const bodyMd5 = md5(body);
-      const stringToSign = `POST\n/apps/${pusherConfig.appId}/events\nauth_key=${pusherConfig.key}&auth_timestamp=${timestamp}&auth_version=1.0&body_md5=${bodyMd5}`;
-      const signature = generatePusherSignature(
-        stringToSign,
-        pusherConfig.secret
-      );
-
-      const options = {
-        hostname: `api-${pusherConfig.cluster}.pusher.com`,
-        port: 443,
-        path: `/apps/${pusherConfig.appId}/events`,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(body),
-        },
-      };
-
-      // Add query parameters
-      options.path += `?auth_key=${pusherConfig.key}&auth_timestamp=${timestamp}&auth_version=1.0&body_md5=${bodyMd5}&auth_signature=${signature}`;
-
-      const req = https.request(options, (res) => {
-        let responseData = "";
-
-        res.on("data", (chunk) => {
-          responseData += chunk;
-        });
-
-        res.on("end", () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.log(
-              `Event sent to Pusher: ${eventName} on channel ${channel}`
-            );
-            resolve({ success: true, statusCode: res.statusCode });
-          } else {
-            console.error(
-              `Failed to send event to Pusher: ${res.statusCode} - ${responseData}`
-            );
-            reject(
-              new Error(
-                `Failed to send event: ${res.statusCode} - ${responseData}`
-              )
-            );
-          }
-        });
-      });
-
-      req.on("error", (error) => {
-        console.error("Error sending event to Pusher:", error);
-        reject(error);
-      });
-
-      req.write(body);
-      req.end();
-    } catch (error) {
-      console.error("Error in sendToPusher:", error);
-      reject(error);
-    }
-  });
-}
 
 // Set up Supabase real-time listeners
 async function setupSupabaseListeners() {
-  console.log("Setting up Supabase real-time listeners...");
-  console.log(
-    "Supabase client status:",
-    supabase ? "initialized" : "not initialized"
-  );
+  logger.info("Setting up Supabase real-time listeners...");
+  
+  // Create callbacks for Supabase real-time events
+  const callbacks = {
+    onMessageInsert: async (payload) => {
+      logger.info("===== MESSAGE INSERTED CALLBACK TRIGGERED =====");
+      logger.debug("New message received:", JSON.stringify(payload));
+      const message = payload.new;
 
-  // Create a single channel for all events
-  console.log("Setting up combined channel subscription...");
-  const channel = supabase
-    .channel("db-changes")
-    // .on(
-    //   "postgres_changes",
-    //   {
-    //     event: "*",
-    //     schema: "public",
-    //     table: "agents",
-    //   },
-    //   async (payload) => {
-    //     console.log("===== AGENT CHANGE DETECTED =====");
-    //     console.log("Agent change:", JSON.stringify(payload));
+      // Add to recent messages cache
+      MessageTracker.addMessage(message);
 
-    //     // Refresh the agents list
-    //     await fetchAIAgents();
-    //   }
-    // )
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-      },
-      async (payload) => {
-        console.log("===== MESSAGE INSERTED CALLBACK TRIGGERED =====");
-        console.log("New message received:", JSON.stringify(payload));
-        const message = payload.new;
+      try {
+        // Send message to the appropriate room channel
+        await PusherService.sendEvent(`room-${message.room_id}`, "new-message", {
+          id: message.id,
+          content: message.content,
+          created_at: message.created_at,
+          user_id: message.user_id,
+        });
+        logger.info(`Message successfully forwarded to Pusher channel room-${message.room_id}`);
 
-        // Add to recent messages
-        recentMessages.push(message);
-        if (recentMessages.length > 50) {
-          recentMessages.shift(); // Remove oldest message if we exceed 50
+        // Generate AI response if the message is from a human user
+        if (!AIService.isMessageFromAI(message.user_id)) {
+          logger.info("Message is from a human user, scheduling AI response...");
+          AIService.scheduleResponse(message.room_id);
+        } else {
+          logger.info("Message is from an AI agent, skipping AI response generation");
         }
-
-        try {
-          // Send to the appropriate room channel
-          await sendToPusher(`room-${message.room_id}`, "new-message", {
-            id: message.id,
-            content: message.content,
-            created_at: message.created_at,
-            user_id: message.user_id,
-          });
-          console.log(
-            `Message successfully forwarded to Pusher channel room-${message.room_id}`
-          );
-
-          // Only generate AI responses for messages from human users
-          if (!aiAgentIds.has(message.user_id)) {
-            console.log(
-              "Message is from a human user, generating AI response..."
-            );
-
-            // Generate AI response after a short delay
-            // Clear any existing timeout to prevent multiple responses
-            if (aiResponseTimeout) {
-              clearTimeout(aiResponseTimeout);
-            }
-
-            // Set a new timeout to generate a response after 2 seconds
-            aiResponseTimeout = setTimeout(() => {
-              generateAIResponse(message.room_id);
-            }, 2000);
-          } else {
-            console.log(
-              "Message is from an AI agent, skipping AI response generation"
-            );
-
-            // buttttttt
-          }
-        } catch (error) {
-          console.error("Error forwarding message to Pusher:", error);
-        }
+      } catch (error) {
+        logger.error("Error forwarding message to Pusher:", error);
       }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "room_participants",
-      },
-      async (payload) => {
-        console.log("===== PARTICIPANT JOINED CALLBACK TRIGGERED =====");
-        console.log("User joined room:", JSON.stringify(payload));
-        const participant = payload.new;
+    },
+    
+    onParticipantJoined: async (payload) => {
+      logger.info("===== PARTICIPANT JOINED CALLBACK TRIGGERED =====");
+      logger.debug("User joined room:", JSON.stringify(payload));
+      const participant = payload.new;
 
-        try {
-          // Send user joined event
-          await sendToPusher(`room-${participant.room_id}`, "user-joined", {
-            user_id: participant.user_id,
-            joined_at: participant.joined_at,
-          });
-          console.log(
-            `User join event forwarded to Pusher channel room-${participant.room_id}`
-          );
-        } catch (error) {
-          console.error("Error forwarding user join event to Pusher:", error);
-        }
+      try {
+        // Send user joined event
+        await PusherService.sendEvent(`room-${participant.room_id}`, "user-joined", {
+          user_id: participant.user_id,
+          joined_at: participant.joined_at,
+        });
+        logger.info(`User join event forwarded to Pusher channel room-${participant.room_id}`);
+      } catch (error) {
+        logger.error("Error forwarding user join event to Pusher:", error);
       }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "DELETE",
-        schema: "public",
-        table: "room_participants",
-      },
-      async (payload) => {
-        console.log("===== PARTICIPANT LEFT CALLBACK TRIGGERED =====");
-        console.log("User left room:", JSON.stringify(payload));
-        const participant = payload.old;
+    },
+    
+    onParticipantLeft: async (payload) => {
+      logger.info("===== PARTICIPANT LEFT CALLBACK TRIGGERED =====");
+      logger.debug("User left room:", JSON.stringify(payload));
+      const participant = payload.old;
 
-        try {
-          // Send user left event
-          await sendToPusher(`room-${participant.room_id}`, "user-left", {
-            user_id: participant.user_id,
-          });
-          console.log(
-            `User left event forwarded to Pusher channel room-${participant.room_id}`
-          );
-        } catch (error) {
-          console.error("Error forwarding user left event to Pusher:", error);
-        }
+      try {
+        // Send user left event
+        await PusherService.sendEvent(`room-${participant.room_id}`, "user-left", {
+          user_id: participant.user_id,
+        });
+        logger.info(`User left event forwarded to Pusher channel room-${participant.room_id}`);
+      } catch (error) {
+        logger.error("Error forwarding user left event to Pusher:", error);
       }
-    );
-
-  // Subscribe to the channel
-  console.log("Subscribing to channel...");
-  const subscription = channel.subscribe((status) => {
-    console.log(`Subscription status changed: ${status}`);
-    if (status === "SUBSCRIBED") {
-      console.log("Successfully subscribed to database changes!");
     }
-    if (status === "CHANNEL_ERROR") {
-      console.error("Failed to subscribe to database changes");
-    }
-  });
+  };
 
-  console.log("Supabase real-time listeners set up successfully");
-  console.log("Channel subscription state:", channel.state);
-
+  const channel = await SupabaseService.setupRealtimeListeners(callbacks);
+  
   return { channel };
 }
 
-// Express server setup
-const express = require("express");
-const app = express();
-app.use(express.json());
-
-// Test endpoint for Pusher
-app.post("/test-pusher", async (req, res) => {
+// Set up Express app routes
+function setupExpressApp(app) {
+  // Apply middleware
+  app.use(express.json());
+  
+  // Apply morgan middleware if available
   try {
-    console.log("Testing Pusher integration");
-    const roomId = req.body.roomId || "test-room";
-    const message = req.body.message || "Test message";
-    const messageType = req.body.messageType || "text";
+    const morgan = require('./middleware/morgan');
+    app.use(morgan);
+  } catch (error) {
+    logger.info("Morgan middleware not available, skipping");
+  }
 
-    if (messageType === "html") {
-      // Test sending HTML content
-      const htmlContent =
-        req.body.htmlContent ||
-        `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-            h1 { color: #4a6fa5; }
-            p { line-height: 1.6; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Test HTML Content</h1>
-            <p>This is a test HTML page generated by the worker. In a real scenario, this would contain a creative summary or visualization of the conversation.</p>
-            <p>The actual content would be much more detailed and relevant to the conversation topics.</p>
-          </div>
-        </body>
-        </html>
-      `;
+  // Test endpoint for Pusher
+  app.post("/test-pusher", async (req, res) => {
+    try {
+      logger.info("Testing Pusher integration");
+      const roomId = req.body.roomId || "test-room";
+      const message = req.body.message || "Test message";
+      const messageType = req.body.messageType || "text";
 
-      // Send HTML content as a special event type
-      console.log("Sending test HTML visualization to Pusher");
+      if (messageType === "html") {
+        // Test sending HTML content
+        const htmlContent =
+          req.body.htmlContent ||
+          `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+              .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+              h1 { color: #4a6fa5; }
+              p { line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Test HTML Content</h1>
+              <p>This is a test HTML page generated by the worker. In a real scenario, this would contain a creative summary or visualization of the conversation.</p>
+              <p>The actual content would be much more detailed and relevant to the conversation topics.</p>
+            </div>
+          </body>
+          </html>
+        `;
 
-      const visualizationData = {
-        id: "test-viz-" + Date.now(),
-        html: htmlContent,
-        summary: "Test HTML Visualization",
-        created_at: new Date().toISOString(),
-        user_id: "test-user",
-      };
+        // Send HTML content as a special event type
+        logger.info("Sending test HTML visualization to Pusher");
 
-      try {
-        await sendToPusher(
-          `room-${roomId}`,
-          "html-visualization",
-          visualizationData
-        );
-        console.log("Test HTML visualization successfully sent to Pusher");
-        res.status(200).json({
-          success: true,
-          message: "Test HTML visualization sent to Pusher",
+        const visualizationData = {
+          id: "test-viz-" + Date.now(),
+          html: htmlContent,
+          summary: "Test HTML Visualization",
+          created_at: new Date().toISOString(),
+          user_id: "test-user",
+        };
+
+        try {
+          await PusherService.sendEvent(
+            `room-${roomId}`,
+            "html-visualization",
+            visualizationData
+          );
+          logger.info("Test HTML visualization successfully sent to Pusher");
+          res.status(200).json({
+            success: true,
+            message: "Test HTML visualization sent to Pusher",
+          });
+        } catch (error) {
+          logger.error(
+            "Error sending test HTML visualization to Pusher:",
+            error
+          );
+          res
+            .status(500)
+            .json({ error: "Failed to send HTML visualization to Pusher" });
+        }
+      } else {
+        // Regular text message
+        await PusherService.sendEvent(`room-${roomId}`, "new-message", {
+          id: "test-" + Date.now(),
+          content: message,
+          created_at: new Date().toISOString(),
+          user_id: "test-user",
         });
-      } catch (error) {
-        console.error(
-          "Error sending test HTML visualization to Pusher:",
-          error
-        );
+
         res
-          .status(500)
-          .json({ error: "Failed to send HTML visualization to Pusher" });
+          .status(200)
+          .json({ success: true, message: "Test message sent to Pusher" });
       }
-    } else {
-      // Regular text message
-      await sendToPusher(`room-${roomId}`, "new-message", {
-        id: "test-" + Date.now(),
-        content: message,
-        created_at: new Date().toISOString(),
-        user_id: "test-user",
-      });
-
-      res
-        .status(200)
-        .json({ success: true, message: "Test message sent to Pusher" });
+    } catch (error) {
+      logger.error("Error testing Pusher:", error);
+      res.status(500).json({ error: "Failed to send test message to Pusher" });
     }
-  } catch (error) {
-    console.error("Error testing Pusher:", error);
-    res.status(500).json({ error: "Failed to send test message to Pusher" });
-  }
-});
+  });
 
-// Get recent messages endpoint
-app.get("/recent-messages", (req, res) => {
-  res.status(200).json({ messages: recentMessages });
-});
+  // Get recent messages endpoint
+  app.get("/recent-messages", (req, res) => {
+    res.status(200).json({ messages: MessageTracker.getRecentMessages() });
+  });
 
-// Test endpoint for AI response
-app.post("/test-ai", async (req, res) => {
+  // Test endpoint for AI response
+  app.post("/test-ai", async (req, res) => {
+    try {
+      logger.info("Testing AI response generation");
+      const roomId = req.body.roomId || "test-room";
+      const forceHtml = req.body.forceHtml === true;
+
+      // Generate and send AI response
+      await AIService.generateResponse(roomId, { forceHtml });
+
+      res.status(200).json({
+        success: true,
+        message: forceHtml 
+          ? "HTML content generated and sent to Pusher" 
+          : "AI response generated and sent to Pusher",
+      });
+    } catch (error) {
+      logger.error("Error testing AI response:", error);
+      res.status(500).json({ error: "Failed to generate AI response" });
+    }
+  });
+
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
+
+  // Apply error handler middleware
+  app.use(errorHandler);
+}
+
+// Initialize the application
+async function init() {
   try {
-    console.log("Testing AI response generation");
-    const roomId = req.body.roomId || "test-room";
-    const forceHtml = req.body.forceHtml === true;
+    logger.info("===== INITIALIZING APPLICATION =====");
+    logger.info("Environment variables:");
+    logger.info(`- PUSHER_SECRET: ${process.env.PUSHER_SECRET ? "is set" : "is NOT set"}`);
+    logger.info(`- NEXT_PUBLIC_SUPABASE_URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? "is set" : "is NOT set"}`);
+    logger.info(`- NEXT_PUBLIC_SUPABASE_ANON_KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "is set" : "is NOT set"}`);
+    logger.info(`- SUPABASE_SERVICE_KEY: ${process.env.SUPABASE_SERVICE_KEY ? "is set" : "is NOT set"}`);
+    logger.info(`- OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? "is set" : "is NOT set"}`);
+    logger.info(`- HTML_CONTENT_CHANCE: ${appConfig.htmlContentChance}%`);
+    logger.info(`- PORT: ${appConfig.port}`);
 
-    // Override the random selection if forceHtml is true
-    if (forceHtml) {
-      // Temporarily modify Math.random to always return 0.1 (which is < 0.2)
-      const originalRandom = Math.random;
-      Math.random = () => 0.1;
+    // Initialize Supabase service
+    await SupabaseService.init();
+    
+    // Initialize message tracker with recent messages
+    const messages = await SupabaseService.fetchRecentMessages();
+    MessageTracker.initialize(messages);
+    
+    // Initialize AI service with agents from database
+    const agents = await SupabaseService.fetchAIAgents();
+    await AIService.init(SupabaseService, agents, MessageTracker, PusherService, {
+      htmlContentChance: appConfig.htmlContentChance
+    });
+    
+    // Set up real-time listeners
+    const { channel } = await setupSupabaseListeners();
 
-      // Generate and send AI response with HTML
-      await generateAIResponse(roomId);
-
-      // Restore original Math.random
-      Math.random = originalRandom;
-
-      res.status(200).json({
-        success: true,
-        message: "HTML content generated and sent to Pusher",
-      });
-    } else {
-      // Generate and send regular AI response
-      await generateAIResponse(roomId);
-
-      res.status(200).json({
-        success: true,
-        message: "AI response generated and sent to Pusher",
-      });
-    }
+    // Create and set up Express app
+    const app = express();
+    setupExpressApp(app);
+    
+    // Start the server
+    app.listen(appConfig.port, () => {
+      logger.info(`Worker server is running on port ${appConfig.port}`);
+    });
   } catch (error) {
-    console.error("Error testing AI response:", error);
-    res.status(500).json({ error: "Failed to generate AI response" });
+    logger.error("Error during initialization:", error);
+    process.exit(1);
   }
-});
+}
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
+// Start the application
+init();
 
 // Generate AI response based on recent messages
 async function generateAIResponse(roomId) {
