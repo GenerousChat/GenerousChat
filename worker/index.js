@@ -355,9 +355,22 @@ async function setupSupabaseListeners() {
 
 // Express server setup
 const express = require("express");
-const app = express();
-app.use(express.json());
+const config = require("./config");
+const routes = require("./routes");
+const SupabaseService = require("./services/SupabaseService");
+const AIService = require("./services/AIService");
 
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use("/", routes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something broke!" });
+});
 // Test endpoint for Pusher
 app.post("/test-pusher", async (req, res) => {
   try {
@@ -1089,58 +1102,19 @@ Create something that directly fulfills the most recent build/create/update requ
 async function init() {
   try {
     console.log("===== INITIALIZING APPLICATION =====");
-    console.log("Environment variables:");
-    console.log(
-      "- PUSHER_SECRET:",
-      process.env.PUSHER_SECRET ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- NEXT_PUBLIC_SUPABASE_URL:",
-      process.env.NEXT_PUBLIC_SUPABASE_URL ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- NEXT_PUBLIC_SUPABASE_ANON_KEY:",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- SUPABASE_SERVICE_KEY:",
-      process.env.SUPABASE_SERVICE_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- OPENAI_API_KEY:",
-      process.env.OPENAI_API_KEY ? "is set" : "is NOT set"
-    );
-    console.log(
-      "- HTML_CONTENT_CHANCE:",
-      process.env.HTML_CONTENT_CHANCE
-        ? process.env.HTML_CONTENT_CHANCE + "%"
-        : "90% (default)"
-    );
-    console.log(
-      "- Using Supabase key type:",
-      process.env.SUPABASE_SERVICE_KEY
-        ? "SERVICE ROLE (privileged)"
-        : "ANON (limited)"
-    );
-    // Fetch recent messages first
-    await fetchRecentMessages();
+    
+    // Initialize services
+    await SupabaseService.init();
+    await AIService.init();
 
-    // Fetch AI agents
-    await fetchAIAgents();
-
-    // Set up Supabase listeners
-    await setupSupabaseListeners();
-
-    // Start the server
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-      console.log(`Supabase to Pusher bridge worker running on port ${PORT}`);
+    // Start server
+    app.listen(config.server.port, () => {
+      console.log(`Server running on port ${config.server.port}`);
     });
   } catch (error) {
-    console.error("Error initializing the application:", error);
+    console.error("Error initializing application:", error);
     process.exit(1);
   }
 }
 
-// Start the application
 init();
