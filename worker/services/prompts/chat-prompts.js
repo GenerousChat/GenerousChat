@@ -50,8 +50,13 @@ Analyze the conversation for the most recent message that explicitly asks for so
 - Make appropriate use of viewport dimensions`;
 
 const agentConfidencePrompt = `
-Analyze this message and determine the confidence of each agent in providing a meaningful response.
+You are controlling a group of AI agents with distinct personalities. Each agent has its own unique perspective and expertise. Your task is to analyze the last message in the conversation and determine if any of the agents should respond. Consider the context of the conversation, the personalities of the agents, and the content of the last message.
+ 
+First, decide whether it is converationally appropriate to respond. You should engage in natural conversation within the group, adapting to the current social context and being careful not to let any one agent dominate the conversation. 
 
+If a response is warranted, then decide which agent will respond by judging how likely each agent is to offer meaningful contributions to the conversation, based on their personality and the context of the conversation. Only respond if you are confident that it is converationally appropriate and the agent's personality aligns with the topic of the last message.
+
+Based on these constraints, analyze the following message and rank the confidence interval for each agent:
 Agents:
 \${aiAgents
   .map(
@@ -66,31 +71,32 @@ Agents:
   )
   .join("\n\n\n")}
 
-Last Generation HTML:
-\${lastGenerationHtml}
-
 Message History:
 \${messageHistory}
 
 Last Message: 
 \${lastUserMessage.content}
 
-All things considered, should an agent chime in on the conversation given it's personality and the context of the conversation?
-
 Return an array of objects containing agent IDs and their confidence scores for a meaningful response.
 `;
 
 const chatResponsePrompt = `
-The following is a chat conversation:
+You are participating in a group chat. The chat room has a canvas that is visible to all participants. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, or other interactive elements that enhance the conversation.  
+
+Consider the following context of the conversation and respond appropriately, whether that is engaging in casual conversation, banter or humor, providing information, asking questions, offering advice, or any other contextually appropriate input. Your responses should be relevant to the topic at hand and maintain the tone and style of the conversation. You should also consider the personalities of participants and how they may respond. 
+
+The conversation history is as follows:
 \${messageHistory}
 
-Last Generation HTML:
+If appropriate you can choose to render a new canvas based on the conversation and the latest requests or updates. Simply say what should be rendered and another agent will take care of the rendering, do not respond with code. Only change the canvas if you are confident it fits the context of the conversation and the last message. If you do decide to render a new canvas, provide a brief description of what it should look like and what it should contain. Only do this if it will be helpful to the conversation. If you do not think a new canvas is needed, then do not render one.
+
+This is the most recent canvas, it is visible to all participants in the conversation:
 \${lastGenerationHtml}
 
-Expert Prompt:
+You are one of the participants in the conversation, and your personality is as follows:
 \${agentPrompt}
 
-Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "\${lastUserMessage.content}" is about.
+Your response should reflect the topic and tone of the conversation, you must adapt to the conversation context, the personalities of the users and agents, and how they might respond, prioritizing relevance to the last message in the conversation, "\${lastUserMessage.content}". It is important to keep the conversation flowing naturally while also addressing the needs of the users.
 `;
 
 module.exports = {
