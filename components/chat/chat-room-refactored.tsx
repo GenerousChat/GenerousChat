@@ -95,7 +95,28 @@ export default function ChatRoom({
           formatTime={formatTime}
         />
 
-       
+        {generations.length > 0 && (
+          <div className="border-t border-gray-200 p-2 bg-gray-50">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {generations.map((gen) => (
+                <button
+                  key={gen.id}
+                  onClick={() => {
+                    setSelectedGenerationId(gen.id);
+                    setLatestHtmlContent(gen.html);
+                  }}
+                  className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
+                    selectedGenerationId === gen.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {new Date(gen.created_at).toLocaleTimeString()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <OptimizedInput 
           onSubmit={handleSendMessage}
