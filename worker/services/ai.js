@@ -734,8 +734,13 @@ async function generateResponseWithAgent(
       const htmlPrompt = `# Conversation-Driven UI Generation
 
 ## Canvas Generation Guide- Use the following guidelines to determine what to build. 
-- Choose the appropriate framework based on the user intent expressed in the following message, ${lastUserMessage.content}. If the user intent is to add to, modify, change, or update the visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible changing only what elements the user specifies should be altered. 
+
+## User Intent 
+- Choose the appropriate framework based on the user intent expressed in the following message, ${lastUserMessage.content}. 
+- If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. 
 - Everything must be rendered in html in the sidebar and must be responsive. 
+
+## Canvas Rules
 - Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
 - Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
 - Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
@@ -759,8 +764,6 @@ async function generateResponseWithAgent(
 - Youtube videos → Use lite YouTube embed
 - Simple text/concepts → Use elegant typography
 - Don't use WebGL as it does not work in the sidebar 
-
-
 
 ## Your Creation Requirements:
 1. Ensure responsive design that works well in the sidebar panel
