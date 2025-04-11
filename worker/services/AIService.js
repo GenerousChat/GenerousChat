@@ -1,12 +1,12 @@
-const { generateText, generateObject } = require('ai');
-const { openai } = require('@ai-sdk/openai');
-const { z } = require('zod');
-const PusherService = require('./PusherService');
+const { generateText, generateObject } = require("ai");
+const { openai } = require("@ai-sdk/openai");
+const { z } = require("zod");
+const PusherService = require("./PusherService");
 const {
   visualizationPrompt,
   agentConfidencePrompt,
   chatResponsePrompt,
-} = require('./prompts/chat-prompts');
+} = require("./prompts/chat-prompts");
 
 class AIService {
   constructor(supabase) {
@@ -18,38 +18,66 @@ class AIService {
     this.processedMessages = new Map();
   }
 
-  async handleAIResponse(roomId, messageHistory, lastUserMessage, agentPrompt = null) {
+  async handleAIResponse(
+    roomId,
+    messageHistory,
+    lastUserMessage,
+    agentPrompt = null
+  ) {
     try {
+      // Skip messages with null or undefined user_id
+      if (!lastUserMessage.user_id) {
+        console.log("Message has null or undefined user_id, skipping response");
+        return;
+      }
+
       // Check if the message is from an AI agent - if so, don't respond
       if (this.aiAgentIds.has(lastUserMessage.user_id)) {
-        console.log("Last message was from an AI agent, skipping response");
+        console.log(
+          `Last message was from an AI agent (${lastUserMessage.user_id}), skipping response`
+        );
         return;
       }
-      
+
       // Check if this specific message has already received a response
       if (this.processedMessages.has(lastUserMessage.id)) {
-        console.log(`Already responded to message ${lastUserMessage.id}, skipping duplicate response`);
+        console.log(
+          `Already responded to message ${lastUserMessage.id}, skipping duplicate response`
+        );
         return;
       }
-      
+
       // Mark this message as processed to prevent duplicate responses
       this.processedMessages.set(lastUserMessage.id, Date.now());
-      console.log(`Marked message ${lastUserMessage.id} as processed. Total processed: ${this.processedMessages.size}`);
-      
+      console.log(
+        `Marked message ${lastUserMessage.id} as processed. Total processed: ${this.processedMessages.size}`
+      );
+
       // Cleanup old processed messages to prevent memory leaks (entries older than 1 hour)
       this._cleanupProcessedMessages();
-      
+
       // 1. Check if the message indicates a visualization intent
-      const visualizationConfidence = await this.analyzeMessageForVisualizationIntent(lastUserMessage);
-      console.log(`Visualization confidence: ${visualizationConfidence * 100}%`);
-      
+      const visualizationConfidence =
+        await this.analyzeMessageForVisualizationIntent(lastUserMessage);
+      console.log(
+        `Visualization confidence: ${visualizationConfidence * 100}%`
+      );
+
       // 2. Select the most appropriate agent for this message
-      const selectedAgent = await this.selectAgent(roomId, messageHistory, lastUserMessage);
-      console.log(`Selected agent: ${selectedAgent ? selectedAgent.name : 'Default'}`);
-      
+      const selectedAgent = await this.selectAgent(
+        roomId,
+        messageHistory,
+        lastUserMessage
+      );
+      console.log(
+        `Selected agent: ${selectedAgent ? selectedAgent.name : "Default"}`
+      );
+
       // Use the selected agent's prompt or fallback to provided agentPrompt
-      const effectivePrompt = selectedAgent ? selectedAgent.personality_prompt : agentPrompt;
-      
+      const effectivePrompt = selectedAgent
+        ? selectedAgent.personality_prompt
+        : agentPrompt;
+
       // 3. Generate the text response
       const textResponse = await this.generateResponse(
         roomId,
@@ -58,21 +86,22 @@ class AIService {
         effectivePrompt
       );
       console.log(`AI Response: ${textResponse}`);
-      
+
       // 4. Determine if we need to generate visualization
       let generationHtml = null;
-      if (visualizationConfidence > 0.7) { // Threshold for visualization generation
+      if (visualizationConfidence > 0.7) {
+        // Threshold for visualization generation
         console.log("Visualization intent detected, generating visualization");
         generationHtml = await this.generateVisualization(
-          roomId, 
-          messageHistory, 
-          lastUserMessage, 
+          roomId,
+          messageHistory,
+          lastUserMessage,
           textResponse
         );
-        
+
         // Store the new generation in the database
         const { data: generation, error: insertError } = await this.supabase
-          .from('chat_room_generations')
+          .from("chat_room_generations")
           .insert({
             room_id: roomId,
             html: generationHtml,
@@ -81,64 +110,71 @@ class AIService {
             type: "visualization",
             metadata: {
               model: "o3-mini",
-              messageCount: typeof messageHistory === 'string' ? messageHistory.split('\n').length : 
-                Array.isArray(messageHistory) ? messageHistory.length : 0
-            }
+              messageCount:
+                typeof messageHistory === "string"
+                  ? messageHistory.split("\n").length
+                  : Array.isArray(messageHistory)
+                    ? messageHistory.length
+                    : 0,
+            },
           })
           .select()
           .single();
-          
+
         if (insertError) {
-          console.error('Error storing generation:', insertError);
+          console.error("Error storing generation:", insertError);
         } else {
           console.log("Generation stored in database with ID:", generation.id);
         }
       }
-      
+
       // 5. Store the AI response in the database
       const aiAssistantId = selectedAgent ? selectedAgent.id : null;
-      const { data: messageData, error: messageError } = await this.supabase.from("messages").insert({
-        room_id: roomId,
-        user_id: aiAssistantId,
-        content: textResponse,
-      }).select().single();
+      const { data: messageData, error: messageError } = await this.supabase
+        .from("messages")
+        .insert({
+          room_id: roomId,
+          user_id: aiAssistantId,
+          content: textResponse,
+        })
+        .select()
+        .single();
 
       if (messageError) {
-        console.error('Error saving AI response to database:', messageError);
+        console.error("Error saving AI response to database:", messageError);
       } else {
         console.log("AI response saved to database with ID:", messageData.id);
-        
+
         // Send the AI response to the appropriate Pusher channel
-        await PusherService.sendEvent(`room-${roomId}`, 'new-message', {
+        await PusherService.sendEvent(`room-${roomId}`, "new-message", {
           id: messageData.id,
           content: textResponse,
           created_at: messageData.created_at,
-          user_id: aiAssistantId
+          user_id: aiAssistantId,
         });
       }
-      
+
       // 6. If there's a new generation, notify clients to update
       if (generationHtml) {
         // Send HTML visualization as a special event type (matching old code)
-        await PusherService.sendEvent(`room-${roomId}`, 'html-visualization', {
+        await PusherService.sendEvent(`room-${roomId}`, "html-visualization", {
           id: generation.id,
           html: generationHtml,
           summary: "Generated a visual summary of this conversation",
           created_at: generation.created_at,
-          user_id: selectedAgent ? selectedAgent.id : null
+          user_id: selectedAgent ? selectedAgent.id : null,
         });
-        
+
         console.log("HTML visualization sent to clients via Pusher");
       }
-      
     } catch (error) {
-      console.error('Error handling AI response:', error);
+      console.error("Error handling AI response:", error);
     }
   }
 
   async init() {
     await this.fetchAIAgents();
-    
+
     // Set up periodic cleanup of the processed messages tracker
     setInterval(() => this._cleanupProcessedMessages(), 60 * 60 * 1000); // Clean up every hour
   }
@@ -146,12 +182,12 @@ class AIService {
   async fetchAIAgents() {
     try {
       const { data, error } = await this.supabase
-        .from('agents')
-        .select('*')
-        .order('name');
+        .from("agents")
+        .select("*")
+        .order("name");
 
       if (error) {
-        console.error('Error fetching AI agents:', error);
+        console.error("Error fetching AI agents:", error);
         return;
       }
 
@@ -160,77 +196,77 @@ class AIService {
         this.aiAgentIds = new Set(data.map((agent) => agent.id));
         console.log(`Fetched ${this.aiAgents.length} AI agents`);
       } else {
-        console.log('No AI agents found in the database');
+        console.log("No AI agents found in the database");
       }
     } catch (error) {
-      console.error('Error in fetchAIAgents:', error);
+      console.error("Error in fetchAIAgents:", error);
     }
   }
 
   async analyzeMessageForVisualizationIntent(message) {
     const visualizationKeywords = [
-      'build',
-      'create',
-      'generate',
-      'make',
-      'show',
-      'visualize',
-      'display',
-      'draw',
-      'chart',
-      'graph',
-      'diagram',
-      'map',
-      'plot',
-      'visualisation',
-      'visualization',
-      'dashboard',
-      'ui',
-      'interface',
-      'design',
-      'mockup',
-      'prototype',
-      'render',
-      'play',
-      'animate',
-      'simulate',
-      'illustrate',
-      'depict',
-      'add',
-      'update',
-      'change',
-      'modify',
-      'improve',
-      'enhance',
-      'optimize',
-      'refine',
-      'revise',
-      'customize',
-      'personalize',
-      'tailor',
-      'adjust',
-      'transform',
-      'evolve',
-      'rework',
-      'rebuild',
-      'recreate',
-      'remake',
-      'reproduce',
-      'reimagine',
-      'rethink',
-      'reconceptualize',
-      'reengineer',
-      'restructure',
-      'reconfigure',
-      'reorganize',
-      'rearrange',
-      'recompose',
-      'reconstruct',
-      'refactor',
-      'can you',
-      'could you',
-      'suggest',
-      'recommend',
+      "build",
+      "create",
+      "generate",
+      "make",
+      "show",
+      "visualize",
+      "display",
+      "draw",
+      "chart",
+      "graph",
+      "diagram",
+      "map",
+      "plot",
+      "visualisation",
+      "visualization",
+      "dashboard",
+      "ui",
+      "interface",
+      "design",
+      "mockup",
+      "prototype",
+      "render",
+      "play",
+      "animate",
+      "simulate",
+      "illustrate",
+      "depict",
+      "add",
+      "update",
+      "change",
+      "modify",
+      "improve",
+      "enhance",
+      "optimize",
+      "refine",
+      "revise",
+      "customize",
+      "personalize",
+      "tailor",
+      "adjust",
+      "transform",
+      "evolve",
+      "rework",
+      "rebuild",
+      "recreate",
+      "remake",
+      "reproduce",
+      "reimagine",
+      "rethink",
+      "reconceptualize",
+      "reengineer",
+      "restructure",
+      "reconfigure",
+      "reorganize",
+      "rearrange",
+      "recompose",
+      "reconstruct",
+      "refactor",
+      "can you",
+      "could you",
+      "suggest",
+      "recommend",
     ];
 
     const messageText = message.content.toLowerCase();
@@ -243,16 +279,16 @@ class AIService {
     if (keywordMatch) {
       try {
         const result = await generateObject({
-          model: openai.responses('gpt-4o'),
+          model: openai.responses("gpt-4o"),
           schema: z.object({
             score: z
               .number()
               .describe(
-                'A score from 0 to 100 indicating the likelihood that the user is requesting a visualization'
+                "A score from 0 to 100 indicating the likelihood that the user is requesting a visualization"
               ),
             reason: z
               .string()
-              .describe('A brief explanation of why this score was given'),
+              .describe("A brief explanation of why this score was given"),
           }),
           prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
 
@@ -262,29 +298,29 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
           temperature: 0.1,
         });
 
-        if (result && typeof result === 'object') {
+        if (result && typeof result === "object") {
           let score, reason;
 
-          if ('score' in result) {
+          if ("score" in result) {
             score = result.score;
             reason = result.reason;
-          } else if (result.object && typeof result.object === 'object') {
+          } else if (result.object && typeof result.object === "object") {
             score = result.object.score;
             reason = result.object.reason;
-          } else if (result.analysis && typeof result.analysis === 'object') {
+          } else if (result.analysis && typeof result.analysis === "object") {
             score = result.analysis.score;
             reason = result.analysis.reason;
           }
 
-          if (typeof score === 'number') {
+          if (typeof score === "number") {
             confidence = score / 100;
             console.log(
-              `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || 'No reason provided'}`
+              `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
             );
           }
         }
       } catch (aiError) {
-        console.error('Error getting AI analysis of message:', aiError);
+        console.error("Error getting AI analysis of message:", aiError);
       }
     }
 
@@ -295,23 +331,23 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     if (this.aiAgents.length === 0) return null;
 
     const { data: lastGeneration } = await this.supabase
-      .from('chat_room_generations')
+      .from("chat_room_generations")
       .select()
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: false })
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false })
       .limit(1);
 
     const lastGenerationHtml = lastGeneration?.[0]?.html;
 
     const prompt = agentConfidencePrompt
-      .replace('${aiAgents}', JSON.stringify(this.aiAgents))
-      .replace('${lastGenerationHtml}', lastGenerationHtml || '')
-      .replace('${messageHistory}', messageHistory)
-      .replace('${lastUserMessage.content}', lastUserMessage.content);
+      .replace("${aiAgents}", JSON.stringify(this.aiAgents))
+      .replace("${lastGenerationHtml}", lastGenerationHtml || "")
+      .replace("${messageHistory}", messageHistory)
+      .replace("${lastUserMessage.content}", lastUserMessage.content);
 
     try {
       const result = await generateObject({
-        model: openai.responses('gpt-4o'),
+        model: openai.responses("gpt-4o"),
         temperature: 0.1,
         schema: z.object({
           agents_confidence: z.array(
@@ -327,7 +363,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       // Safely access the agents_confidence array from the result
       // Different AI SDK versions might return different response structures
       let selectedAgents;
-      
+
       // First check if we have the direct output object structure
       if (result && result.agents_confidence) {
         selectedAgents = result.agents_confidence;
@@ -336,22 +372,29 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
       else if (result?.response?.body?.output) {
         // Handle case where output is already an array of objects with content field
         const output = result.response.body.output[0];
-        
+
         if (output && output.text) {
           try {
             // Safely parse JSON from text
             const parsedContent = JSON.parse(output.text);
             selectedAgents = parsedContent.agents_confidence;
           } catch (parseError) {
-            console.error('Failed to parse JSON from AI response:', parseError);
+            console.error("Failed to parse JSON from AI response:", parseError);
             return null;
           }
         }
       }
-      
+
       // If we couldn't extract the agents_confidence, log error and return null
-      if (!selectedAgents || !Array.isArray(selectedAgents) || selectedAgents.length === 0) {
-        console.error('Could not extract valid agents_confidence array from AI response:', result);
+      if (
+        !selectedAgents ||
+        !Array.isArray(selectedAgents) ||
+        selectedAgents.length === 0
+      ) {
+        console.error(
+          "Could not extract valid agents_confidence array from AI response:",
+          result
+        );
         return null;
       }
 
@@ -363,7 +406,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
         (agent) => agent.id === highestConfidenceAgent.agent_id
       );
     } catch (error) {
-      console.error('Error selecting agent:', error);
+      console.error("Error selecting agent:", error);
       return null;
     }
   }
@@ -375,21 +418,21 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
     expertAgentText
   ) {
     const { data: lastGeneration } = await this.supabase
-      .from('chat_room_generations')
+      .from("chat_room_generations")
       .select()
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: false })
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false })
       .limit(1);
 
     const lastGenerationHtml = lastGeneration?.[0]?.html;
 
     const prompt = visualizationPrompt
-      .replace('${lastGenerationHtml}', lastGenerationHtml || '')
-      .replace('${messageHistory}', messageHistory)
-      .replace('${expertAgentText}', expertAgentText);
+      .replace("${lastGenerationHtml}", lastGenerationHtml || "")
+      .replace("${messageHistory}", messageHistory)
+      .replace("${expertAgentText}", expertAgentText);
 
     const { text: htmlContent } = await generateText({
-      model: openai.responses('o3-mini'),
+      model: openai.responses("o3-mini"),
       prompt,
       maxTokens: 35500,
       temperature: 0.8,
@@ -400,24 +443,24 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
 
   async generateResponse(roomId, messageHistory, lastUserMessage, agentPrompt) {
     const { data: lastGeneration } = await this.supabase
-      .from('chat_room_generations')
+      .from("chat_room_generations")
       .select()
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: false })
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: false })
       .limit(1);
 
     const lastGenerationHtml = lastGeneration?.[0]?.html;
 
     const prompt = chatResponsePrompt
-      .replace('${messageHistory}', messageHistory)
-      .replace('${lastGenerationHtml}', lastGenerationHtml || '')
-      .replace('${agentPrompt}', agentPrompt)
-      .replace('${lastUserMessage.content}', lastUserMessage.content);
+      .replace("${messageHistory}", messageHistory)
+      .replace("${lastGenerationHtml}", lastGenerationHtml || "")
+      .replace("${agentPrompt}", agentPrompt)
+      .replace("${lastUserMessage.content}", lastUserMessage.content);
 
     const { text } = await generateText({
-      model: openai.responses('gpt-4o'),
+      model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 2000,
+      maxTokens: 300,
       temperature: 0.8,
     });
 
@@ -430,8 +473,8 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
    */
   _cleanupProcessedMessages() {
     const now = Date.now();
-    const oneHourAgo = now - (60 * 60 * 1000);
-    
+    const oneHourAgo = now - 60 * 60 * 1000;
+
     let cleanupCount = 0;
     for (const [messageId, timestamp] of this.processedMessages.entries()) {
       if (timestamp < oneHourAgo) {
@@ -439,9 +482,11 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
         cleanupCount++;
       }
     }
-    
+
     if (cleanupCount > 0) {
-      console.log(`Cleaned up ${cleanupCount} old message entries. Current tracked: ${this.processedMessages.size}`);
+      console.log(
+        `Cleaned up ${cleanupCount} old message entries. Current tracked: ${this.processedMessages.size}`
+      );
     }
   }
 }

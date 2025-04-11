@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from 'react';
 import { createClient } from "@/utils/supabase/client";
+import { Button } from "@/components/ui/button";
 
 interface Participant {
   user_id: string;
@@ -10,12 +11,18 @@ interface Participant {
   };
 }
 
+interface ParticipantListProps {
+  participants: Participant[];
+  onJoinAudio?: () => void;
+  showAudioRoom?: boolean;
+}
+
 interface ParticipantInfo {
   name: string;
   isAgent?: boolean;
 }
 
-const ParticipantList = memo(({ participants }: { participants: Participant[] }) => {
+const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {
   const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
   
   // Load profile names once when participants change
@@ -51,6 +58,38 @@ const ParticipantList = memo(({ participants }: { participants: Participant[] })
       <div className="p-4 border-b">
         <h3 className="text-sm font-medium">Room Participants</h3>
       </div>
+      
+      {/* Audio Room Join Button */}
+      {onJoinAudio && !showAudioRoom && (
+        <div className="p-3 border-b">
+          <Button 
+            onClick={onJoinAudio} 
+            className="w-full flex items-center justify-center gap-2 text-xs"
+            size="sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            Join Audio Chat
+          </Button>
+        </div>
+      )}
+      
+      {/* Audio Room Status */}
+      {showAudioRoom && (
+        <div className="p-3 border-b bg-green-50">
+          <div className="flex items-center justify-center gap-2 text-xs text-green-700">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              Audio Connected
+            </span>
+          </div>
+        </div>
+      )}
+      
       <div className="flex-1 p-2 space-y-1 overflow-auto">
         {participants.map((participant) => {
           const info = userInfo[participant.user_id] || { name: 'Loading...' };

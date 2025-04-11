@@ -59,3 +59,98 @@
 {"level":"info","message":"Server running on port 3001","service":"worker-service","timestamp":"2025-04-10T13:31:50.895Z"}
 {"level":"info","message":"Subscription status changed: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-10T13:31:51.228Z"}
 {"level":"info","message":"===== MESSAGE INSERTED CALLBACK TRIGGERED =====","service":"worker-service","timestamp":"2025-04-10T13:31:56.686Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:42:29.517Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:42:29.519Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:42:29.520Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:42:29.520Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:42:29.520Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:42:29.521Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:42:29.521Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:42:29.521Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:42:29.521Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:42:30.321Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:42:30.604Z"}
+{"level":"info","message":"Supabase to Pusher bridge worker running on port 3001","service":"worker-service","timestamp":"2025-04-11T07:42:30.631Z"}
+{"level":"info","message":"Supabase realtime status: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-11T07:42:31.729Z"}
+{"level":"info","message":"New message received: 1005ef93-1286-4f18-9253-30fa7fb08d85 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:44:47.711Z"}
+{"code":"ENOTFOUND","errno":-3008,"hostname":"api-undefined.pusher.com","level":"error","message":"Error handling new message: getaddrinfo ENOTFOUND api-undefined.pusher.com","service":"worker-service","stack":"Error: getaddrinfo ENOTFOUND api-undefined.pusher.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)","syscall":"getaddrinfo","timestamp":"2025-04-11T07:44:47.784Z"}
+{"level":"info","message":"New message received: a5c5420c-d0c3-4f55-95e0-09986bef07fe in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:45:21.880Z"}
+{"code":"ENOTFOUND","errno":-3008,"hostname":"api-undefined.pusher.com","level":"error","message":"Error handling new message: getaddrinfo ENOTFOUND api-undefined.pusher.com","service":"worker-service","stack":"Error: getaddrinfo ENOTFOUND api-undefined.pusher.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)","syscall":"getaddrinfo","timestamp":"2025-04-11T07:45:21.923Z"}
+{"level":"info","message":"New message received: d68cbdf5-ed7f-4290-97cb-295f25aa676c in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:45:36.935Z"}
+{"code":"ENOTFOUND","errno":-3008,"hostname":"api-undefined.pusher.com","level":"error","message":"Error handling new message: getaddrinfo ENOTFOUND api-undefined.pusher.com","service":"worker-service","stack":"Error: getaddrinfo ENOTFOUND api-undefined.pusher.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)","syscall":"getaddrinfo","timestamp":"2025-04-11T07:45:36.985Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:46:41.010Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:46:41.013Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:46:41.013Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:46:41.013Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:46:41.014Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:46:41.014Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:46:41.014Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:46:41.014Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:46:41.014Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:46:41.810Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:46:42.168Z"}
+{"level":"info","message":"Supabase to Pusher bridge worker running on port 3001","service":"worker-service","timestamp":"2025-04-11T07:46:42.199Z"}
+{"level":"info","message":"Supabase realtime status: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-11T07:46:42.612Z"}
+{"level":"info","message":"New message received: 1883e7db-eb81-4414-b3f3-0af30fff8de6 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:47:19.671Z"}
+{"level":"error","message":"Error handling new message: aiService.isFromAIAgent is not a function","service":"worker-service","stack":"TypeError: aiService.isFromAIAgent is not a function\n    at Object.handleNewMessage [as callback] (/home/ajax/repos/hackathon/worker/index.js:60:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-11T07:47:20.985Z"}
+{"level":"info","message":"New message received: aef0caaf-460b-4269-94ac-936fa0f73089 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:47:32.482Z"}
+{"level":"error","message":"Error handling new message: aiService.isFromAIAgent is not a function","service":"worker-service","stack":"TypeError: aiService.isFromAIAgent is not a function\n    at Object.handleNewMessage [as callback] (/home/ajax/repos/hackathon/worker/index.js:60:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-11T07:47:33.281Z"}
+{"level":"info","message":"New message received: 25575e08-5be7-44f4-9e1d-64ed38612461 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:48:15.175Z"}
+{"level":"error","message":"Error handling new message: aiService.isFromAIAgent is not a function","service":"worker-service","stack":"TypeError: aiService.isFromAIAgent is not a function\n    at Object.handleNewMessage [as callback] (/home/ajax/repos/hackathon/worker/index.js:60:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-11T07:48:15.871Z"}
+{"level":"info","message":"New message received: 3a9efb8c-6479-4011-9c09-6032f6f4044d in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:48:27.754Z"}
+{"level":"error","message":"Error handling new message: aiService.isFromAIAgent is not a function","service":"worker-service","stack":"TypeError: aiService.isFromAIAgent is not a function\n    at Object.handleNewMessage [as callback] (/home/ajax/repos/hackathon/worker/index.js:60:43)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-04-11T07:48:28.563Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:48:44.803Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:48:44.806Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:48:44.807Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:48:44.807Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:48:44.807Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:48:44.807Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:48:44.808Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:48:44.808Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:48:44.808Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:48:45.231Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:48:45.495Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:49:11.433Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:49:11.437Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:49:11.437Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:49:11.438Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:49:11.438Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:49:11.438Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:49:11.439Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:49:11.439Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:49:11.439Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:49:11.834Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:49:12.198Z"}
+{"level":"info","message":"Supabase to Pusher bridge worker running on port 3001","service":"worker-service","timestamp":"2025-04-11T07:49:12.222Z"}
+{"level":"info","message":"Supabase realtime status: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-11T07:49:12.568Z"}
+{"level":"info","message":"New message received: 54cba2a0-120a-4d7f-9fef-efcf389b234f in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:21.640Z"}
+{"level":"info","message":"New message received: 96926294-dce8-4163-b51f-67f7159c6cdd in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:28.751Z"}
+{"level":"info","message":"New message received: 6da5ff7b-9ba2-4892-9665-e9b37bd90805 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:32.568Z"}
+{"level":"info","message":"New message received: 6c3bf2e1-ad18-452f-bf76-33cda155c9f3 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:37.105Z"}
+{"level":"info","message":"New message received: 7f71728b-6b34-434c-8e22-02caaf843d9d in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:44.949Z"}
+{"level":"info","message":"New message received: 4551683a-c813-4b90-92f4-dd9d2941fa44 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:52.487Z"}
+{"level":"info","message":"New message received: 2169ac56-1b90-4bea-b822-6763db1da57c in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:49:59.923Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:54:06.722Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:54:06.726Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:54:06.726Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:54:06.726Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:54:06.726Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:54:06.727Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:54:06.727Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:54:06.727Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:54:06.727Z"}
+{"level":"info","message":"AI service initialized with 7 agents","service":"worker-service","timestamp":"2025-04-11T07:54:07.145Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:54:07.363Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:54:07.364Z"}
+{"level":"info","message":"Supabase to Pusher bridge worker running on port 3001","service":"worker-service","timestamp":"2025-04-11T07:54:07.376Z"}
+{"level":"info","message":"Supabase realtime status: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-11T07:54:07.760Z"}
+{"level":"info","message":"New message received: ce65fddc-7983-4e4f-a463-a99fecb2512d in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:11.971Z"}
+{"level":"info","message":"Message from user e92d83f8-b2cd-4ebe-8d06-6e232e64736a - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:54:12.834Z"}
+{"level":"info","message":"New message received: 2401e49b-b220-4628-ba43-25332d1039e9 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:19.299Z"}
+{"level":"info","message":"Message from user null - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:54:20.199Z"}
+{"level":"info","message":"New message received: 274ce2be-0021-4260-b0ff-89e4bdd3e280 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:28.723Z"}
+{"level":"info","message":"Message from user null - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:54:29.571Z"}
+{"level":"info","message":"New message received: 69540cd9-345f-4bfe-ac0c-9c82825536c3 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:30.186Z"}
+{"level":"info","message":"Message from user 83889581-07d0-4dee-8422-0e652bf51080 - Is AI agent: true","service":"worker-service","timestamp":"2025-04-11T07:54:30.386Z"}
+{"level":"info","message":"New message received: c6c688fe-4162-418a-ae14-e1ae83cc2bf7 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:38.652Z"}
+{"level":"info","message":"Message from user null - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:54:39.574Z"}
