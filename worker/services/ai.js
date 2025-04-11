@@ -596,7 +596,8 @@ Analyze the conversation for the most recent message that uses an imperative com
 - Simple animations → Use CSS animations or GSAP
 - Scientific visualizations → Use Plotly.js or Vega-Lite
 - Youtube videos → Use lite YouTube embed
-- Simple text/concepts → Use elegant typography 
+- Simple text/concepts → Use elegant typography
+- Don't use WebGL as it does not work in the sidebar 
 
 IMPORTANT: Always strive to satisfy the request in as much detail as possible. Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
