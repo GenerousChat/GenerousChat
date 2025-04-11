@@ -727,6 +727,9 @@ async function generateResponseWithAgent(
         "Generating a canvas visualization"
       );
 
+      const canvasTemplates = [];
+      const canvasStyleGuide = `Make it look nice and responsive`;
+
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
 
