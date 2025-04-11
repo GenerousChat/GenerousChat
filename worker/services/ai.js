@@ -558,6 +558,13 @@ async function generateResponseWithAgent(
     if (shouldGenerateHtml) {
       logger.info("Generating HTML content based on conversation...");
 
+      // Send a status message to notify users that a canvas is being generated
+      await pusherService.sendStatusMessage(
+        roomId,
+        "generation",
+        "Generating a canvas visualization"
+      );
+
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
 

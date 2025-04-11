@@ -152,6 +152,20 @@ async function sendNewGeneration(roomId, generationId, type, createdAt) {
   });
 }
 
+/**
+ * Send a status message to a room channel
+ * @param {string} roomId - Room ID
+ * @param {string} statusType - Status type (join, leave, generation, etc.)
+ * @param {string} message - Optional custom message
+ * @returns {Promise<Object>} Response from Pusher
+ */
+async function sendStatusMessage(roomId, statusType, message) {
+  return sendToPusher(`room-${roomId}`, 'new-status', {
+    status_type: statusType,
+    message: message,
+  });
+}
+
 module.exports = {
   sendToPusher,
   sendNewMessage,
@@ -159,4 +173,5 @@ module.exports = {
   sendUserLeft,
   sendHtmlVisualization,
   sendNewGeneration,
+  sendStatusMessage,
 };
