@@ -97,6 +97,50 @@ export class OpenAITTSService extends AbstractTTSService {
   }
   
   // Reset audio context if needed
+  private isAgentId(userId: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  }
+  
+  // Helper method to notify when a message starts playing
+  private notifySpeakingStart(message: any): void {
+    try {
+      // Use the speaking context to update indicators
+      // This requires accessing the global speaking context
+      if (typeof window !== 'undefined' && (window as any).__SPEAKING_CONTEXT) {
+        const speakingContext = (window as any).__SPEAKING_CONTEXT;
+        
+        // Turn off all other speaking indicators first
+        if (speakingContext.turnOffAllSpeaking) {
+          speakingContext.turnOffAllSpeaking('tts', message.userId);
+        }
+        
+        // Turn on this message's speaking indicator
+        if (speakingContext.setParticipantSpeaking) {
+          speakingContext.setParticipantSpeaking(message.userId, 'tts', true);
+        }
+      }
+    } catch (error) {
+      console.error('Error in notifySpeakingStart:', error);
+    }
+  }
+  
+  // Helper method to notify when a message stops playing
+  private notifySpeakingEnd(message: any): void {
+    try {
+      // Use the speaking context to update indicators
+      if (typeof window !== 'undefined' && (window as any).__SPEAKING_CONTEXT) {
+        const speakingContext = (window as any).__SPEAKING_CONTEXT;
+        
+        // Turn off this message's speaking indicator
+        if (speakingContext.setParticipantSpeaking) {
+          speakingContext.setParticipantSpeaking(message.userId, 'tts', false);
+        }
+      }
+    } catch (error) {
+      console.error('Error in notifySpeakingEnd:', error);
+    }
+  }
+  
   private resetAudioContext(): boolean {
     try {
       if (this.audioContextResetCount >= this.maxResetAttempts) {
@@ -314,6 +358,81 @@ export class OpenAITTSService extends AbstractTTSService {
     });
   }
   
+  // Override processQueue to handle OpenAI-specific logic
+  protected async processQueue(): Promise<void> {
+    if (this.isPlaying || this.queue.length === 0) return;
+    
+    try {
+      this.isPlaying = true;
+      const message = this.queue[0]; // Get the first message in the queue
+      
+      console.log(`Speaking message with voice ${message.voice?.name || 'default'}`);
+      
+      // Notify that this message is now playing (for speaking indicators)
+      this.notifySpeakingStart(message);
+      
+      try {
+        // Check if we need to fetch an agent voice
+        if (!message.voice && this.isAgentId(message.userId)) {
+          const agentVoice = await this.fetchAgentVoice(message.userId);
+          if (agentVoice) {
+            message.voice = agentVoice;
+          }
+        }
+        
+        // Speak the message
+        await this.speakText(message.content, message.voice || this.getDefaultVoice(), this.apiOptions);
+        
+        // Mark as read and remove from queue
+        this.readMessageIds.add(message.id);
+        this.queue.shift();
+        
+        // Save state
+        this.saveState();
+        
+        // Reset error count on successful playback
+        this.resetErrorCount();
+        
+        // Notify that this message has finished playing
+        this.notifySpeakingEnd(message);
+        
+        // Continue with the next message if there is one
+        this.isPlaying = false;
+        if (this.queue.length > 0) {
+          // Process the next message after a short delay
+          setTimeout(() => this.processQueue(), 300);
+        }
+      } catch (error) {
+        this.recordError(error as Error);
+        console.error('Error speaking message:', error);
+        
+        // Notify that this message has stopped playing due to error
+        this.notifySpeakingEnd(message);
+        
+        // Skip this message if it caused an error
+        this.queue.shift();
+        
+        // Continue with the next message if there is one
+        this.isPlaying = false;
+        if (this.queue.length > 0) {
+          // Process the next message after a short delay
+          setTimeout(() => this.processQueue(), 300);
+        }
+      }
+    } catch (error) {
+      console.error('Error in processQueue:', error);
+      this.recordError(error as Error);
+      
+      // Reset playing state to allow queue to continue
+      this.isPlaying = false;
+      
+      // Try to continue with the next message after a short delay
+      if (this.queue.length > 0) {
+        setTimeout(() => this.processQueue(), 1000);
+      }
+    }
+  }
+  
   // Stop current audio playback
   private stopCurrentAudio(): void {
     try {
@@ -351,6 +470,9 @@ export class OpenAITTSService extends AbstractTTSService {
   // Override stop to cancel current audio
   public stop(): void {
     try {
+      // Get the currently playing message before stopping
+      const currentMessage = this.queue.length > 0 ? this.queue[0] : null;
+      
       super.stop();
       this.stopCurrentAudio();
       
@@ -359,6 +481,11 @@ export class OpenAITTSService extends AbstractTTSService {
       
       // Reset state flags
       this.isPlaying = false;
+      
+      // Notify that any currently playing message has stopped
+      if (currentMessage) {
+        this.notifySpeakingEnd(currentMessage);
+      }
       
       console.log('TTS playback stopped and queue cleared');
     } catch (error) {

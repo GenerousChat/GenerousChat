@@ -23,6 +23,8 @@ interface SpeakingContextType {
   isParticipantSpeaking: (userId: string) => boolean;
   // Get the speaking activity type for a participant
   getParticipantActivityType: (userId: string) => SpeakingActivityType;
+  // Turn off all speaking indicators except for a specific user
+  turnOffAllSpeaking: (activityType: SpeakingActivityType, exceptUserId?: string) => void;
 }
 
 // Create the context with default values
@@ -42,6 +44,44 @@ interface SpeakingProviderProps {
 export function SpeakingProvider({ children }: SpeakingProviderProps) {
   const [speakingStates, setSpeakingStates] = useState<Record<string, ParticipantSpeakingState>>({});
   const { ttsServiceRef } = useTTS();
+  
+  // Expose the speaking context globally for the TTS service to use
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__SPEAKING_CONTEXT = {
+        setParticipantSpeaking: (userId: string, activityType: SpeakingActivityType, isActive: boolean) => {
+          setSpeakingStates(prev => ({
+            ...prev,
+            [userId]: {
+              userId,
+              activityType,
+              isActive,
+            },
+          }));
+        },
+        turnOffAllSpeaking: (activityType: SpeakingActivityType, exceptUserId?: string) => {
+          setSpeakingStates(prev => {
+            const newStates = { ...prev };
+            Object.keys(newStates).forEach(userId => {
+              if (userId !== exceptUserId && newStates[userId].activityType === activityType) {
+                newStates[userId] = {
+                  ...newStates[userId],
+                  isActive: false,
+                };
+              }
+            });
+            return newStates;
+          });
+        }
+      };
+    }
+    
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__SPEAKING_CONTEXT;
+      }
+    };
+  }, []);
 
   // Set a participant as speaking
   const setParticipantSpeaking = (userId: string, activityType: SpeakingActivityType, isActive: boolean) => {
@@ -53,6 +93,22 @@ export function SpeakingProvider({ children }: SpeakingProviderProps) {
         isActive,
       },
     }));
+  };
+  
+  // Turn off all speaking indicators except for a specific user
+  const turnOffAllSpeaking = (activityType: SpeakingActivityType, exceptUserId?: string) => {
+    setSpeakingStates(prev => {
+      const newStates = { ...prev };
+      Object.keys(newStates).forEach(userId => {
+        if (userId !== exceptUserId && newStates[userId]?.activityType === activityType) {
+          newStates[userId] = {
+            ...newStates[userId],
+            isActive: false,
+          };
+        }
+      });
+      return newStates;
+    });
   };
 
   // Check if a participant is speaking
@@ -87,6 +143,7 @@ export function SpeakingProvider({ children }: SpeakingProviderProps) {
         setParticipantSpeaking, 
         isParticipantSpeaking,
         getParticipantActivityType,
+        turnOffAllSpeaking,
       }}
     >
       {children}

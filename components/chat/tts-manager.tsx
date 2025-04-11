@@ -57,7 +57,7 @@ interface TTSManagerProps {
 
 export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
   const { ttsServiceRef, systemState, lastError, resetTTSService } = useTTS();
-  const { setParticipantSpeaking } = useSpeaking();
+  const { setParticipantSpeaking, isParticipantSpeaking } = useSpeaking();
   const [enabled, setEnabled] = useState(false);
   const [ttsService, setTtsService] = useState<AbstractTTSService | null>(null);
   const processedMessageIds = useRef<Set<string>>(new Set());
@@ -180,6 +180,19 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     }
   }, [systemState, serviceStatus, createTTSService]);
 
+  // Use a simpler approach to manage speaking indicators
+  useEffect(() => {
+    // This effect handles cleanup of speaking indicators when TTS is disabled
+    if (!enabled && ttsService) {
+      // Turn off all agent speaking indicators when TTS is disabled
+      Object.keys(userCache).forEach(userId => {
+        if (userCache[userId].isAgent) {
+          setParticipantSpeaking(userId, 'tts', false);
+        }
+      });
+    }
+  }, [enabled, ttsService, userCache, setParticipantSpeaking]);
+
   // Process only new messages received through Pusher
   useEffect(() => {
     if (!ttsService || !enabled || !newMessageReceived || serviceStatus === 'error') return;
@@ -206,31 +219,8 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
         timestamp: newMessageReceived.created_at
       };
       
-      // Update speaking state to indicate this user is about to speak via TTS
-      setParticipantSpeaking(newMessageReceived.user_id, 'tts', true);
-      
-      // Set up a message completion monitor
-      const messageCompletionMonitor = setInterval(() => {
-        try {
-          // Check if the service is still valid
-          if (!ttsService) {
-            clearInterval(messageCompletionMonitor);
-            setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
-            return;
-          }
-          
-          // Check if the message is no longer in the queue and not currently playing
-          if (!ttsService.isMessageInQueue(ttsMessage.id)) {
-            clearInterval(messageCompletionMonitor);
-            setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
-            console.log(`Message ${ttsMessage.id} completed playback`);
-          }
-        } catch (error) {
-          console.error('Error in message completion monitor:', error);
-          clearInterval(messageCompletionMonitor);
-          setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
-        }
-      }, 500);
+      // Don't set the speaking indicator yet - we'll let the message processor handle that
+      // Just queue the message without changing indicators
       
       // Queue the message with error handling
       try {
@@ -238,7 +228,6 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
         processedMessageIds.current.add(newMessageReceived.id);
       } catch (error) {
         console.error('Error queueing TTS message:', error);
-        clearInterval(messageCompletionMonitor);
         setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
         
         // If queueing fails, try to recover the service

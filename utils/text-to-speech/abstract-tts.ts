@@ -284,6 +284,29 @@ export abstract class AbstractTTSService {
     return this.queue.some(message => message.id === messageId) || this.isPlaying;
   }
   
+  // Get the current queue length
+  public getQueueLength(): number {
+    return this.queue.length;
+  }
+  
+  // Get a copy of the current queue
+  public getQueue(): TTSMessage[] {
+    return [...this.queue];
+  }
+  
+  // Check if the service is currently playing
+  public isPlaying(): boolean {
+    return this.isPlaying;
+  }
+  
+  // Get the ID of the currently playing message
+  public getCurrentlyPlayingMessageId(): string | null {
+    if (!this.isPlaying || this.queue.length === 0) {
+      return null;
+    }
+    return this.queue[0]?.id || null;
+  }
+  
   // Check if the TTS service is healthy
   public isHealthy(): boolean {
     // Update health check timestamp
