@@ -24,16 +24,27 @@ export function VisualizationPanel({
         <h3 className="text-sm font-medium">Conversation Visualization</h3>
         <div className="flex gap-2">
           {selectedGenerationId && (
-            <button
-              onClick={() => window.open(`/api/generation/${selectedGenerationId}`, '_blank')}
-              className="text-gray-500 hover:text-gray-700 focus:outline-none"
-              title="Open in new tab"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-              </svg>
-            </button>
+            <>
+              <button
+                onClick={() => window.open(`/api/generation/${selectedGenerationId}`, '_blank')}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                title="Open in new tab"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => window.open(`/api/generation/${selectedGenerationId}/code`, '_blank')}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                title="View HTML code"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </>
           )}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
