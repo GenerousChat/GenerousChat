@@ -33,6 +33,7 @@ const SpeakingContext = createContext<SpeakingContextType>({
   setParticipantSpeaking: () => {},
   isParticipantSpeaking: () => false,
   getParticipantActivityType: () => 'none',
+  turnOffAllSpeaking: () => {},
 });
 
 export const useSpeaking = () => useContext(SpeakingContext);
