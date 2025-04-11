@@ -52,7 +52,7 @@ interface TTSManagerProps {
   newMessageReceived?: Message | null; // New prop to track messages from Pusher
 }
 
-export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps) {
+export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
   const [enabled, setEnabled] = useState(false);
   const [ttsService, setTtsService] = useState<AbstractTTSService | null>(null);
   const processedMessageIds = useRef<Set<string>>(new Set());
@@ -111,33 +111,32 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   }, [messages]);
 
   // Process only new messages received through Pusher
-  useEffect(() => {
-    if (!ttsService || !enabled || !newMessageReceived) return;
-    return false;
-    // Skip if it's a status message or already processed or it's the current user's message
-    if (newMessageReceived.type === 'status' || 
-        processedMessageIds.current.has(newMessageReceived.id) || 
-        newMessageReceived.user_id === currentUserId) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!ttsService || !enabled || !newMessageReceived) return;
+  //   // Skip if it's a status message or already processed or it's the current user's message
+  //   if (newMessageReceived.type === 'status' || 
+  //       processedMessageIds.current.has(newMessageReceived.id) || 
+  //       newMessageReceived.user_id === currentUserId) {
+  //     return;
+  //   }
     
-    // Process the new chat message
-    const userName = newMessageReceived.name || 
-                     newMessageReceived.profile?.name ||
-                     userCache[newMessageReceived.user_id]?.name || 
-                     'Unknown User';
+  //   // Process the new chat message
+  //   const userName = newMessageReceived.name || 
+  //                    newMessageReceived.profile?.name ||
+  //                    userCache[newMessageReceived.user_id]?.name || 
+  //                    'Unknown User';
     
-    const ttsMessage: TTSMessage = {
-      id: newMessageReceived.id,
-      content: newMessageReceived.content,
-      userId: newMessageReceived.user_id,
-      userName: userName,
-      timestamp: newMessageReceived.created_at
-    };
+  //   const ttsMessage: TTSMessage = {
+  //     id: newMessageReceived.id,
+  //     content: newMessageReceived.content,
+  //     userId: newMessageReceived.user_id,
+  //     userName: userName,
+  //     timestamp: newMessageReceived.created_at
+  //   };
     
-    ttsService.queueMessage(ttsMessage);
-    processedMessageIds.current.add(newMessageReceived.id);
-  }, [newMessageReceived, ttsService, enabled, userCache, currentUserId]);
+  //   ttsService.queueMessage(ttsMessage);
+  //   processedMessageIds.current.add(newMessageReceived.id);
+  // }, [newMessageReceived, ttsService, enabled, userCache, currentUserId]);
   
   // Toggle TTS
   const toggleTTS = () => {
