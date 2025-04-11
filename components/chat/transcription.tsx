@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '../ui/button';
+import { useTTS } from '@/utils/tts-context';
 
 // Add type definitions for the Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -56,6 +57,8 @@ interface TranscriptionProps {
 export function Transcription({ className, onTranscript }: TranscriptionProps) {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const { stopTTS } = useTTS();
+  const [speechDetected, setSpeechDetected] = useState(false);
 
   const startTranscription = useCallback(() => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -72,11 +75,21 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
     newRecognition.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
+        
+        // If any speech is detected (even non-final), stop TTS immediately
+        if (!speechDetected && transcript.trim()) {
+          console.log('Speech detected, stopping TTS');
+          stopTTS();
+          setSpeechDetected(true);
+        }
+        
         if (event.results[i].isFinal) {
           console.log('Transcription:', transcript);
           if (onTranscript && transcript.trim()) {
             onTranscript(transcript);
           }
+          // Reset speech detected flag after final result
+          setSpeechDetected(false);
         }
       }
     };
@@ -88,6 +101,7 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
 
     newRecognition.onend = () => {
       setIsTranscribing(false);
+      setSpeechDetected(false);
     };
 
     setRecognition(newRecognition);
@@ -99,6 +113,7 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
     if (recognition) {
       recognition.stop();
       setIsTranscribing(false);
+      setSpeechDetected(false);
     }
   }, [recognition]);
 

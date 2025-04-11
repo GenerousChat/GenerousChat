@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AbstractTTSService, TTSMessage } from "@/utils/text-to-speech/abstract-tts";
 import { OpenAITTSService, OpenAITTSOptions } from "@/utils/text-to-speech/openai-tts";
+import { useTTS } from "@/utils/tts-context";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Settings } from "lucide-react";
 import {
@@ -54,6 +55,7 @@ interface TTSManagerProps {
 }
 
 export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
+  const { ttsServiceRef } = useTTS();
   const [enabled, setEnabled] = useState(false);
   const [ttsService, setTtsService] = useState<AbstractTTSService | null>(null);
   const processedMessageIds = useRef<Set<string>>(new Set());
@@ -89,11 +91,14 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     const service = new OpenAITTSService(ttsOptions);
     
     setTtsService(service);
+    // Store the service in the context ref so other components can access it
+    ttsServiceRef.current = service;
     
     // Cleanup on unmount
     return () => {
       if (service) {
         service.stop();
+        ttsServiceRef.current = null;
       }
     };
   }, []);
@@ -162,6 +167,8 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     }
     const service = new OpenAITTSService(updatedOptions);
     setTtsService(service);
+    // Update the service in the context ref
+    ttsServiceRef.current = service;
   };
   
   return (
