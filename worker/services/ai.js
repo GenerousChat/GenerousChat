@@ -733,13 +733,13 @@ async function generateResponseWithAgent(
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
 
-## Canvas Generation Guide- Use the following guidelines to determine what to build. 
+## Canvas Generation Guide- You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, games, or other interactive elements that enhance the conversation. 
+When deciding how to create the new generation or update the canvas use the following guidelines to determine what to build. Your highest priority is to focus on fulfilling this user request: ${lastUserMessage.content}.
 
 ## User Intent 
 - Choose the appropriate framework based on the user intent expressed in the following message, ${lastUserMessage.content}. 
 - If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. 
-- Include the following clarifying message from an expert agent as supporting information to add more context to the users generation request ${agentResponsePrompt} 
-
+- Include the following clarifying message from an expert agent as supporting information to add more context to the users generation request: ${agentResponsePrompt} 
 - Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
 - Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
 - If the user intent is to create a new visualization, then use the following guidelines as a starting point and modify them to fit the request.
