@@ -220,6 +220,26 @@ export class OpenAITTSService extends AbstractTTSService {
     // Return empty array if query fails
     return [];
   }
+  
+  // Get the default voice to use when none is specified
+  getDefaultVoice(): TTSVoice {
+    // Use the first preferred voice if available
+    if (this.apiOptions.preferredVoices && this.apiOptions.preferredVoices.length > 0) {
+      const preferredVoiceId = this.apiOptions.preferredVoices[0];
+      return {
+        id: preferredVoiceId,
+        name: preferredVoiceId,
+        gender: 'neutral'
+      };
+    }
+    
+    // Otherwise use a default voice
+    return {
+      id: 'nova',
+      name: 'Nova',
+      gender: 'female'
+    };
+  }
 
   async speakText(text: string, voice: TTSVoice, options?: TTSOptions): Promise<void> {
     // If we've already determined to use fallback, skip the OpenAI API call
