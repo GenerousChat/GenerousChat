@@ -154,3 +154,23 @@
 {"level":"info","message":"Message from user 83889581-07d0-4dee-8422-0e652bf51080 - Is AI agent: true","service":"worker-service","timestamp":"2025-04-11T07:54:30.386Z"}
 {"level":"info","message":"New message received: c6c688fe-4162-418a-ae14-e1ae83cc2bf7 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:54:38.652Z"}
 {"level":"info","message":"Message from user null - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:54:39.574Z"}
+{"level":"info","message":"===== INITIALIZING APPLICATION =====","service":"worker-service","timestamp":"2025-04-11T07:58:54.007Z"}
+{"level":"info","message":"Environment variables:","service":"worker-service","timestamp":"2025-04-11T07:58:54.011Z"}
+{"level":"info","message":"- PUSHER_SECRET: is set","service":"worker-service","timestamp":"2025-04-11T07:58:54.011Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_URL: is set","service":"worker-service","timestamp":"2025-04-11T07:58:54.011Z"}
+{"level":"info","message":"- NEXT_PUBLIC_SUPABASE_ANON_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:58:54.011Z"}
+{"level":"info","message":"- SUPABASE_SERVICE_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:58:54.012Z"}
+{"level":"info","message":"- OPENAI_API_KEY: is set","service":"worker-service","timestamp":"2025-04-11T07:58:54.012Z"}
+{"level":"info","message":"- HTML_CONTENT_CHANCE: 90% (default)","service":"worker-service","timestamp":"2025-04-11T07:58:54.012Z"}
+{"level":"info","message":"- Using Supabase key type: SERVICE ROLE (privileged)","service":"worker-service","timestamp":"2025-04-11T07:58:54.012Z"}
+{"level":"info","message":"AI service initialized with 7 agents","service":"worker-service","timestamp":"2025-04-11T07:58:59.770Z"}
+{"level":"info","message":"Loaded 50 recent messages from Supabase","service":"worker-service","timestamp":"2025-04-11T07:59:00.333Z"}
+{"level":"info","message":"Supabase real-time listeners initialized","service":"worker-service","timestamp":"2025-04-11T07:59:00.340Z"}
+{"level":"info","message":"Supabase to Pusher bridge worker running on port 3001","service":"worker-service","timestamp":"2025-04-11T07:59:00.364Z"}
+{"level":"info","message":"Supabase realtime status: SUBSCRIBED","service":"worker-service","timestamp":"2025-04-11T07:59:00.692Z"}
+{"level":"info","message":"New message received: de3916d6-3fe0-4870-afa4-bca2867e2236 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:59:14.461Z"}
+{"level":"info","message":"Message from user e92d83f8-b2cd-4ebe-8d06-6e232e64736a - Is AI agent: false","service":"worker-service","timestamp":"2025-04-11T07:59:15.551Z"}
+{"level":"info","message":"New message received: dca7b35c-5270-476e-9377-41e4f9862700 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:59:20.506Z"}
+{"level":"info","message":"Skipping message with null user_id: dca7b35c-5270-476e-9377-41e4f9862700","service":"worker-service","timestamp":"2025-04-11T07:59:20.705Z"}
+{"level":"info","message":"New message received: 46f4d4bb-5c83-4190-ac91-3287299f7277 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:59:23.537Z"}
+{"level":"info","message":"Skipping message with null user_id: 46f4d4bb-5c83-4190-ac91-3287299f7277","service":"worker-service","timestamp":"2025-04-11T07:59:24.131Z"}
