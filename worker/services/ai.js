@@ -477,6 +477,10 @@ async function generateAIResponse(roomId) {
       })
       .join("\n");
 
+    // Get the last generation HTML for context
+    const lastGeneration = await supabaseService.getLastGeneration(roomId);
+    const lastGenerationHtml = lastGeneration?.html || "";
+
     // Select the best agent for the conversation
     const selectedAgent = await selectBestAgent(
       roomId,
@@ -518,10 +522,6 @@ async function generateAIResponse(roomId) {
         return false;
       }
     }
-
-    // Get the last generation HTML for context
-    const lastGeneration = await supabaseService.getLastGeneration(roomId);
-    const lastGenerationHtml = lastGeneration?.html || "";
 
     // Generate response with the selected agent
     return await generateResponseWithAgent(
