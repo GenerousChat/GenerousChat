@@ -254,6 +254,9 @@ export class OpenAITTSService extends AbstractTTSService {
       if (this.agentVoices[voice.id]) {
         openAIVoice = this.agentVoices[voice.id];
       }
+
+      //@todo - limited text
+      const limitedText = text.substr(0, 200);
       
       // Call our API endpoint
       const response = await fetch('/api/tts', {
@@ -262,7 +265,7 @@ export class OpenAITTSService extends AbstractTTSService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
+          text: limitedText,
           voice: openAIVoice,
           model: this.apiOptions.model || 'tts-1',
           speed: this.apiOptions.speed

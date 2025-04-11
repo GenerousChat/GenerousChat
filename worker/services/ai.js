@@ -353,7 +353,7 @@ async function generateAITextResponse(prompt) {
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 20,
+      maxTokens: 300,
       temperature: 0.8,
     });
 
