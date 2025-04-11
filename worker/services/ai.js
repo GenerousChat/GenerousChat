@@ -10,11 +10,6 @@ const logger = require("../utils/logger");
 const supabaseService = require("./supabase");
 const pusherService = require("./pusher");
 
-// Flag to track if AI is currently generating a response
-let aiResponseInProgress = false;
-
-// Timeout to prevent AI from responding too frequently
-let aiResponseTimeout = null;
 
 /**
  * Analyze a message for visualization intent
@@ -193,7 +188,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
 async function selectBestAgent(roomId, lastUserMessage, messageHistory) {
   try {
     // Get AI agents from the service
-    const aiAgents = supabaseService.aiAgents;
+    const aiAgents = await supabaseService.fetchAIAgents();
 
     // Log the number of agents available for debugging
     logger.info(`Selecting from ${aiAgents.length} available AI agents`);
@@ -391,14 +386,7 @@ async function generateHTMLContent(prompt) {
  * @returns {Promise<boolean>} Success status
  */
 async function generateAIResponse(roomId) {
-  // Prevent multiple AI responses at the same time
-  if (aiResponseInProgress) {
-    logger.info("AI response already in progress, skipping");
-    return false;
-  }
-
   try {
-    aiResponseInProgress = true;
     logger.info("Generating AI response based on recent messages...");
 
     // Filter messages for the specific room
@@ -534,8 +522,6 @@ async function generateAIResponse(roomId) {
   } catch (error) {
     logger.error("Error generating AI response:", error);
     return false;
-  } finally {
-    aiResponseInProgress = false;
   }
 }
 
@@ -715,18 +701,5 @@ module.exports = {
   analyzeMessageForVisualizationIntent,
   selectBestAgent,
   generateAITextResponse,
-  generateHTMLContent,
-  clearResponseTimeout: () => {
-    if (aiResponseTimeout) {
-      clearTimeout(aiResponseTimeout);
-      aiResponseTimeout = null;
-    }
-  },
-  setResponseTimeout: (callback, delay) => {
-    if (aiResponseTimeout) {
-      clearTimeout(aiResponseTimeout);
-    }
-    aiResponseTimeout = setTimeout(callback, delay);
-    return aiResponseTimeout;
-  },
+  generateHTMLContent
 };

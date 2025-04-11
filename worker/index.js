@@ -46,18 +46,12 @@ async function handleMessageInserted(message) {
     if (!supabaseService.aiAgentIds.has(message.user_id)) {
       logger.info('Message is from a human user, generating AI response...');
 
-      // Generate AI response after a short delay
-      // Clear any existing timeout to prevent multiple responses
-      aiService.clearResponseTimeout();
-
-      // Set a new timeout to generate a response after 2 seconds
-      aiService.setResponseTimeout(() => {
-        // Log the number of messages for this room before generating the response
-        const roomMessages = supabaseService.recentMessages.filter(msg => msg.room_id === message.room_id);
-        logger.info(`Preparing to generate AI response for room ${message.room_id} with ${roomMessages.length} messages`);
-        
-        aiService.generateAIResponse(message.room_id);
-      }, 2000);
+      // Log the number of messages for this room before generating the response
+      const roomMessages = supabaseService.recentMessages.filter(msg => msg.room_id === message.room_id);
+      logger.info(`Preparing to generate AI response for room ${message.room_id} with ${roomMessages.length} messages`);
+      
+      // Generate AI response immediately
+      aiService.generateAIResponse(message.room_id);
     } else {
       logger.info('Message is from an AI agent, skipping AI response generation');
     }
