@@ -738,12 +738,15 @@ async function generateResponseWithAgent(
 ## User Intent 
 - Choose the appropriate framework based on the user intent expressed in the following message, ${lastUserMessage.content}. 
 - If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. 
-- Everything must be rendered in html in the sidebar and must be responsive. 
+- Include the following clarifying message from an expert agent as supporting information to add more context to the users generation request ${agentResponsePrompt} 
 
-## Canvas Rules
-- Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
 - Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
 - Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
+- If the user intent is to create a new visualization, then use the following guidelines as a starting point and modify them to fit the request.
+## Canvas Rules
+- Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
+- Everything must be rendered in html in the sidebar and must be responsive. 
+
 - Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
 ## Canvas Selection - Use the following templates depending on the type of visualization requested: ${canvasTemplates}, if no template fits the request, generate a freeform canvas that is responsive and centered in the viewport and follow this style guide: ${canvasStyleGuide}. 
@@ -788,9 +791,6 @@ async function generateResponseWithAgent(
 - Include fallback content if libraries fail to load
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
-
-## Agent Response:
-${agentResponsePrompt}}
 `;
 
       // Generate HTML content
