@@ -81,6 +81,17 @@ async function analyzeMessageForVisualizationIntent(message) {
     "suggest",
     "recommend",
   ];
+const visualizationEvalPrompt = `You are an AI that analyzes whether a message is requesting a visualization. You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, games, or other interactive elements that enhance the conversation. When deciding whether to generate or update the canvas conduct the following steps:
+
+  1. Analyze the most recent message, ${lastUserMessage}, for canvas generation requests. Look for imperatives, commands, explicit requests that ask for something to be built, created, generated, visualized, rendered, or updated. Check for key phrases that indicate a request like "can you", "could you", "build", "create", "generate", "make", "show me", "visualize", etc. You can also refer to the following list of keywords that suggest a visualization request, ${visualizationKeywords}, if the message contains any of these treat it is likely a canvas generation request. 
+  
+  2. Try to interpret the users intent, checking whether there is an implicit request or intent to change the canvas, and when ambiguous use the following conversation history to better understand context and decide if generation is needed: 
+  ${messageHistory}
+  
+  3. Ignore casual conversation and messages that don't request anything, only respond to implied or explicit requests to generate or modify a canvas.  
+  
+  4. If the user requests to change, update, modify, or add to the canvas, use the following canvas as a starting point and modify only the parts that the user specifically says they wish to change: 
+  ${lastGenerationHtml}.`
 
   // Simple keyword-based analysis
   const messageText = message.content.toLowerCase();
@@ -108,7 +119,7 @@ async function analyzeMessageForVisualizationIntent(message) {
             .string()
             .describe("A brief explanation of why this score was given"),
         }),
-        prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated. Or improved upon, or ides about something
+        prompt: `Analyze this message and determine if it's explicitly or implicitly requesting something to be built, created, visualized, generated, improved upon, added to, or modified.
 
 Message: "${message.content}"
 
@@ -515,23 +526,24 @@ async function generateResponseWithAgent(
 ) {
   try {
     // Create the prompt with stronger constraints and focus on responding to the last message
-    const prompt = `
-    You are participating in a group chat. The chat room has a canvas that is visible to all participants. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, or other interactive elements that enhance the conversation.  
+    const agentResponsePrompt = `
+    #AI Agent Response Generation
 
-    Consider the following context of the conversation and respond appropriately, whether that is engaging in casual conversation, banter or humor, providing information, asking questions, offering advice, or any other contextually appropriate input. Your responses should be relevant to the topic at hand and maintain the tone and style of the conversation. You should also consider the personalities of participants and how they may respond. 
+    ##Task:
+    You are an AI agent with a specific personality and expertise described here: ${agent.personality_prompt}. Your task is to respond to the last message in the conversation, ${lastUserMessage.content} with a contextually appropriate reply.
+    
+    ##Context:
+    You are in an online audio chat room participating in a conversation with multiple people. The chat room has a canvas that is visible to all participants. The canvas is a collaborative space and can be updated on the fly based on the conversation and the requests made by participants. It often contains visualizations, diagrams, or other interactive elements that enhance the discussion. You should engage in natural conversation within the group, adapting to the current social context and being careful not to dominate the conversation. 
 
-    The conversation history is as follows:
-    ${messageHistory}
+    ##Instructions:
+    Consider the following conversation and respond in line with the tone and style of the discussion: ${messageHistory}. Ensure your reply is relevant to ${lastUserMessage.content} and pertinent to the topic at hand. As the chat progresses you should adapt your responses to better suit the style and personalities of the participants, whether that is engaging in casual conversation, banter or humor, providing information, asking questions, offering advice, or any other contextually appropriate input.
 
-    If appropriate you can choose to render a new canvas based on the conversation and the latest requests or updates. Simply say what should be rendered and another agent will take care of the rendering, do not respond with code. Only change the canvas if you are confident it fits the context of the conversation and the last message. If you do decide to render a new canvas, provide a brief description of what it should look like and what it should contain. Only do this if it will be helpful to the conversation. If you do not think a new canvas is needed, then do not render one.
-
-    This is the most recent canvas, it is visible to all participants in the conversation:
-    ${lastGenerationHtml}
-
-    You are one of the participants in the conversation, and your personality is as follows:
-    ${agent.personality_prompt}
-
-    Your response should reflect the topic and tone of the conversation, you must adapt to the conversation context, the personalities of the users and agents, and how they might respond, prioritizing relevance to the last message in the conversation, "${lastUserMessage.content}". It is important to keep the conversation flowing naturally while also addressing the needs of the users.
+    **Important: Your responses must be relevant, consistent with your personality, and must keep the conversation flowing naturally while also addressing the needs of the users.**
+    
+    ##Canvas Generation:
+    You may choose to render a new chat canvas based on the conversational flow and the latest user request. Simply say what visual should be rendered and another agent will take care of the rendering, do not respond with code. Only change the canvas if you are confident it fits the context of the conversation and the last message, ${lastUserMessage.content}.
+    
+    When considering whether to generate a new canvas you may refer to the current canvas, ${lastGenerationHtml}, which is visible to all participants. If you do decide to render a new canvas provide a brief description of what it should look like and what it should contain. Only do this if it will be helpful to the conversation. If you do not think a new canvas is needed, then do not render one. 
     `;
 
     logger.debug("Sending prompt to OpenAI", prompt);
@@ -568,22 +580,17 @@ async function generateResponseWithAgent(
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
 
-## Last generated Canvas  
-Only use this if the person seemingly wants to update the last canvas 
-${lastGenerationHtml ? lastGenerationHtml : ""}
+## Canvas Generation Guide- Use the following guidelines to determine what to build. 
+- Choose the appropriate framework based on the user requirements. - Everything must be rendered in html in the sidebar and must be responsive. 
+- Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
+- Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
+- Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
+- Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
-## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
-Analyze the conversation for the most recent message that uses an imperative command or explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.
+//## Canvas Selection - Use the following templates depending on the type of visualization requested: ${canvasTemplates}, if no template fits the request, generate a freeform canvas that is responsive and centered in the viewport and follow this style guide: ${canvasStyleGuide}. 
+**IMPORTANT: Only render the html and do not include any comments or markdown or code blocks**
 
-## Context Analysis Guidelines:
-- Find the most recent message containing a request to generate or modify something
-- Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me...", "update...",
-- Skip over casual messages and discussions that don't request canvas creation or updates
-- If generation request is found implement the request on the canvas with as much fidelity as possible
-- Use conversation history only as supporting context for implementing the request
-
-## Technology Selection - Match the right tool to the request and check for dependencies, use the list below as a guideline for which tools to use and substitute better js frameworks where appropriate. Use complex libraries only when simpler approaches are less visually appealing, prioritize user experience and aesthetics. Where possible use libraries that are more performant and have less dependencies.
-
+## Technology Selection - Match the right tool to the request and check for dependencies, where possible use libraries that are more performant and have less dependencies. Use complex libraries only when simpler approaches are less visually appealing, prioritize user experience and aesthetics. Use the list below as a guideline for which tools are preferred and substitute better js frameworks where appropriate.
 - Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
 - Timelines/processes → Use TimelineJS, fill in as much detail as possible and choose the best format
 - 3D objects/spaces → Use Three.js or babylon js
@@ -599,10 +606,7 @@ Analyze the conversation for the most recent message that uses an imperative com
 - Simple text/concepts → Use elegant typography
 - Don't use WebGL as it does not work in the sidebar 
 
-IMPORTANT: Always strive to satisfy the request in as much detail as possible. Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
-## Conversation:
-${messageHistory}
 
 ## Your Creation Requirements:
 1. Ensure responsive design that works well in the sidebar panel
@@ -617,6 +621,10 @@ ${messageHistory}
 10. Handle edge cases gracefully with fallbacks
 
 ## Implementation Details:
+- IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE
+- KEEP SCRIPTS OR LINK TAGS AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
+- RETURN FORMAT MUST BE VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
+- Use the latest stable versions of libraries
 - You may use external libraries from trusted CDNs (cdnjs, unpkg, jsdelivr)
 - The visualization must work immediately without setup steps
 - Use appropriate semantic HTML and accessibility features
@@ -624,16 +632,9 @@ ${messageHistory}
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
 
-## Expert Agent Response:
-${text}
-
-MAKE SURE YOUR SOLUTION INVOLVES EVERYTHING, DON"T WORRY ABOUT HOW BIG THE FILE IS
-
-IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE, KEEP THE SCRIPT OR LINK TAG AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
-
-## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
-
-Create something that directly fulfills the most recent build/create/update request and makes users say "This is exactly what I asked for!"`;
+## Agent Response:
+${agentResponsePrompt}}
+`;
 
       // Generate HTML content
       const htmlContent = await generateHTMLContent(htmlPrompt);
