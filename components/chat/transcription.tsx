@@ -3,9 +3,10 @@ import { Button } from '../ui/button';
 
 interface TranscriptionProps {
   className?: string;
+  onTranscript?: (text: string) => void;
 }
 
-export function Transcription({ className }: TranscriptionProps) {
+export function Transcription({ className, onTranscript }: TranscriptionProps) {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
@@ -26,6 +27,9 @@ export function Transcription({ className }: TranscriptionProps) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           console.log('Transcription:', transcript);
+          if (onTranscript) {
+            onTranscript(`🎤 ${transcript}`);
+          }
         }
       }
     };
@@ -42,7 +46,7 @@ export function Transcription({ className }: TranscriptionProps) {
     setRecognition(newRecognition);
     newRecognition.start();
     setIsTranscribing(true);
-  }, []);
+  }, [onTranscript]);
 
   const stopTranscription = useCallback(() => {
     if (recognition) {

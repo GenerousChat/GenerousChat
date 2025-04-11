@@ -12,6 +12,7 @@ import { TTSManager } from "@/components/chat/tts-manager";
 import { DyteProvider, useDyteClient } from '@dytesdk/react-web-core';
 import AudioRoom from '@/components/audio/audio-room';
 import { createOrJoinMeeting } from '@/utils/dyte/create-meeting';
+import { Transcription } from './transcription';
 
 type StatusType = 'join' | 'leave';
 
@@ -619,26 +620,27 @@ export default function ChatRoom({
   
   return (
     <div className="flex h-full gap-4">
-      {showAudioRoom && meeting && (
-        <DyteProvider
-          value={meeting}
-        >
-          <AudioRoom
-            roomId={roomId}
-            userId={currentUser.id}
-            userName={currentUser.email || 'Anonymous'}
-          />
-        </DyteProvider>
-      )}
-      {/* Participants Panel (Left Side) */}
-      <ParticipantList 
-        participants={participants} 
-        onJoinAudio={handleJoinAudioRoom}
-        showAudioRoom={showAudioRoom}
-      />
+      {/* Left Sidebar */}
+      <div className="w-1/4 flex flex-col">
+        <ParticipantList
+          participants={participants}
+          onJoinAudio={handleJoinAudioRoom}
+          showAudioRoom={showAudioRoom}
+        />
+        <Transcription onTranscript={handleSendMessage} />
+      </div>
 
       {/* Main Chat Column */}
       <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
+        {showAudioRoom && meeting && (
+          <DyteProvider value={meeting}>
+            <AudioRoom
+              roomId={roomId}
+              userId={currentUser.id}
+            />
+          </DyteProvider>
+        )}
+
         <TTSManager 
           messages={messages} 
           userCache={userCache} 
@@ -647,93 +649,93 @@ export default function ChatRoom({
         />
         
         <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No messages yet. Be the first to send a message!
-            </div>
-          ) : (
-            messages.map((message) => (
-              <div
-                key={message.type === 'chat' ? message.id : message.timestamp}
-                className={`flex ${message.type === 'status' ? 'justify-center' : 
-                  isCurrentUser(message.user_id) ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={message.type === 'status' ? 'text-xs text-gray-500 py-2' : `max-w-[80%] rounded-lg p-3 ${isCurrentUser(message.user_id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-                >
-                  {message.type === 'status' ? (
-                    <div>
-                      {userCache[message.userId]?.name || 'Someone'} has {message.statusType === 'join' ? 'joined' : 'left'} the chat
-                    </div>
-                  ) : (
-                    <>
-                      {!isCurrentUser(message.user_id) && (
-                        <div className="font-medium text-xs mb-1">
-                          {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
-                        </div>
-                      )}
-                      <div className="break-words">{message.content}</div>
-                      <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                        {formatTime(getMessageTimestamp(message))}
-                      </div>
-                    </>
-                  )}
-                </div>
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No messages yet. Be the first to send a message!
               </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.type === 'chat' ? message.id : message.timestamp}
+                  className={`flex ${message.type === 'status' ? 'justify-center' : 
+                    isCurrentUser(message.user_id) ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={message.type === 'status' ? 'text-xs text-gray-500 py-2' : `max-w-[80%] rounded-lg p-3 ${isCurrentUser(message.user_id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                  >
+                    {message.type === 'status' ? (
+                      <div>
+                        {userCache[message.userId]?.name || 'Someone'} has {message.statusType === 'join' ? 'joined' : 'left'} the chat
+                      </div>
+                    ) : (
+                      <>
+                        {!isCurrentUser(message.user_id) && (
+                          <div className="font-medium text-xs mb-1">
+                            {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
+                          </div>
+                        )}
+                        <div className="break-words">{message.content}</div>
+                        <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          {formatTime(getMessageTimestamp(message))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
 
-      {generations.length > 0 && (
-        <div className="border-t border-gray-200 p-2 bg-gray-50">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {generations.map((gen) => (
-              <button
-                key={gen.id}
-                onClick={() => {
-                  setSelectedGenerationId(gen.id);
-                  setLatestHtmlContent(gen.html);
-                }}
-                className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
-                  selectedGenerationId === gen.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {new Date(gen.created_at).toLocaleTimeString()}
-              </button>
-            ))}
+        {generations.length > 0 && (
+          <div className="border-t border-gray-200 p-2 bg-gray-50">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {generations.map((gen) => (
+                <button
+                  key={gen.id}
+                  onClick={() => {
+                    setSelectedGenerationId(gen.id);
+                    setLatestHtmlContent(gen.html);
+                  }}
+                  className={`px-3 py-1 text-sm rounded-full whitespace-nowrap ${
+                    selectedGenerationId === gen.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {new Date(gen.created_at).toLocaleTimeString()}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <OptimizedInput 
+          onSubmit={handleSendMessage}
+          isLoading={isLoading} 
+        />
+      </div>
+
+      {/* Visualization Panel (Right Side) */}
+      <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
+        <div className="p-4 border-b">
+          <h3 className="text-sm font-medium">Conversation Visualization</h3>
+        </div>
+        <div className="flex-1 p-4">
+          <div className="bg-white rounded-md overflow-hidden shadow-sm h-full">
+            <iframe
+              srcDoc={latestHtmlContent || defaultHtmlContent}
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
+              allow="camera; microphone; geolocation; fullscreen"
+              title="Conversation Visualization"
+            />
           </div>
         </div>
-      )}
-
-      <OptimizedInput 
-        onSubmit={handleSendMessage}
-        isLoading={isLoading} 
-      />
-    </div>
-
-    {/* Visualization Panel (Right Side) */}
-    <div className="w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
-      <div className="p-4 border-b">
-        <h3 className="text-sm font-medium">Conversation Visualization</h3>
-      </div>
-      <div className="flex-1 p-4">
-        <div className="bg-white rounded-md overflow-hidden shadow-sm h-full">
-          <iframe
-            srcDoc={latestHtmlContent || defaultHtmlContent}
-            className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
-            allow="camera; microphone; geolocation; fullscreen"
-            title="Conversation Visualization"
-          />
-        </div>
       </div>
     </div>
-  </div>
   );
 }

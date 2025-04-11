@@ -4,7 +4,6 @@ import { memo, useEffect, useState } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
-import { Transcription } from "./transcription";
 
 interface Participant {
   user_id: string;
@@ -79,9 +78,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           </Button>
         </div>
       )}
-
-      {/* Transcription Button */}
-      <Transcription />
       
       {/* Audio Room Status */}
       {showAudioRoom && (
