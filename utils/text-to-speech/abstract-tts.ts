@@ -295,7 +295,7 @@ export abstract class AbstractTTSService {
   }
   
   // Check if the service is currently playing
-  public isPlaying(): boolean {
+  public getIsPlaying(): boolean {
     return this.isPlaying;
   }
   
