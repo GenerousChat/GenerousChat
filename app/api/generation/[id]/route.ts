@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  params
+  { params }
 ) {
   try {
+
+    console.log({ params });
     const generationId = params.id;
     
     if (!generationId) {
