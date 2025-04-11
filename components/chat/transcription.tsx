@@ -74,8 +74,8 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           console.log('Transcription:', transcript);
-          if (onTranscript) {
-            onTranscript(`🎤 ${transcript}`);
+          if (onTranscript && transcript.trim()) {
+            onTranscript(transcript);
           }
         }
       }

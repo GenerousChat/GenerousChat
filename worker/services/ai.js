@@ -353,7 +353,7 @@ async function generateAITextResponse(prompt) {
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 300,
+      maxTokens: 20,
       temperature: 0.8,
     });
 
@@ -397,7 +397,7 @@ async function generateAIResponse(roomId) {
     // Fetch messages for the specific room
     let { data: roomMessages, error: messagesError } =
       await supabaseService.supabase
-        .from("messages")
+        .from(config.supabase.messagesTable)
         .select("*")
         .eq("room_id", roomId)
         .order("created_at", { ascending: false })

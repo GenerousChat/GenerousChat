@@ -5,6 +5,7 @@ module.exports = {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
     serviceKey: process.env.SUPABASE_SERVICE_KEY,
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    messagesTable: process.env.MESSAGES_TABLE || 'messages',
   },
   
   pusher: {
