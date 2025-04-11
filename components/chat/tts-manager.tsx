@@ -69,7 +69,8 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     volume: 1.0
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [serviceStatus, setServiceStatus] = useState<'healthy' | 'warning' | 'error'>('healthy');
+  type ServiceStatus = 'healthy' | 'warning' | 'error';
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>('healthy');
   const serviceRecreationAttempts = useRef<number>(0);
   const maxServiceRecreationAttempts = 3;
   const lastServiceCreationTime = useRef<number>(Date.now());
@@ -231,7 +232,7 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
         setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
         
         // If queueing fails, try to recover the service
-        if (serviceStatus !== 'error') {
+        if (serviceStatus === 'healthy' || serviceStatus === 'warning') {
           setServiceStatus('warning');
           resetTTSService();
         }
