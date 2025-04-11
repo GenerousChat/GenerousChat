@@ -3,13 +3,14 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Pusher from 'pusher-js';
 
-export type StatusType = 'join' | 'leave';
+export type StatusType = 'join' | 'leave' | 'generation';
 
 export type StatusMessage = {
   type: 'status';
   statusType: StatusType;
   userId: string;
   timestamp: string;
+  message?: string; // Optional custom message for status updates
 };
 
 export type ChatMessage = {
@@ -250,6 +251,19 @@ export function useChatMessages(
         statusType: 'leave',
         userId: data.user_id,
         timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, statusMsg]);
+    });
+    
+    // Listen for new status events
+    channel.bind('new-status', (data: { user_id: string, status_type: StatusType, message?: string }) => {
+      // Add status message
+      const statusMsg: StatusMessage = {
+        type: 'status',
+        statusType: data.status_type,
+        userId: data.user_id,
+        timestamp: new Date().toISOString(),
+        message: data.message // Optional custom message
       };
       setMessages(prev => [...prev, statusMsg]);
     });

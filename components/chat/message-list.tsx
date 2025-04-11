@@ -46,7 +46,16 @@ export function MessageList({
               >
                 {message.type === 'status' ? (
                   <div>
-                    {userCache[message.userId]?.name || 'Someone'} has {message.statusType === 'join' ? 'joined' : 'left'} the chat
+                    {message.message ? (
+                      message.message
+                    ) : (
+                      <>
+                        {userCache[message.userId]?.name || 'Someone'} 
+                        {message.statusType === 'join' && 'has joined the chat'}
+                        {message.statusType === 'leave' && 'has left the chat'}
+                        {message.statusType === 'generation' && 'is creating a visualization'}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <>
