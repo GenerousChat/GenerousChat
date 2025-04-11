@@ -16,6 +16,10 @@ export class OpenAITTSService extends AbstractTTSService {
   private useFallback: boolean = false;
   private currentAudio: HTMLAudioElement | null = null;
   private agentVoices: Record<string, string> = {};
+  private audioContextResetCount: number = 0;
+  private maxResetAttempts: number = 3;
+  private lastPlayAttempt: number = 0;
+  private playbackMonitorInterval: number | null = null;
 
   constructor(private apiOptions: OpenAITTSOptions = {}) {
     super(apiOptions);
@@ -27,21 +31,95 @@ export class OpenAITTSService extends AbstractTTSService {
     if (typeof window !== 'undefined') {
       // Create audio context on user interaction to avoid autoplay restrictions
       const initAudioContext = () => {
-        if (!this.audioContext) {
-          this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        try {
+          if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            console.log('Audio context initialized successfully');
+          }
+          // Remove event listeners once initialized
+          document.removeEventListener('click', initAudioContext);
+          document.removeEventListener('touchstart', initAudioContext);
+        } catch (error) {
+          console.error('Error initializing audio context:', error);
+          this.recordError(error as Error);
         }
-        // Remove event listeners once initialized
-        document.removeEventListener('click', initAudioContext);
-        document.removeEventListener('touchstart', initAudioContext);
       };
       
       document.addEventListener('click', initAudioContext);
       document.addEventListener('touchstart', initAudioContext);
       
       // Initialize fallback speech synthesis
-      if (window.speechSynthesis) {
-        this.fallbackSynthesis = window.speechSynthesis;
+      try {
+        if (window.speechSynthesis) {
+          this.fallbackSynthesis = window.speechSynthesis;
+          console.log('Fallback speech synthesis initialized');
+        }
+      } catch (error) {
+        console.error('Error initializing fallback speech synthesis:', error);
+        this.recordError(error as Error);
       }
+      
+      // Set up playback monitoring
+      this.setupPlaybackMonitoring();
+    }
+  }
+  
+  // Set up monitoring to detect and recover from stalled playback
+  private setupPlaybackMonitoring(): void {
+    if (this.playbackMonitorInterval) {
+      clearInterval(this.playbackMonitorInterval);
+    }
+    
+    // Check every 10 seconds
+    this.playbackMonitorInterval = window.setInterval(() => {
+      try {
+        // If we're supposedly playing but no activity for 30 seconds
+        const inactivityThreshold = 30000; // 30 seconds
+        if (this.isPlaying && 
+            this.lastPlayAttempt > 0 && 
+            Date.now() - this.lastPlayAttempt > inactivityThreshold) {
+          
+          console.warn('Playback appears stalled, attempting recovery...');
+          
+          // Force stop current playback
+          this.stopCurrentAudio();
+          
+          // Reset playing state
+          this.isPlaying = false;
+          
+          // Try to resume queue processing
+          setTimeout(() => this.processQueue(), 1000);
+        }
+      } catch (error) {
+        console.error('Error in playback monitoring:', error);
+      }
+    }, 10000);
+  }
+  
+  // Reset audio context if needed
+  private resetAudioContext(): boolean {
+    try {
+      if (this.audioContextResetCount >= this.maxResetAttempts) {
+        console.warn('Maximum audio context reset attempts reached, switching to fallback');
+        this.useFallback = true;
+        return false;
+      }
+      
+      if (this.audioContext) {
+        // Close existing context
+        this.audioContext.close().catch(err => console.error('Error closing audio context:', err));
+      }
+      
+      // Create new context
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioContextResetCount++;
+      console.log(`Audio context reset (attempt ${this.audioContextResetCount})`);
+      return true;
+    } catch (error) {
+      console.error('Error resetting audio context:', error);
+      this.recordError(error as Error);
+      this.useFallback = true;
+      return false;
     }
   }
 
@@ -236,13 +314,77 @@ export class OpenAITTSService extends AbstractTTSService {
     });
   }
   
-  // Override stop to cancel current audio
-  public stop(): void {
-    super.stop();
-    
-    if (this.currentAudio) {
-      this.currentAudio.pause();
+  // Stop current audio playback
+  private stopCurrentAudio(): void {
+    try {
+      if (this.currentAudio) {
+        this.currentAudio.onended = null; // Remove event listener
+        this.currentAudio.onerror = null; // Remove event listener
+        this.currentAudio.pause();
+        
+        try {
+          // Try to reset the audio element
+          this.currentAudio.currentTime = 0;
+        } catch (e) {
+          // Ignore errors when resetting currentTime
+        }
+        
+        this.currentAudio = null;
+      }
+      
+      // Also stop any speech synthesis if using fallback
+      if (this.useFallback && this.fallbackSynthesis) {
+        try {
+          this.fallbackSynthesis.cancel();
+        } catch (e) {
+          console.error('Error cancelling speech synthesis:', e);
+        }
+      }
+    } catch (error) {
+      console.error('Error stopping current audio:', error);
+      this.recordError(error as Error);
+      // Force reset state
       this.currentAudio = null;
     }
+  }
+  
+  // Override stop to cancel current audio
+  public stop(): void {
+    try {
+      super.stop();
+      this.stopCurrentAudio();
+      
+      // Clear any queued audio elements
+      this.audioQueue = [];
+      
+      // Reset state flags
+      this.isPlaying = false;
+      
+      console.log('TTS playback stopped and queue cleared');
+    } catch (error) {
+      console.error('Error in stop method:', error);
+      this.recordError(error as Error);
+      
+      // Force reset state
+      this.audioQueue = [];
+      this.isPlaying = false;
+      this.currentAudio = null;
+    }
+  }
+  
+  // Override isHealthy to add additional checks
+  public isHealthy(): boolean {
+    // First check the base implementation
+    if (!super.isHealthy()) {
+      return false;
+    }
+    
+    // Check if we've exceeded reset attempts
+    if (this.audioContextResetCount >= this.maxResetAttempts) {
+      console.warn('Audio context has been reset too many times');
+      return false;
+    }
+    
+    return true;
   }
 }
