@@ -16,8 +16,6 @@ const supabase = createClient(
 
 logger.info(`Supabase client initialized with ${keyType} key`);
 
-// Store the last 50 messages
-let recentMessages = [];
 
 // Store AI agents fetched from the database
 let aiAgents = [];
@@ -62,25 +60,8 @@ async function fetchAIAgents() {
  * @returns {Promise<Array>} Array of recent messages
  */
 async function fetchRecentMessages() {
-  try {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      logger.error('Error fetching recent messages:', error);
-      return [];
-    }
-
-    recentMessages = data.reverse();
-    logger.info(`Fetched ${recentMessages.length} recent messages`);
-    return recentMessages;
-  } catch (error) {
-    logger.error('Error in fetchRecentMessages:', error);
-    return [];
-  }
+  // Deprecated - messages are now fetched live when needed
+  return [];
 }
 
 /**
@@ -230,6 +211,37 @@ async function getUserProfiles(userIds) {
  * @param {Array<string>} agentIds - Array of agent IDs
  * @returns {Promise<Object>} Map of agent IDs to names
  */
+/**
+ * Check if a user ID belongs to an AI agent
+ * @param {string} userId - User ID to check
+ * @returns {Promise<boolean>} True if user is an AI agent
+ */
+async function isUserAnAgent(userId) {
+  // If userId is null/undefined, it's not an agent
+  if (!userId) {
+    logger.debug('Received null/undefined userId in isUserAnAgent, treating as non-agent');
+    return false;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error('Error checking if user is agent:', error);
+      return false;
+    }
+
+    return data !== null;
+  } catch (error) {
+    logger.error('Error in isUserAnAgent:', error);
+    return false;
+  }
+}
+
 async function getAgentProfiles(agentIds) {
   try {
     const { data: agentData, error: agentError } = await supabase
@@ -350,9 +362,7 @@ async function getLastGeneration(roomId) {
 
 module.exports = {
   supabase,
-  aiAgents,
-  aiAgentIds,
-  recentMessages,
+  isUserAnAgent,
   fetchAIAgents,
   fetchRecentMessages,
   setupSupabaseListeners,

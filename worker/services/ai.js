@@ -389,13 +389,21 @@ async function generateAIResponse(roomId) {
   try {
     logger.info("Generating AI response based on recent messages...");
 
-    // Filter messages for the specific room
-    const roomMessages = supabaseService.recentMessages.filter(
-      (msg) => msg.room_id === roomId
-    );
+    // Fetch messages for the specific room
+    const { data: roomMessages, error: messagesError } = await supabaseService.supabase
+      .from('messages')
+      .select('*')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true })
+      .limit(50);
+
+    if (messagesError) {
+      logger.error("Error fetching messages:", messagesError);
+      return false;
+    }
 
     // If no messages in this room, skip
-    if (roomMessages.length === 0) {
+    if (!roomMessages || roomMessages.length === 0) {
       logger.info("No messages found for room:", roomId);
       return false;
     }
@@ -404,7 +412,8 @@ async function generateAIResponse(roomId) {
     const lastUserMessage = roomMessages[roomMessages.length - 1];
 
     // Check if the last message is from an AI agent
-    if (supabaseService.aiAgentIds.has(lastUserMessage.user_id)) {
+    const isLastMessageFromAgent = await supabaseService.isUserAnAgent(lastUserMessage.user_id);
+    if (isLastMessageFromAgent) {
       logger.info("Last message was from an AI agent, skipping response");
       return false;
     }
@@ -425,8 +434,8 @@ async function generateAIResponse(roomId) {
       `HTML generation: Visualization confidence: ${visualizationConfidence * 100}%, Final decision: ${shouldGenerateHtml}`
     );
 
-    // Get the last 50 messages or fewer if not available
-    const lastMessages = roomMessages.slice(-50);
+    // Use all fetched messages (we already limited to 50 in the query)
+    const lastMessages = roomMessages;
 
     // Get user IDs from messages to fetch their names
     const userIds = [...new Set(lastMessages.map((msg) => msg.user_id))];
@@ -436,14 +445,12 @@ async function generateAIResponse(roomId) {
     const userNames = await supabaseService.getUserProfiles(userIds);
 
     // For any user IDs not found in profiles, check if they're agents
-    const missingUserIds = userIds.filter(
-      (id) => !userNames[id] && supabaseService.aiAgentIds.has(id)
-    );
-
+    const missingUserIds = userIds.filter(id => !userNames[id]);
+    
     if (missingUserIds.length > 0) {
-      logger.debug("Looking up agent names for:", missingUserIds);
+      // Get agent profiles for missing users
       const agentNames = await supabaseService.getAgentProfiles(missingUserIds);
-
+      
       // Merge agent names into userNames
       Object.assign(userNames, agentNames);
     }
@@ -453,9 +460,9 @@ async function generateAIResponse(roomId) {
       .map((msg) => {
         let userName = userNames[msg.user_id];
 
-        // If still no name found and it's an AI agent, use a generic agent name
-        if (!userName && supabaseService.aiAgentIds.has(msg.user_id)) {
-          userName = "AI Assistant";
+        // If still no name found, use a generic name
+        if (!userName) {
+          userName = "User";
         }
 
         // Final fallback

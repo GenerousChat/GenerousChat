@@ -24,13 +24,6 @@ app.use(errorHandler);
 // Message handler for Supabase real-time events
 async function handleMessageInserted(message) {
   try {
-    // Add the message to the recentMessages array in memory
-    // This is critical for the AI service to find messages for the room
-    supabaseService.recentMessages.push(message);
-    if (supabaseService.recentMessages.length > 50) {
-      supabaseService.recentMessages.shift(); // Remove oldest message if we exceed 50
-    }
-    logger.debug(`Added message to in-memory store, now have ${supabaseService.recentMessages.length} messages`);
     
     // Send to the appropriate room channel
     await pusherService.sendNewMessage(message.room_id, {
@@ -42,13 +35,13 @@ async function handleMessageInserted(message) {
     
     logger.info(`Message successfully forwarded to Pusher channel room-${message.room_id}`);
 
+    // Check if message is from an AI agent
+    const isAgent = await supabaseService.isUserAnAgent(message.user_id);
+    
     // Only generate AI responses for messages from human users
-    if (!supabaseService.aiAgentIds.has(message.user_id)) {
+    if (!isAgent) {
       logger.info('Message is from a human user, generating AI response...');
-
-      // Log the number of messages for this room before generating the response
-      const roomMessages = supabaseService.recentMessages.filter(msg => msg.room_id === message.room_id);
-      logger.info(`Preparing to generate AI response for room ${message.room_id} with ${roomMessages.length} messages`);
+      logger.info(`Preparing to generate AI response for room ${message.room_id}`);
       
       // Generate AI response immediately
       aiService.generateAIResponse(message.room_id);
