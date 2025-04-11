@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    h2 {
+      color: #4b5563;
+      font-size: 1.5rem;
+      margin-top: 0;
+      text-align: center;
+    }
+    
+    .message {
+      background-color: #f3f4f6;
+      border-left: 4px solid #6b7280;
+      padding: 12px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+    
+    .example-section {
+      margin: 24px 0;
+    }
+    
+    .example {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      background-color: #f9fafb;
+    }
+    
+    .example h3 {
+      margin-top: 0;
+      color: #1f2937;
+      font-size: 1rem;
+    }
+    
+    .example p {
+      margin-bottom: 0;
+      color: #4b5563;
+    }
+    
+    .schedule-example {
+      border-left: 3px solid #3b82f6;
+    }
+    
+    .chart-example {
+      border-left: 3px solid #10b981;
+    }
+    
+    .timeline-example {
+      border-left: 3px solid #8b5cf6;
+    }
+    
+    .button {
+      background-color: #6b7280;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      display: block;
+      margin: 16px auto 0;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: #4b5563;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #111827;
+        color: #e5e7eb;
+      }
+      
+      .container {
+        background-color: #1f2937;
+      }
+      
+      h2 {
+        color: #9ca3af;
+      }
+      
+      .message {
+        background-color: #374151;
+        border-left-color: #6b7280;
+      }
+      
+      .example {
+        background-color: #111827;
+      }
+      
+      .example h3 {
+        color: #e5e7eb;
+      }
+      
+      .example p {
+        color: #9ca3af;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Visualization Request Unclear</h2>
+    
+    <div class="message">
+      <p>I couldn't determine clearly what type of visualization you're looking for. Please try rephrasing your request with more specific details.</p>
+    </div>
+    
+    <div class="example-section">
+      <div class="example schedule-example">
+        <h3>For a schedule:</h3>
+        <p>"Create a workout schedule for Monday through Friday with yoga, cardio, and strength training"</p>
+      </div>
+      
+      <div class="example chart-example">
+        <h3>For a chart:</h3>
+        <p>"Make a bar chart showing monthly sales data for Q1 with values of $12,500 for January, $19,000 for February, and $15,500 for March"</p>
+      </div>
+      
+      <div class="example timeline-example">
+        <h3>For a timeline:</h3>
+        <p>"Create a timeline of major space missions in the 1960s including Yuri Gagarin's flight and the Apollo 11 moon landing"</p>
+      </div>
+    </div>
+    
+    <button class="button" onclick="window.parent.postMessage('close-visualization', '*')">
+      Try Again
+    </button>
+  </div>
+</body>
+</html> 

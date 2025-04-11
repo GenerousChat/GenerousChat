@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import Pusher from 'pusher';
+
+// Initialize Pusher
+const pusher = new Pusher({
+  appId: process.env.PUSHER_APP_ID!,
+  key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
+  secret: process.env.PUSHER_SECRET!,
+  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+  useTLS: true,
+});
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { canvasId, element, type, message } = body;
+    const { type, canvasId, data } = body;
     
-    if (!canvasId || (!element && !message)) {
-      return NextResponse.json(
-        { error: 'Missing required fields' }, 
-        { status: 400 }
-      );
-    }
-
     // Verify user is authenticated
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,55 +27,79 @@ export async function POST(request: Request) {
       );
     }
     
-    // Handle different types of data
-    if (type === 'message' && message) {
-      // Handle message - store it directly in the database
-      // Note: This assumes message is already created in the database by the client
-      // If not, you would need to create it here
-
-      console.log('Processing canvas message:', message);
-      
-      return NextResponse.json({
-        success: true,
-        message: 'Canvas message processed',
-        messageId: message.id
-      });
-    } else if (element) {
-      // Store element in the database
-      const { data, error } = await supabase
-        .from('canvas_elements')
-        .insert({
-          canvas_id: canvasId,
-          user_id: user.id,
-          type: element.type,
-          properties: element.properties,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error storing canvas element:', error);
-        return NextResponse.json(
-          { error: 'Failed to store canvas element' }, 
-          { status: 500 }
-        );
-      }
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Canvas element stored',
-        element: data
-      });
-    } else {
+    // Validate input
+    if (!type || !canvasId) {
       return NextResponse.json(
-        { error: 'Invalid data type' }, 
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
-  } catch (error) {
-    console.error('Error in canvas-element API:', error);
+    
+    // Handle different event types
+    switch (type) {
+      case 'message':
+        // Send message event
+        if (!data.message) {
+          return NextResponse.json(
+            { error: 'Missing message content' },
+            { status: 400 }
+          );
+        }
+        
+        await pusher.trigger(`canvas-${canvasId}`, 'message', {
+          message: data.message
+        });
+        break;
+        
+      case 'visualization':
+        // Handle template-based visualization
+        if (data.renderMethod === 'jsx' && data.templateId && data.templateProps) {
+          await pusher.trigger(`canvas-${canvasId}`, 'visualization', {
+            templateId: data.templateId,
+            data: data.templateProps,
+            renderMethod: 'jsx'
+          });
+        }
+        // Handle HTML-based visualization
+        else if (data.html) {
+          await pusher.trigger(`canvas-${canvasId}`, 'visualization', {
+            html: data.html,
+            renderMethod: 'fallback_iframe'
+          });
+        } else {
+          return NextResponse.json(
+            { error: 'Missing visualization content' },
+            { status: 400 }
+          );
+        }
+        break;
+        
+      case 'error':
+        // Send error event
+        if (!data.message) {
+          return NextResponse.json(
+            { error: 'Missing error message' },
+            { status: 400 }
+          );
+        }
+        
+        await pusher.trigger(`canvas-${canvasId}`, 'error', {
+          message: data.message
+        });
+        break;
+        
+      default:
+        return NextResponse.json(
+          { error: 'Invalid event type' },
+          { status: 400 }
+        );
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error in Pusher API:', error);
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

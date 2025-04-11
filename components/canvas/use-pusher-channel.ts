@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from 'react';
-import Pusher from 'pusher-js';
+import { useEffect, useState } from 'react';
+import Pusher, { Channel } from 'pusher-js';
 import { CanvasMessage } from './canvas-utils';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client';
 
 type UsePusherChannelProps = {
   canvasId: string;
@@ -11,15 +12,93 @@ type UsePusherChannelProps = {
   setHtmlContent: React.Dispatch<React.SetStateAction<string | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setVisualizationError: React.Dispatch<React.SetStateAction<string | null>>;
+  setTemplateId?: React.Dispatch<React.SetStateAction<string | null>>;
+  setTemplateProps?: React.Dispatch<React.SetStateAction<any>>;
+  setRenderMethod?: React.Dispatch<React.SetStateAction<'jsx' | 'fallback_iframe'>>;
   supabase: SupabaseClient;
 };
 
-export function usePusherChannel({
+// Initialize Pusher with environment variables
+let pusher: Pusher | null = null;
+
+// Hook for subscribing to a Pusher channel
+export function usePusherChannel(channelName: string) {
+  const [channel, setChannel] = useState<Channel | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    async function setupPusher() {
+      try {
+        // Initialize Pusher if not already done
+        if (!pusher) {
+          // Get Pusher credentials from Supabase
+          const supabase = createClient();
+          const { data, error } = await supabase.functions.invoke('get-pusher-credentials');
+          
+          if (error) {
+            throw new Error(`Failed to get Pusher credentials: ${error.message}`);
+          }
+          
+          const { key, cluster } = data;
+          
+          if (!key || !cluster) {
+            throw new Error('Missing Pusher credentials');
+          }
+          
+          pusher = new Pusher(key, {
+            cluster,
+            forceTLS: true
+          });
+        }
+        
+        // Subscribe to the specified channel
+        const newChannel = pusher.subscribe(channelName);
+        setChannel(newChannel);
+        
+        // Set up connection event handlers
+        newChannel.bind('pusher:subscription_succeeded', () => {
+          setIsConnected(true);
+        });
+        
+        newChannel.bind('pusher:subscription_error', (error: any) => {
+          setError(new Error(`Subscription error: ${error}`));
+          setIsConnected(false);
+        });
+        
+        return () => {
+          if (newChannel) {
+            pusher?.unsubscribe(channelName);
+          }
+        };
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setIsConnected(false);
+      }
+    }
+    
+    setupPusher();
+    
+    return () => {
+      if (channel) {
+        pusher?.unsubscribe(channelName);
+        setChannel(null);
+      }
+    };
+  }, [channelName]);
+  
+  return { channel, isConnected, error };
+}
+
+export function usePusherChannelForCanvas({
   canvasId,
   setCanvasMessages,
   setHtmlContent,
   setIsLoading,
   setVisualizationError,
+  setTemplateId,
+  setTemplateProps,
+  setRenderMethod,
   supabase
 }: UsePusherChannelProps) {
   useEffect(() => {
@@ -32,10 +111,39 @@ export function usePusherChannel({
     const channel = pusher.subscribe(`canvas-${canvasId}`);
 
     // Handle real-time visualization updates
-    channel.bind('visualization', (data: { html: string }) => {
+    channel.bind('visualization', (data: { 
+      html?: string;
+      templateId?: string;
+      data?: any;
+      renderMethod?: 'jsx' | 'fallback_iframe';
+    }) => {
       console.log('Received visualization from Pusher:', data);
-      if (data.html) {
+      
+      // Handle template-based visualizations
+      if (data.renderMethod === 'jsx' && data.templateId && data.data) {
+        console.log('Received template-based visualization:', data.templateId);
+        
+        // Only update if we have the proper setters available
+        if (setTemplateId && setTemplateProps && setRenderMethod) {
+          setTemplateId(data.templateId);
+          setTemplateProps(data.data);
+          setRenderMethod('jsx');
+          setHtmlContent(null); // Clear any HTML content
+          setIsLoading(false);
+        }
+      } 
+      // Handle HTML-based visualizations
+      else if (data.html) {
+        console.log('Received HTML visualization');
         setHtmlContent(data.html);
+        
+        // Clear template data if we have the setters
+        if (setTemplateId && setTemplateProps && setRenderMethod) {
+          setTemplateId(null);
+          setTemplateProps(null);
+          setRenderMethod('fallback_iframe');
+        }
+        
         setIsLoading(false);
       }
     });
@@ -82,5 +190,5 @@ export function usePusherChannel({
       channel.unbind_all();
       pusher.unsubscribe(`canvas-${canvasId}`);
     };
-  }, [canvasId, setCanvasMessages, setHtmlContent, setIsLoading, setVisualizationError, supabase]);
+  }, [canvasId, setCanvasMessages, setHtmlContent, setIsLoading, setVisualizationError, setTemplateId, setTemplateProps, setRenderMethod, supabase]);
 }

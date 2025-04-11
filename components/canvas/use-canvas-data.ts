@@ -10,6 +10,9 @@ type UseCanvasDataProps = {
   setHtmlContent: React.Dispatch<React.SetStateAction<string | null>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setVisualizationError: React.Dispatch<React.SetStateAction<string | null>>;
+  setTemplateId?: React.Dispatch<React.SetStateAction<string | null>>;
+  setTemplateProps?: React.Dispatch<React.SetStateAction<any>>;
+  setRenderMethod?: React.Dispatch<React.SetStateAction<'jsx' | 'fallback_iframe'>>;
   supabase: SupabaseClient;
 };
 
@@ -19,6 +22,9 @@ export function useCanvasData({
   setHtmlContent,
   setIsLoading,
   setVisualizationError,
+  setTemplateId,
+  setTemplateProps,
+  setRenderMethod,
   supabase
 }: UseCanvasDataProps) {
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<string | null>(null);
@@ -79,11 +85,32 @@ export function useCanvasData({
       }
 
       if (data && data.length > 0) {
-        // Only update HTML content if we're not currently loading a visualization
-        const isCurrentlyLoading = false; // We'll grab the current loading state from React state in a moment
-        if (data[0].html) {
-          setHtmlContent(data[0].html);
-          setIsLoading(false); // Turn off loading state once visualization is loaded
+        const generation = data[0];
+        
+        // Handle different rendering methods
+        if (generation.render_method === 'jsx' && generation.template_id && generation.component_data) {
+          console.log('Found template-based visualization:', generation.template_id);
+          
+          // Only update if we have the proper setters available
+          if (setTemplateId && setTemplateProps && setRenderMethod) {
+            setTemplateId(generation.template_id);
+            setTemplateProps(generation.component_data);
+            setRenderMethod('jsx');
+            setHtmlContent(null); // Clear any HTML content
+            setIsLoading(false);
+          }
+        } else if (generation.html) {
+          console.log('Found HTML-based visualization');
+          setHtmlContent(generation.html);
+          
+          // Clear template data if we have the setters
+          if (setTemplateId && setTemplateProps && setRenderMethod) {
+            setTemplateId(null);
+            setTemplateProps(null);
+            setRenderMethod('fallback_iframe');
+          }
+          
+          setIsLoading(false);
         }
       }
     } catch (error) {

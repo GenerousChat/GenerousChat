@@ -11,7 +11,8 @@ import {
   ErrorMessage,
   CanvasMessage,
   createLoadingVisualization,
-  createErrorVisualization
+  createErrorVisualization,
+  ClientTemplateRenderer
 } from "./index";
 import { useCanvasData } from "./use-canvas-data";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +39,11 @@ export default function Canvas({
   const [isLoading, setIsLoading] = useState(false);
   const [visualizationError, setVisualizationError] = useState<string | null>(null);
   
+  // New state for template-based visualizations
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [templateProps, setTemplateProps] = useState<any>(null);
+  const [renderMethod, setRenderMethod] = useState<'jsx' | 'fallback_iframe'>('fallback_iframe');
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
   
@@ -50,6 +56,9 @@ export default function Canvas({
     setHtmlContent,
     setIsLoading,
     setVisualizationError,
+    setTemplateId,
+    setTemplateProps,
+    setRenderMethod,
     supabase
   });
 
@@ -93,9 +102,14 @@ export default function Canvas({
       log('Requesting visualization...');
       setIsLoading(true);
       
+      // Reset template state
+      setTemplateId(null);
+      setTemplateProps(null);
+      
       // Show loading visualization immediately for better UX
       const loadingHtml = createLoadingVisualization(newMessage);
       setHtmlContent(loadingHtml);
+      setRenderMethod('fallback_iframe');
       
       // Request visualization directly from our API
       try {
@@ -127,13 +141,25 @@ export default function Canvas({
         const result = await response.json();
         log('Visualization request result:', result);
         
-        // If direct HTML response is provided, use it immediately
-        if (result.html) {
+        // Handle response based on renderMethod
+        if (result.renderMethod === 'jsx' && result.templateId && result.data) {
+          log('Received template-based visualization:', result.templateId);
+          setTemplateId(result.templateId);
+          setTemplateProps(result.data);
+          setRenderMethod('jsx');
+          setHtmlContent(null); // Clear any HTML content
+          setIsLoading(false);
+        } else if (result.html) {
+          // Direct HTML rendering (fallback approach)
           log('HTML content received, length:', result.html.length);
           setHtmlContent(result.html);
+          setRenderMethod('fallback_iframe');
+          setTemplateId(null);
+          setTemplateProps(null);
           setIsLoading(false);
         } else {
-          log('No HTML content in response');
+          log('Invalid response format:', result);
+          throw new Error('Invalid response format from visualization API');
         }
       } catch (error: any) {
         console.error("Error requesting visualization:", error);
@@ -143,6 +169,7 @@ export default function Canvas({
         
         // Show error visualization
         setHtmlContent(createErrorVisualization(error.message || "Unknown error occurred"));
+        setRenderMethod('fallback_iframe');
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -159,6 +186,8 @@ export default function Canvas({
       if (event.data === 'close-visualization') {
         log('Closing visualization');
         setHtmlContent(null);
+        setTemplateId(null);
+        setTemplateProps(null);
         setIsLoading(false);
       }
     };
@@ -168,6 +197,8 @@ export default function Canvas({
   }, []);
 
   log('Canvas messages count:', canvasMessages.length);
+  log('Render method:', renderMethod);
+  log('Template ID:', templateId);
   log('HTML content status:', htmlContent ? 'present' : 'not present');
   log('Loading status:', isLoading);
   log('Error status:', visualizationError ? 'error' : 'no error');
@@ -181,7 +212,7 @@ export default function Canvas({
           ref={containerRef}
           className="absolute inset-0 flex items-center justify-center"
         >
-          {!htmlContent && !isLoading && !visualizationError && (
+          {!htmlContent && !templateId && !isLoading && !visualizationError && (
             <BlurFade className="max-w-lg w-full">
               <Card className="shadow-lg border-border bg-card text-card-foreground overflow-hidden">
                 <CardContent className="p-8 flex flex-col items-center text-center">
@@ -217,14 +248,32 @@ export default function Canvas({
           )}
         </div>
         
-        {/* Visualization component */}
-        <CanvasVisualization 
-          htmlContent={htmlContent}
-          onClose={() => setHtmlContent(null)}
-        />
+        {/* Template-based visualization (JSX) */}
+        {renderMethod === 'jsx' && templateId && templateProps && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-full h-full">
+              <ClientTemplateRenderer 
+                templateId={templateId}
+                props={templateProps}
+                onClose={() => {
+                  setTemplateId(null);
+                  setTemplateProps(null);
+                }}
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* HTML-based visualization (iframe) */}
+        {renderMethod === 'fallback_iframe' && htmlContent && (
+          <CanvasVisualization 
+            htmlContent={htmlContent}
+            onClose={() => setHtmlContent(null)}
+          />
+        )}
         
         {/* Error message display */}
-        {visualizationError && !isLoading && !htmlContent && (
+        {visualizationError && !isLoading && !htmlContent && !templateId && (
           <ErrorMessage 
             message={visualizationError} 
             onClose={() => setVisualizationError(null)} 
@@ -232,7 +281,7 @@ export default function Canvas({
         )}
         
         {/* Loading overlay */}
-        {isLoading && !htmlContent && (
+        {isLoading && !htmlContent && !templateId && (
           <LoadingOverlay message="Generating visualization..." />
         )}
       </div>

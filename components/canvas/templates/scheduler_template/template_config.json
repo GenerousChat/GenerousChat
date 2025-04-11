@@ -1,0 +1,22 @@
+{
+  "id": "scheduler_template",
+  "name": "Weekly Scheduler",
+  "type": "component",
+  "description": "Generates a weekly schedule UI with date + label items.",
+  "tags": ["calendar", "schedule", "planner"],
+  "zod_schema": "SchedulerProps",
+  "tool": "calendarRenderer",
+  "confidence_threshold": 0.75,
+  "template": "<Scheduler activities={{{activities}}} />",
+  "example_prompt": "Make me a 5-day workout schedule",
+  "example_props": {
+    "activities": [
+      { "date": "Monday", "label": "Yoga" },
+      { "date": "Tuesday", "label": "Cardio" },
+      { "date": "Wednesday", "label": "Rest" },
+      { "date": "Thursday", "label": "Strength Training" },
+      { "date": "Friday", "label": "HIIT" }
+    ]
+  },
+  "fallback_html": "<div class='p-5 bg-white rounded-lg shadow'><h2 class='text-xl font-bold mb-3'>Weekly Schedule</h2><p class='text-gray-500'>Unable to generate a detailed schedule. Please try again with more specific information.</p></div>"
+} 

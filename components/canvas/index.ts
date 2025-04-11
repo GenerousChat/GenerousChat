@@ -1,7 +1,24 @@
-// Export all components from this directory
-export * from './canvas-input';
+// Export main Canvas components
+export { default } from './canvas';
+export { CanvasVisualization } from './canvas-visualization';
+export { CanvasInput } from './canvas-input';
+export { LoadingOverlay } from './loading-overlay';
+export { ErrorMessage } from './error-message';
+
+// Export hooks
+export { useCanvasData } from './use-canvas-data';
+export { usePusherChannel } from './use-pusher-channel';
+
+// Export utilities
 export * from './canvas-utils';
-export * from './canvas-visualization';
-export * from './error-message';
-export * from './loading-overlay';
-export * from './use-canvas-data';
+
+// Export template components
+export { default as TemplateLoader } from './template-loader';
+export { TemplateRenderer } from './template-renderer';
+
+// Import and re-export ClientTemplateRenderer
+import { ClientTemplateRenderer as CTR } from './client-template-renderer';
+export const ClientTemplateRenderer = CTR;
+
+// Re-export template types
+export * from './templates';
