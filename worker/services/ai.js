@@ -573,32 +573,32 @@ Only use this if the person seemingly wants to update the last canvas
 ${lastGenerationHtml ? lastGenerationHtml : ""}
 
 ## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
-Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.
+Analyze the conversation for the most recent message that uses an imperative command or explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.
 
 ## Context Analysis Guidelines:
-- Find the most recent message containing an EXPLICIT request to build/create something
+- Find the most recent message containing a request to generate or modify something
 - Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me...", "update...",
-- Skip over casual messages, questions, or discussions that don't request creation or updates
-- Once found, implement exactly what that message requested
+- Skip over casual messages and discussions that don't request canvas creation or updates
+- If generation request is found implement the request on the canvas with as much fidelity as possible
 - Use conversation history only as supporting context for implementing the request
 
-## Technology Selection - Match the right tool to the request and check for dependencies:
+## Technology Selection - Match the right tool to the request and check for dependencies, use the list below as a guideline for which tools to use and substitute better js frameworks where appropriate. Use complex libraries only when simpler approaches are less visually appealing, prioritize user experience and aesthetics. Where possible use libraries that are more performant and have less dependencies.
 
 - Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
 - Timelines/processes → Use TimelineJS, fill in as much detail as possible and choose the best format
-- 3D objects/spaces → Use Three.js (only when truly beneficial)
-- Creative explanations → Use SVG/Canvas/p5.js for illustrations
+- 3D objects/spaces → Use Three.js or babylon js
+- Creative explanations → Use SVG/Canvas/p5.js or paper js for illustrations
 - Interactive tools → Use appropriate JS framework for the specific tool
 - Math concepts → use MathJax or KaTeX for math, or custom SVG
 - Games/simulations → Use Phaser or p5.js, 
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
-- Physics simulations → Use Matter.js
+- Physics simulations → Use Matter.js or another physics engine
 - Simple animations → Use CSS animations or GSAP
 - Scientific visualizations → Use Plotly.js or Vega-Lite
 - Youtube videos → Use lite YouTube embed
 - Simple text/concepts → Use elegant typography 
 
-IMPORTANT: Use complex libraries only when simpler approaches are less visually appealing. Choose technology based on conversation needs, and always prioritize user experience and aesthetics.
+IMPORTANT: Always strive to satisfy the request in as much detail as possible. Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
 ## Conversation:
 ${messageHistory}
