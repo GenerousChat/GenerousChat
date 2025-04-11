@@ -56,8 +56,37 @@ During conversations with AI agents, there's often an overlap when a human start
 - **Accuracy**: Percentage of speech correctly detected and transcribed
 - **User Satisfaction**: Reduction in reported instances of AI and human speech overlap
 
+### 4. Participant List and Speaking Indicators
+- **Comprehensive Participant Display**: Show all participants in the conversation, including both human users and AI agents
+- **Speaking Status Indicators**: Each participant should have a speaker/microphone icon that visually indicates their speaking status
+- **Real-time Animation**: Speaking indicators should be animated to provide clear visual feedback about who is currently speaking
+- **Transcription Status**: Human users with transcription enabled should show a distinct visual indicator when they are speaking and being transcribed
+- **TTS Status**: AI agents should display a speaking indicator when they are actively using text-to-speech to communicate
+- **Synchronized States**: All speaking indicators must be synchronized with the actual audio state to avoid confusion
+
+## Participant List UI Requirements
+
+### Visual Design
+- **Speaker Icons**: Each participant (human and agent) should have a microphone/speaker icon next to their name or avatar
+- **Animation Effects**: When a participant is speaking, their icon should display a subtle animation (e.g., sound wave ripples, pulsing effect)
+- **Color Coding**: Different states should use appropriate colors (e.g., green for active, gray for inactive)
+- **Accessibility**: All visual indicators must have appropriate ARIA attributes and meet contrast requirements
+
+### Interaction States
+- **Human Speaking (Transcribing)**: When a human user is speaking and transcription is active, show an animated microphone icon
+- **Agent Speaking (TTS)**: When an AI agent is using TTS, show an animated speaker icon
+- **Idle State**: When no audio activity is detected, show the default non-animated icon
+- **Transition Effects**: Smooth transitions between speaking and non-speaking states
+
+### Technical Implementation
+- **State Management**: Centralized state management to track speaking status of all participants
+- **Event System**: Event-based system to update UI indicators when speech is detected or TTS is active
+- **Animation Framework**: Use CSS animations or a lightweight animation library for the speaking indicators
+- **Performance Optimization**: Ensure animations don't impact overall system performance
+
 ## Future Enhancements
 - Implement speaker diarization to distinguish between different human speakers
 - Add support for multiple languages
 - Develop more sophisticated speech detection algorithms to reduce false positives
 - Create visual feedback showing transcribed text in real-time
+- Add voice activity visualization showing audio waveforms for active speakers

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AbstractTTSService, TTSMessage } from "@/utils/text-to-speech/abstract-tts";
 import { OpenAITTSService, OpenAITTSOptions } from "@/utils/text-to-speech/openai-tts";
 import { useTTS } from "@/utils/tts-context";
+import { useSpeaking } from "@/utils/speaking-context";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Settings } from "lucide-react";
 import {
@@ -56,6 +57,7 @@ interface TTSManagerProps {
 
 export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
   const { ttsServiceRef } = useTTS();
+  const { setParticipantSpeaking } = useSpeaking();
   const [enabled, setEnabled] = useState(false);
   const [ttsService, setTtsService] = useState<AbstractTTSService | null>(null);
   const processedMessageIds = useRef<Set<string>>(new Set());
@@ -140,9 +142,29 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
       timestamp: newMessageReceived.created_at
     };
     
+    // Update speaking state to indicate this user is about to speak via TTS
+    setParticipantSpeaking(newMessageReceived.user_id, 'tts', true);
+    
+    // Add an event listener to know when TTS is done
+    const originalQueueMessage = ttsService.queueMessage;
+    ttsService.queueMessage = (message: TTSMessage) => {
+      // Set up a listener to detect when this message is done playing
+      const checkInterval = setInterval(() => {
+        // Check if the message is no longer in the queue and not currently playing
+        // This is a simplified approach - ideally the TTS service would emit events
+        if (!ttsService.isMessageInQueue(message.id)) {
+          clearInterval(checkInterval);
+          setParticipantSpeaking(message.userId, 'tts', false);
+        }
+      }, 500);
+      
+      // Call the original method
+      return originalQueueMessage.call(ttsService, message);
+    };
+    
     ttsService.queueMessage(ttsMessage);
     processedMessageIds.current.add(newMessageReceived.id);
-  }, [newMessageReceived, ttsService, enabled, userCache, currentUserId]);
+  }, [newMessageReceived, ttsService, enabled, userCache, currentUserId, setParticipantSpeaking]);
   
   // Toggle TTS
   const toggleTTS = () => {
@@ -152,6 +174,13 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     
     if (!newEnabled && ttsService) {
       ttsService.stop();
+      
+      // Make sure to clear any speaking states when TTS is disabled
+      Object.keys(userCache).forEach(userId => {
+        if (userCache[userId].isAgent) {
+          setParticipantSpeaking(userId, 'tts', false);
+        }
+      });
     }
   };
   

@@ -233,4 +233,10 @@ export abstract class AbstractTTSService {
     this.queue = [];
     // Concrete implementations should override this to also stop current speech
   }
+  
+  // Check if a message is in the queue
+  public isMessageInQueue(messageId: string): boolean {
+    // Check if the message is in the queue
+    return this.queue.some(message => message.id === messageId) || this.isPlaying;
+  }
 }

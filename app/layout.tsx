@@ -10,6 +10,7 @@ import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { MobileNav } from "@/components/mobile-nav";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
+import { SpeakingProvider } from "@/utils/speaking-context";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -45,6 +46,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <TTSProvider>
+            <SpeakingProvider>
           <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
             {/* Radial gradient for the background */}
             <div className="fixed inset-0 -z-10">
@@ -95,6 +97,7 @@ export default async function RootLayout({
               {children}
             </div>
           </main>
+            </SpeakingProvider>
           </TTSProvider>
         </ThemeProvider>
       </body>
