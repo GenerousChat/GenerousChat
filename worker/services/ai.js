@@ -405,7 +405,7 @@ async function generateAIResponse(roomId) {
   try {
     logger.info("Generating AI response based on recent messages...");
 
-    // Fetch messages for the specific room
+    // Fetch messages for the specific room, including unread messages
     let { data: roomMessages, error: messagesError } =
       await supabaseService.supabase
         .from(config.supabase.messagesTable)
@@ -425,7 +425,7 @@ async function generateAIResponse(roomId) {
       return false;
     }
 
-    // reverse roomMessages
+    // reverse roomMessages to have them in chronological order
     roomMessages.reverse();
 
     // Get the last message to analyze for visualization intent
@@ -436,20 +436,48 @@ async function generateAIResponse(roomId) {
       lastUserMessage.user_id
     );
 
-    console.log("isLastMessageFromAgent", isLastMessageFromAgent, {
-      lastUserMessage,
-    });
-
     if (isLastMessageFromAgent) {
       logger.info("Last message was from an AI agent, skipping response");
+      // Mark messages as read even if we're not responding
+      await markMessagesAsRead(roomId, roomMessages);
       return false;
     }
 
-    // Use all fetched messages (we already limited to 50 in the query)
-    const lastMessages = roomMessages;
+    // Get the response algorithm configuration
+    const {
+      rapidMessageThresholdMs,
+      responseDelayMs,
+      minMessagesBeforeResponse,
+      maxConsecutiveUserMessages
+    } = config.ai.responseAlgorithm;
+
+    // Check if we should respond based on timing
+    const shouldRespondResult = await shouldAgentRespond(roomId, roomMessages, {
+      rapidMessageThresholdMs,
+      responseDelayMs,
+      minMessagesBeforeResponse,
+      maxConsecutiveUserMessages
+    });
+
+    // If we shouldn't respond now, schedule a delayed check and return
+    if (!shouldRespondResult.shouldRespond) {
+      logger.info(`Not responding now due to: ${shouldRespondResult.reason}`);
+      
+      // If a delayed check is recommended, schedule it
+      if (shouldRespondResult.scheduleDelayedCheck) {
+        logger.info(`Scheduling delayed response check in ${responseDelayMs}ms`);
+        setTimeout(() => {
+          generateAIResponse(roomId).catch(err => {
+            logger.error("Error in delayed response check:", err);
+          });
+        }, responseDelayMs);
+      }
+      
+      return false;
+    }
 
     // Get user IDs from messages to fetch their names
-    const userIds = [...new Set(lastMessages.map((msg) => msg.user_id))];
+    const userIds = [...new Set(roomMessages.map((msg) => msg.user_id))];
     logger.debug("User IDs to fetch:", userIds);
 
     // Fetch user profiles
@@ -467,7 +495,7 @@ async function generateAIResponse(roomId) {
     }
 
     // Format messages for the prompt with user names
-    const messageHistory = lastMessages
+    const messageHistory = roomMessages
       .map((msg) => {
         let userName = userNames[msg.user_id];
 
@@ -505,6 +533,127 @@ async function generateAIResponse(roomId) {
   } catch (error) {
     logger.error("Error generating AI response:", error);
     return false;
+  }
+}
+
+/**
+ * Determine if the AI agent should respond based on message timing and other factors
+ * @param {string} roomId - Room ID
+ * @param {Array} messages - Recent messages in the room
+ * @param {Object} config - Configuration parameters
+ * @returns {Promise<Object>} Decision object with shouldRespond, reason, and scheduleDelayedCheck flags
+ */
+async function shouldAgentRespond(roomId, messages, config) {
+  // If there are no messages, don't respond
+  if (!messages || messages.length === 0) {
+    return {
+      shouldRespond: false,
+      reason: "No messages to respond to",
+      scheduleDelayedCheck: false
+    };
+  }
+
+  // If there are fewer messages than the minimum required, don't respond
+  if (messages.length < config.minMessagesBeforeResponse) {
+    return {
+      shouldRespond: false,
+      reason: "Not enough messages to respond to",
+      scheduleDelayedCheck: false
+    };
+  }
+
+  // Get the most recent message
+  const lastMessage = messages[messages.length - 1];
+  
+  // Count consecutive user messages
+  let consecutiveUserMessages = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    const isUserMessage = !(await supabaseService.isUserAnAgent(message.user_id));
+    
+    if (isUserMessage) {
+      consecutiveUserMessages++;
+    } else {
+      break;
+    }
+  }
+  
+  // If we've reached the maximum consecutive user messages, force a response
+  if (consecutiveUserMessages >= config.maxConsecutiveUserMessages) {
+    logger.info(`Responding due to ${consecutiveUserMessages} consecutive user messages`);
+    return {
+      shouldRespond: true,
+      reason: "Maximum consecutive user messages reached",
+      scheduleDelayedCheck: false
+    };
+  }
+
+  // Check if messages are in rapid succession (within the threshold)
+  if (messages.length >= 2) {
+    const recentMessages = messages.slice(-3); // Look at the last 3 messages
+    const messageTimes = recentMessages.map(msg => new Date(msg.created_at).getTime());
+    
+    // Check if all recent messages are within the threshold
+    let allWithinThreshold = true;
+    for (let i = 1; i < messageTimes.length; i++) {
+      const timeDiff = messageTimes[i] - messageTimes[i - 1];
+      if (timeDiff > config.rapidMessageThresholdMs) {
+        allWithinThreshold = false;
+        break;
+      }
+    }
+    
+    // If all messages are within the threshold, delay the response
+    if (allWithinThreshold) {
+      const lastMessageTime = new Date(lastMessage.created_at).getTime();
+      const currentTime = new Date().getTime();
+      const timeSinceLastMessage = currentTime - lastMessageTime;
+      
+      // If the last message is very recent, schedule a delayed check
+      if (timeSinceLastMessage < config.rapidMessageThresholdMs) {
+        return {
+          shouldRespond: false,
+          reason: "Messages in rapid succession",
+          scheduleDelayedCheck: true
+        };
+      }
+    }
+  }
+  
+  // If we've passed all checks, the agent should respond
+  return {
+    shouldRespond: true,
+    reason: "Normal response conditions met",
+    scheduleDelayedCheck: false
+  };
+}
+
+/**
+ * Mark messages as read by the AI
+ * @param {string} roomId - Room ID
+ * @param {Array} messages - Messages to mark as read
+ * @returns {Promise<void>}
+ */
+async function markMessagesAsRead(roomId, messages) {
+  try {
+    // Get the IDs of all messages to mark as read
+    const messageIds = messages.map(msg => msg.id);
+    
+    if (messageIds.length === 0) return;
+    
+    // Update the read_by_ai flag for these messages
+    const { error } = await supabaseService.supabase
+      .from(config.supabase.messagesTable)
+      .update({ read_by_ai: true })
+      .in('id', messageIds);
+    
+    if (error) {
+      logger.error(`Error marking messages as read: ${error.message}`);
+    } else {
+      logger.debug(`Marked ${messageIds.length} messages as read in room ${roomId}`);
+    }
+  } catch (error) {
+    logger.error("Error in markMessagesAsRead:", error);
   }
 }
 
@@ -684,4 +833,6 @@ module.exports = {
   selectBestAgent,
   generateAITextResponse,
   generateHTMLContent,
+  shouldAgentRespond,
+  markMessagesAsRead,
 };
