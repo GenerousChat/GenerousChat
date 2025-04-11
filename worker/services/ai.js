@@ -730,8 +730,29 @@ async function generateResponseWithAgent(
       const canvasTemplates = [];
       const canvasStyleGuide = `Make it look nice and responsive`;
 
+      /*
+  - message history
+  - last generation
+  - text/agent response
+  - last message
+
+*/
+
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
+
+## Message History:
+${messageHistory}
+
+## Last Message:
+${lastUserMessage.content}
+
+## Last Generation:
+${lastGenerationHtml}
+
+## Text/Agent Response:
+${agentResponsePrompt}
+
 
 ## Canvas Generation Guide- Use the following guidelines to determine what to build. 
 - Choose the appropriate framework based on the user requirements. - Everything must be rendered in html in the sidebar and must be responsive. 
@@ -785,8 +806,7 @@ async function generateResponseWithAgent(
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
 
-## Agent Response:
-${agentResponsePrompt}}
+
 `;
 
       // Generate HTML content
