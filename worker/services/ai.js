@@ -10,7 +10,6 @@ const logger = require("../utils/logger");
 const supabaseService = require("./supabase");
 const pusherService = require("./pusher");
 
-
 /**
  * Analyze a message for visualization intent
  * @param {Object} message - Message object
@@ -259,27 +258,30 @@ async function selectBestAgent(roomId, lastUserMessage, messageHistory) {
       prompt,
     });
 
-    logger.debug("AI agent selection result:", result);
-
     // Parse the response to get the agent confidences
     let selectedAgents = [];
 
-    if (
-      result.response &&
-      result.response.body &&
-      result.response.body.output &&
-      result.response.body.output[0] &&
-      result.response.body.output[0].content
-    ) {
-      const content = result.response.body.output[0].content;
-      if (typeof content === "object" && content.text) {
-        selectedAgents = JSON.parse(content.text).agents_confidence;
-      } else if (typeof content === "string") {
-        selectedAgents = JSON.parse(content).agents_confidence;
+    try {
+      if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
+        // Parse the JSON text from the first content item
+        const parsedData = JSON.parse(
+          result.response.body.output[0].content[0].text
+        );
+        if (parsedData.agents_confidence) {
+          selectedAgents = parsedData.agents_confidence;
+          logger.debug(
+            "Successfully parsed agent confidences:",
+            selectedAgents
+          );
+        }
       }
+    } catch (error) {
+      logger.error("Error parsing agent selection result:", error);
     }
 
-    logger.debug("Selected agents:", selectedAgents);
+    if (selectedAgents.length === 0) {
+      return null;
+    }
 
     // Map agent IDs to names and confidences for logging
     const agentNamesAndConfidence = selectedAgents.map((agent) => {
@@ -390,12 +392,13 @@ async function generateAIResponse(roomId) {
     logger.info("Generating AI response based on recent messages...");
 
     // Fetch messages for the specific room
-    const { data: roomMessages, error: messagesError } = await supabaseService.supabase
-      .from('messages')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true })
-      .limit(50);
+    const { data: roomMessages, error: messagesError } =
+      await supabaseService.supabase
+        .from("messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("created_at", { ascending: true })
+        .limit(50);
 
     if (messagesError) {
       logger.error("Error fetching messages:", messagesError);
@@ -412,27 +415,13 @@ async function generateAIResponse(roomId) {
     const lastUserMessage = roomMessages[roomMessages.length - 1];
 
     // Check if the last message is from an AI agent
-    const isLastMessageFromAgent = await supabaseService.isUserAnAgent(lastUserMessage.user_id);
+    const isLastMessageFromAgent = await supabaseService.isUserAnAgent(
+      lastUserMessage.user_id
+    );
     if (isLastMessageFromAgent) {
       logger.info("Last message was from an AI agent, skipping response");
       return false;
     }
-
-    // Analyze the message for visualization intent
-    const visualizationConfidence =
-      await analyzeMessageForVisualizationIntent(lastUserMessage);
-
-    // Determine if we should generate HTML based on confidence score
-    const shouldGenerateHtml =
-      visualizationConfidence > 0.7
-        ? true
-        : visualizationConfidence > 0.3
-          ? Math.random() < visualizationConfidence
-          : Math.random() < 0.1; // Very low chance for low confidence messages
-
-    logger.info(
-      `HTML generation: Visualization confidence: ${visualizationConfidence * 100}%, Final decision: ${shouldGenerateHtml}`
-    );
 
     // Use all fetched messages (we already limited to 50 in the query)
     const lastMessages = roomMessages;
@@ -445,12 +434,12 @@ async function generateAIResponse(roomId) {
     const userNames = await supabaseService.getUserProfiles(userIds);
 
     // For any user IDs not found in profiles, check if they're agents
-    const missingUserIds = userIds.filter(id => !userNames[id]);
-    
+    const missingUserIds = userIds.filter((id) => !userNames[id]);
+
     if (missingUserIds.length > 0) {
       // Get agent profiles for missing users
       const agentNames = await supabaseService.getAgentProfiles(missingUserIds);
-      
+
       // Merge agent names into userNames
       Object.assign(userNames, agentNames);
     }
@@ -482,41 +471,6 @@ async function generateAIResponse(roomId) {
       lastUserMessage,
       messageHistory
     );
-
-    if (!selectedAgent) {
-      logger.info("No suitable agent found for this conversation");
-
-      // Attempt to fetch agents directly from the database as a fallback
-      try {
-        const { data: agents, error } = await supabaseService.supabase
-          .from("agents")
-          .select("*")
-          .limit(1);
-
-        if (error) {
-          logger.error("Error fetching fallback agent:", error);
-          return false;
-        }
-
-        if (agents && agents.length > 0) {
-          logger.info(`Using fallback agent: ${agents[0].name}`);
-          // Continue with the fallback agent
-          return await generateResponseWithAgent(
-            roomId,
-            agents[0],
-            lastUserMessage,
-            messageHistory,
-            lastGenerationHtml
-          );
-        } else {
-          logger.error("No agents available in the database");
-          return false;
-        }
-      } catch (fallbackError) {
-        logger.error("Error in fallback agent selection:", fallbackError);
-        return false;
-      }
-    }
 
     // Generate response with the selected agent
     return await generateResponseWithAgent(
@@ -577,12 +531,7 @@ async function generateResponseWithAgent(
     // This should be passed from the parent function, but we'll recalculate it here for safety
     const visualizationConfidence =
       await analyzeMessageForVisualizationIntent(lastUserMessage);
-    const shouldGenerateHtml =
-      visualizationConfidence > 0.7
-        ? true
-        : visualizationConfidence > 0.3
-          ? Math.random() < visualizationConfidence
-          : Math.random() < 0.1; // Very low chance for low confidence messages
+    const shouldGenerateHtml = visualizationConfidence * 100 > 70;
 
     logger.info(
       `HTML generation in agent response: Visualization confidence: ${visualizationConfidence * 100}%, Final decision: ${shouldGenerateHtml}`
@@ -708,5 +657,5 @@ module.exports = {
   analyzeMessageForVisualizationIntent,
   selectBestAgent,
   generateAITextResponse,
-  generateHTMLContent
+  generateHTMLContent,
 };
