@@ -15,7 +15,11 @@ const pusherService = require("./pusher");
  * @param {Object} message - Message object
  * @returns {Promise<number>} Confidence score (0-1)
  */
-async function analyzeMessageForVisualizationIntent(message) {
+async function analyzeMessageForVisualizationIntent(
+  lastUserMessage,
+  lastGenerationHtml,
+  messageHistory
+) {
   // Keywords that suggest a visualization request
   const visualizationKeywords = [
     "build",
@@ -81,7 +85,8 @@ async function analyzeMessageForVisualizationIntent(message) {
     "suggest",
     "recommend",
   ];
-const visualizationEvalPrompt = `You are an AI that analyzes whether a message is requesting a visualization. You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, games, or other interactive elements that enhance the conversation. When deciding whether to generate or update the canvas conduct the following steps:
+
+  const visualizationEvalPrompt = `You are an AI that analyzes whether a message is requesting a visualization. You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, games, or other interactive elements that enhance the conversation. When deciding whether to generate or update the canvas conduct the following steps:
 
   1. Analyze the most recent message, ${lastUserMessage}, for canvas generation requests. Look for imperatives, commands, explicit requests that ask for something to be built, created, generated, visualized, rendered, or updated. Check for key phrases that indicate a request like "can you", "could you", "build", "create", "generate", "make", "show me", "visualize", etc. You can also refer to the following list of keywords that suggest a visualization request, ${visualizationKeywords}, if the message contains any of these treat it is likely a canvas generation request. 
   
@@ -91,96 +96,79 @@ const visualizationEvalPrompt = `You are an AI that analyzes whether a message i
   3. Ignore casual conversation and messages that don't request anything, only respond to implied or explicit requests to generate or modify a canvas.  
   
   4. If the user requests to change, update, modify, or add to the canvas, use the following canvas as a starting point and modify only the parts that the user specifically says they wish to change: 
-  ${lastGenerationHtml}.`
-
-  // Simple keyword-based analysis
-  const messageText = message.content.toLowerCase();
-  const keywordMatch = visualizationKeywords.some((keyword) =>
-    messageText.includes(keyword)
-  );
-
-  // Initial confidence based on keyword matching
-  let confidence = keywordMatch ? 0.5 : 0.1;
+  ${lastGenerationHtml}.`;
 
   // For more accurate analysis, use the AI to evaluate
-  if (keywordMatch) {
-    try {
-      // @todo - pass in last generation and message history
-      // Use generateObject with Zod schema as per the latest docs
-      const result = await generateObject({
-        model: openai.responses("gpt-4o"),
-        schema: z.object({
-          score: z
-            .number()
-            .describe(
-              "A score from 0 to 100 indicating the likelihood that the user is requesting something to be generated"
-            ),
-          reason: z
-            .string()
-            .describe("A brief explanation of why this score was given"),
-        }),
-        prompt: `Analyze this message and determine if it's explicitly or implicitly requesting something to be built, created, visualized, generated, improved upon, added to, or modified.
+  try {
+    // @todo - pass in last generation and message history
+    // Use generateObject with Zod schema as per the latest docs
+    const result = await generateObject({
+      model: openai.responses("gpt-4o"),
+      schema: z.object({
+        score: z
+          .number()
+          .describe(
+            "A score from 0 to 100 indicating the likelihood that the user is requesting something to be generated"
+          ),
+        reason: z
+          .string()
+          .describe("A brief explanation of why this score was given"),
+      }),
+      prompt: visualizationEvalPrompt,
+      temperature: 0.1,
+    });
 
-Message: "${message.content}"
+    // Safely access properties with fallbacks
+    if (result && typeof result === "object") {
+      // Try to find score and reason properties at any level based on the actual structure
+      let score, reason;
 
-Return a score from 0 to 100 indicating the likelihood that the user is requesting something be generated, and a brief reason explaining why.`,
-        temperature: 0.1,
-      });
+      // Check for direct properties
+      if ("score" in result) {
+        score = result.score;
+        reason = result.reason;
+      }
+      // Check for object.score structure (this is the actual structure based on the debug output)
+      else if (result.object && typeof result.object === "object") {
+        score = result.object.score;
+        reason = result.object.reason;
+      }
+      // Check for analysis structure
+      else if (result.analysis && typeof result.analysis === "object") {
+        score = result.analysis.score;
+        reason = result.analysis.reason;
+      }
+      // Check for response structure
+      else if (
+        result.response &&
+        typeof result.response === "object" &&
+        result.response.body &&
+        result.response.body.output &&
+        result.response.body.output[0] &&
+        result.response.body.output[0].content
+      ) {
+        const content = JSON.parse(result.response.body.output[0].content.text);
+        score = content.score;
+        reason = content.reason;
+      }
 
-      // Safely access properties with fallbacks
-      if (result && typeof result === "object") {
-        // Try to find score and reason properties at any level based on the actual structure
-        let score, reason;
-
-        // Check for direct properties
-        if ("score" in result) {
-          score = result.score;
-          reason = result.reason;
-        }
-        // Check for object.score structure (this is the actual structure based on the debug output)
-        else if (result.object && typeof result.object === "object") {
-          score = result.object.score;
-          reason = result.object.reason;
-        }
-        // Check for analysis structure
-        else if (result.analysis && typeof result.analysis === "object") {
-          score = result.analysis.score;
-          reason = result.analysis.reason;
-        }
-        // Check for response structure
-        else if (
-          result.response &&
-          typeof result.response === "object" &&
-          result.response.body &&
-          result.response.body.output &&
-          result.response.body.output[0] &&
-          result.response.body.output[0].content
-        ) {
-          const content = JSON.parse(
-            result.response.body.output[0].content.text
-          );
-          score = content.score;
-          reason = content.reason;
-        }
-
-        if (typeof score === "number") {
-          confidence = score / 100;
-          logger.info(
-            `AI analysis of generation intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
-          );
-        } else {
-          logger.warn(
-            "Could not find valid score in AI response, using keyword-based confidence"
-          );
-        }
+      if (typeof score === "number") {
+        confidence = score / 100;
+        logger.info(
+          `AI analysis of generation intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
+        );
       } else {
         logger.warn(
-          "AI analysis returned invalid result, using keyword-based confidence"
+          "Could not find valid score in AI response, using keyword-based confidence"
         );
       }
-    } catch (aiError) {
-      logger.error("Error getting AI analysis of message:", aiError);
+    } else {
+      logger.warn(
+        "AI analysis returned invalid result, using keyword-based confidence"
+      );
     }
+  } catch (aiError) {
+    logger.error("Error getting AI analysis of message:", aiError);
   }
 
   return confidence;
@@ -448,7 +436,7 @@ async function generateAIResponse(roomId) {
       rapidMessageThresholdMs,
       responseDelayMs,
       minMessagesBeforeResponse,
-      maxConsecutiveUserMessages
+      maxConsecutiveUserMessages,
     } = config.ai.responseAlgorithm;
 
     // Check if we should respond based on timing
@@ -456,23 +444,25 @@ async function generateAIResponse(roomId) {
       rapidMessageThresholdMs,
       responseDelayMs,
       minMessagesBeforeResponse,
-      maxConsecutiveUserMessages
+      maxConsecutiveUserMessages,
     });
 
     // If we shouldn't respond now, schedule a delayed check and return
     if (!shouldRespondResult.shouldRespond) {
       logger.info(`Not responding now due to: ${shouldRespondResult.reason}`);
-      
+
       // If a delayed check is recommended, schedule it
       if (shouldRespondResult.scheduleDelayedCheck) {
-        logger.info(`Scheduling delayed response check in ${responseDelayMs}ms`);
+        logger.info(
+          `Scheduling delayed response check in ${responseDelayMs}ms`
+        );
         setTimeout(() => {
-          generateAIResponse(roomId).catch(err => {
+          generateAIResponse(roomId).catch((err) => {
             logger.error("Error in delayed response check:", err);
           });
         }, responseDelayMs);
       }
-      
+
       return false;
     }
 
@@ -549,7 +539,7 @@ async function shouldAgentRespond(roomId, messages, config) {
     return {
       shouldRespond: false,
       reason: "No messages to respond to",
-      scheduleDelayedCheck: false
+      scheduleDelayedCheck: false,
     };
   }
 
@@ -558,41 +548,47 @@ async function shouldAgentRespond(roomId, messages, config) {
     return {
       shouldRespond: false,
       reason: "Not enough messages to respond to",
-      scheduleDelayedCheck: false
+      scheduleDelayedCheck: false,
     };
   }
 
   // Get the most recent message
   const lastMessage = messages[messages.length - 1];
-  
+
   // Count consecutive user messages
   let consecutiveUserMessages = 0;
   for (let i = messages.length - 1; i >= 0; i--) {
     const message = messages[i];
-    const isUserMessage = !(await supabaseService.isUserAnAgent(message.user_id));
-    
+    const isUserMessage = !(await supabaseService.isUserAnAgent(
+      message.user_id
+    ));
+
     if (isUserMessage) {
       consecutiveUserMessages++;
     } else {
       break;
     }
   }
-  
+
   // If we've reached the maximum consecutive user messages, force a response
   if (consecutiveUserMessages >= config.maxConsecutiveUserMessages) {
-    logger.info(`Responding due to ${consecutiveUserMessages} consecutive user messages`);
+    logger.info(
+      `Responding due to ${consecutiveUserMessages} consecutive user messages`
+    );
     return {
       shouldRespond: true,
       reason: "Maximum consecutive user messages reached",
-      scheduleDelayedCheck: false
+      scheduleDelayedCheck: false,
     };
   }
 
   // Check if messages are in rapid succession (within the threshold)
   if (messages.length >= 2) {
     const recentMessages = messages.slice(-3); // Look at the last 3 messages
-    const messageTimes = recentMessages.map(msg => new Date(msg.created_at).getTime());
-    
+    const messageTimes = recentMessages.map((msg) =>
+      new Date(msg.created_at).getTime()
+    );
+
     // Check if all recent messages are within the threshold
     let allWithinThreshold = true;
     for (let i = 1; i < messageTimes.length; i++) {
@@ -602,29 +598,29 @@ async function shouldAgentRespond(roomId, messages, config) {
         break;
       }
     }
-    
+
     // If all messages are within the threshold, delay the response
     if (allWithinThreshold) {
       const lastMessageTime = new Date(lastMessage.created_at).getTime();
       const currentTime = new Date().getTime();
       const timeSinceLastMessage = currentTime - lastMessageTime;
-      
+
       // If the last message is very recent, schedule a delayed check
       if (timeSinceLastMessage < config.rapidMessageThresholdMs) {
         return {
           shouldRespond: false,
           reason: "Messages in rapid succession",
-          scheduleDelayedCheck: true
+          scheduleDelayedCheck: true,
         };
       }
     }
   }
-  
+
   // If we've passed all checks, the agent should respond
   return {
     shouldRespond: true,
     reason: "Normal response conditions met",
-    scheduleDelayedCheck: false
+    scheduleDelayedCheck: false,
   };
 }
 
@@ -637,20 +633,22 @@ async function shouldAgentRespond(roomId, messages, config) {
 async function markMessagesAsRead(roomId, messages) {
   try {
     // Get the IDs of all messages to mark as read
-    const messageIds = messages.map(msg => msg.id);
-    
+    const messageIds = messages.map((msg) => msg.id);
+
     if (messageIds.length === 0) return;
-    
+
     // Update the read_by_ai flag for these messages
     const { error } = await supabaseService.supabase
       .from(config.supabase.messagesTable)
       .update({ read_by_ai: true })
-      .in('id', messageIds);
-    
+      .in("id", messageIds);
+
     if (error) {
       logger.error(`Error marking messages as read: ${error.message}`);
     } else {
-      logger.debug(`Marked ${messageIds.length} messages as read in room ${roomId}`);
+      logger.debug(
+        `Marked ${messageIds.length} messages as read in room ${roomId}`
+      );
     }
   } catch (error) {
     logger.error("Error in markMessagesAsRead:", error);
@@ -695,10 +693,10 @@ async function generateResponseWithAgent(
     When considering whether to generate a new canvas you may refer to the current canvas, ${lastGenerationHtml}, which is visible to all participants. If you do decide to render a new canvas provide a brief description of what it should look like and what it should contain. Only do this if it will be helpful to the conversation. If you do not think a new canvas is needed, then do not render one. 
     `;
 
-    logger.debug("Sending prompt to OpenAI", prompt);
+    logger.debug("Sending prompt to OpenAI", agentResponsePrompt);
 
     // Generate text using OpenAI with stricter constraints
-    const text = await generateAITextResponse(prompt);
+    const text = await generateAITextResponse(agentResponsePrompt);
     logger.debug("AI generated response:", text);
 
     // Save the regular AI response to the Supabase database
@@ -707,8 +705,11 @@ async function generateResponseWithAgent(
 
     // Determine if we should generate HTML based on confidence score
     // This should be passed from the parent function, but we'll recalculate it here for safety
-    const visualizationConfidence =
-      await analyzeMessageForVisualizationIntent(lastUserMessage);
+    const visualizationConfidence = await analyzeMessageForVisualizationIntent(
+      lastUserMessage,
+      lastGenerationHtml,
+      messageHistory
+    );
     const shouldGenerateHtml = visualizationConfidence * 100 > 70;
 
     logger.info(
@@ -736,7 +737,7 @@ async function generateResponseWithAgent(
 - Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
 - Keep every visualization centered in the viewport and use responsive design principles to give the best user experience. 
 
-//## Canvas Selection - Use the following templates depending on the type of visualization requested: ${canvasTemplates}, if no template fits the request, generate a freeform canvas that is responsive and centered in the viewport and follow this style guide: ${canvasStyleGuide}. 
+## Canvas Selection - Use the following templates depending on the type of visualization requested: ${canvasTemplates}, if no template fits the request, generate a freeform canvas that is responsive and centered in the viewport and follow this style guide: ${canvasStyleGuide}. 
 **IMPORTANT: Only render the html and do not include any comments or markdown or code blocks**
 
 ## Technology Selection - Match the right tool to the request and check for dependencies, where possible use libraries that are more performant and have less dependencies. Use complex libraries only when simpler approaches are less visually appealing, prioritize user experience and aesthetics. Use the list below as a guideline for which tools are preferred and substitute better js frameworks where appropriate.
