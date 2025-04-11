@@ -91,14 +91,44 @@ export async function GET(
     <body>
       <div class="header">
         <h1>HTML Code - Generation ${generationId.substring(0, 8)}...</h1>
-        <button class="btn" onclick="window.location.href='/api/generation/${generationId}'">View Rendered HTML</button>
+        <div>
+          <button id="copyBtn" class="btn" style="margin-right: 10px;">Copy Code</button>
+          <button class="btn" onclick="window.location.href='/api/generation/${generationId}'">View Rendered HTML</button>
+        </div>
       </div>
-      <pre><code class="language-html">${escapedHtml}</code></pre>
+      <pre><code class="language-html" id="htmlCode">${escapedHtml}</code></pre>
       
       <script>
         document.addEventListener('DOMContentLoaded', (event) => {
+          // Apply syntax highlighting
           document.querySelectorAll('pre code').forEach((block) => {
             hljs.highlightElement(block);
+          });
+          
+          // Set up copy button functionality
+          const copyBtn = document.getElementById('copyBtn');
+          const htmlCode = document.getElementById('htmlCode');
+          
+          copyBtn.addEventListener('click', () => {
+            // Get the original unescaped HTML (stored in a data attribute)
+            const textToCopy = htmlCode.textContent;
+            
+            // Use the Clipboard API to copy the text
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              // Visual feedback that copy was successful
+              const originalText = copyBtn.textContent;
+              copyBtn.textContent = 'Copied!';
+              copyBtn.style.backgroundColor = '#10B981'; // Green color
+              
+              // Reset button after 2 seconds
+              setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.backgroundColor = '#0070f3';
+              }, 2000);
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+              alert('Failed to copy code to clipboard');
+            });
           });
         });
       </script>
