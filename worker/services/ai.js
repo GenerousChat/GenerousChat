@@ -517,16 +517,6 @@ async function generateResponseWithAgent(
       Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.
     `;
 
-    logger.debug("Sending prompt to OpenAI");
-
-    // Generate text using OpenAI with stricter constraints
-    const text = await generateAITextResponse(prompt);
-    logger.debug("AI generated response:", text);
-
-    // Save the regular AI response to the Supabase database
-    await supabaseService.saveMessage(roomId, agent.id, text);
-    logger.info("AI response saved to database for room:", roomId);
-
     // Determine if we should generate HTML based on confidence score
     // This should be passed from the parent function, but we'll recalculate it here for safety
     const visualizationConfidence =
@@ -538,7 +528,18 @@ async function generateResponseWithAgent(
     );
 
     // If we should generate HTML, create and send a special HTML visualization message
-    if (shouldGenerateHtml) {
+    if (!shouldGenerateHtml) {
+      // JUST DOING A CASUAL RESPONSE
+      logger.debug("Doing a casual response, Sending prompt to OpenAI");
+
+      // Generate text using OpenAI with stricter constraints
+      const text = await generateAITextResponse(prompt);
+      logger.debug("AI generated response:", text);
+
+      // Save the regular AI response to the Supabase database
+      await supabaseService.saveMessage(roomId, agent.id, text);
+      logger.info("AI response saved to database for room:", roomId);
+    } else {
       logger.info("Generating HTML content based on conversation...");
 
       // Create a prompt for generating HTML content that responds to conversation intent
