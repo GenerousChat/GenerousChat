@@ -113,7 +113,7 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   // Process only new messages received through Pusher
   useEffect(() => {
     if (!ttsService || !enabled || !newMessageReceived) return;
-    
+    return false;
     // Skip if it's a status message or already processed or it's the current user's message
     if (newMessageReceived.type === 'status' || 
         processedMessageIds.current.has(newMessageReceived.id) || 

@@ -94,6 +94,7 @@ async function analyzeMessageForVisualizationIntent(message) {
   // For more accurate analysis, use the AI to evaluate
   if (keywordMatch) {
     try {
+      // @todo - pass in last generation and message history
       // Use generateObject with Zod schema as per the latest docs
       const result = await generateObject({
         model: openai.responses("gpt-4o"),
@@ -101,22 +102,19 @@ async function analyzeMessageForVisualizationIntent(message) {
           score: z
             .number()
             .describe(
-              "A score from 0 to 100 indicating the likelihood that the user is requesting a visualization"
+              "A score from 0 to 100 indicating the likelihood that the user is requesting something to be generated"
             ),
           reason: z
             .string()
             .describe("A brief explanation of why this score was given"),
         }),
-        prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated.
+        prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated. Or improved upon, or ides about something
 
 Message: "${message.content}"
 
-Return a score from 0 to 100 indicating the likelihood that the user is requesting a visualization, and a brief reason explaining why.`,
+Return a score from 0 to 100 indicating the likelihood that the user is requesting something be generated, and a brief reason explaining why.`,
         temperature: 0.1,
       });
-
-      // Debug the result structure
-      logger.debug("AI analysis result structure:", result);
 
       // Safely access properties with fallbacks
       if (result && typeof result === "object") {
@@ -157,7 +155,7 @@ Return a score from 0 to 100 indicating the likelihood that the user is requesti
         if (typeof score === "number") {
           confidence = score / 100;
           logger.info(
-            `AI analysis of visualization intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
+            `AI analysis of generation intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
           );
         } else {
           logger.warn(
@@ -350,7 +348,7 @@ async function generateAITextResponse(prompt) {
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
       prompt: prompt,
-      maxTokens: 4000,
+      maxTokens: 300,
       temperature: 0.8,
     });
 
@@ -392,13 +390,13 @@ async function generateAIResponse(roomId) {
     logger.info("Generating AI response based on recent messages...");
 
     // Fetch messages for the specific room
-    const { data: roomMessages, error: messagesError } =
+    let { data: roomMessages, error: messagesError } =
       await supabaseService.supabase
         .from("messages")
         .select("*")
         .eq("room_id", roomId)
-        .order("created_at", { ascending: true })
-        .limit(50);
+        .order("created_at", { ascending: false })
+        .limit(20);
 
     if (messagesError) {
       logger.error("Error fetching messages:", messagesError);
@@ -411,6 +409,9 @@ async function generateAIResponse(roomId) {
       return false;
     }
 
+    // reverse roomMessages
+    roomMessages.reverse();
+
     // Get the last message to analyze for visualization intent
     const lastUserMessage = roomMessages[roomMessages.length - 1];
 
@@ -418,6 +419,11 @@ async function generateAIResponse(roomId) {
     const isLastMessageFromAgent = await supabaseService.isUserAnAgent(
       lastUserMessage.user_id
     );
+
+    console.log("isLastMessageFromAgent", isLastMessageFromAgent, {
+      lastUserMessage,
+    });
+
     if (isLastMessageFromAgent) {
       logger.info("Last message was from an AI agent, skipping response");
       return false;
@@ -515,9 +521,13 @@ async function generateResponseWithAgent(
       ${agent.personality_prompt}
 
       Focus on responding directly to the last message in the conversation. Your response should reflect the topic and tone of the conversation, especially addressing what "${lastUserMessage.content}" is about.
+
+      Rules:
+        - If the user ask for something new, ignore the last generation html
+        - Just share the general idea of what you would do if it is about a generation, no code etc
     `;
 
-    logger.debug("Sending prompt to OpenAI");
+    logger.debug("Sending prompt to OpenAI", prompt);
 
     // Generate text using OpenAI with stricter constraints
     const text = await generateAITextResponse(prompt);
