@@ -205,6 +205,13 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
       return;
     }
     
+    // Check if the user is an agent using the userCache
+    const isAgent = userCache[newMessageReceived.user_id]?.isAgent || false;
+    if (!isAgent) {
+      console.log(`Skipping TTS for non-agent user ${newMessageReceived.user_id}`);
+      return;
+    }
+    
     try {
       // Process the new chat message
       const userName = newMessageReceived.name || 
