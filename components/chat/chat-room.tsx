@@ -114,14 +114,14 @@ export default function ChatRoom({
         setSelectedGenerationId={setSelectedGenerationId}
         setLatestHtmlContent={setLatestHtmlContent}
       />
-      <CanvasPanel
+      {false && <CanvasPanel
         latestHtmlContent={latestHtmlContent}
         defaultHtmlContent={defaultHtmlContent}
         generations={generations}
         selectedGenerationId={selectedGenerationId}
         setSelectedGenerationId={setSelectedGenerationId}
         setLatestHtmlContent={setLatestHtmlContent}
-      />
+      />}
     </div>
   );
 }
