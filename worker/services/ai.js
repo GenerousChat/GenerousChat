@@ -440,33 +440,6 @@ async function generateAIResponse(roomId) {
       maxConsecutiveUserMessages,
     } = config.ai.responseAlgorithm;
 
-    // Check if we should respond based on timing
-    const shouldRespondResult = await shouldAgentRespond(roomId, roomMessages, {
-      rapidMessageThresholdMs,
-      responseDelayMs,
-      minMessagesBeforeResponse,
-      maxConsecutiveUserMessages,
-    });
-
-    // If we shouldn't respond now, schedule a delayed check and return
-    if (!shouldRespondResult.shouldRespond) {
-      logger.info(`Not responding now due to: ${shouldRespondResult.reason}`);
-
-      // If a delayed check is recommended, schedule it
-      if (shouldRespondResult.scheduleDelayedCheck) {
-        logger.info(
-          `Scheduling delayed response check in ${responseDelayMs}ms`
-        );
-        setTimeout(() => {
-          generateAIResponse(roomId).catch((err) => {
-            logger.error("Error in delayed response check:", err);
-          });
-        }, responseDelayMs);
-      }
-
-      return false;
-    }
-
     // Get user IDs from messages to fetch their names
     const userIds = [...new Set(roomMessages.map((msg) => msg.user_id))];
     logger.debug("User IDs to fetch:", userIds);
@@ -526,8 +499,6 @@ async function generateAIResponse(roomId) {
     return false;
   }
 }
-
-
 
 /**
  * Mark messages as read by the AI
