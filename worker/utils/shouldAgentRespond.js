@@ -37,69 +37,37 @@ async function shouldAgentRespond(roomId, messages, config) {
 
 */
 
-  const MONKEY_TIME_PAUSE = 10000;
-  const MONKEY_TIME_OVERTURE = 30000;
-  const MONKEY_TIME_DELAY = 5000;
+  const MONKEY_BUFFER = 10000;
 
-  const realTimeMessages = messages.map((msg) => ({
-    ...msg,
-    created_at: new Date(msg.created_at).getTime(),
-  }));
-
-  // fetch agent uuids from supabase
-  const agents = await supabaseService.fetchAIAgents();
-  const agentUuids = agents.map((agent) => agent.uuid);
-
-  // starting from the last message, we want to check the previous and see if its longer than MONKEY_TIME_PAUSE, just the message before
-
-  let lastMessage = realTimeMessages[realTimeMessages.length - 1];
-  const secondLastMessage = realTimeMessages[realTimeMessages.length - 2];
-  const sameConsecutiveUser = lastMessage.user_id === secondLastMessage.user_id;
-  const sameConsecutiveAnyUsers =
-    agentUuids.includes(lastMessage.user_id) &&
-    agentUuids.includes(secondLastMessage.user_id);
-
-  console.log("=======");
-  console.log("=======");
-  console.log("=======");
-  console.log("=======");
-
-  console.log({
-    sameConsecutiveUser,
-    sameConsecutiveAnyUsers,
+  // in the last minute, count the total messages
+  const lastMinuteMessages = messages.filter((msg) => {
+    const now = new Date();
+    const oneMinuteAgo = new Date(now.getTime() - 60000);
+    return new Date(msg.created_at) > oneMinuteAgo;
   });
 
-  if (sameConsecutiveUser || sameConsecutiveAnyUsers) {
-    // it should call this function after MONKEY_TIME_DELAY
+  const messagesPerMinute = (lastMinuteMessages.length / 60) * 100;
 
+  // calculate time since last message in ms
+  const lastMessage = lastMinuteMessages[lastMinuteMessages.length - 1];
+  const timeSinceLastMessage =
+    (new Date() - new Date(lastMessage.created_at)) * 10;
+
+  console.log("==================");
+  console.log("==================");
+  console.log("==================");
+  console.log("==================");
+  console.log("==================");
+  console.log({ lastMessage, messagesPerMinute, timeSinceLastMessage });
+
+  if (messagesPerMinute > 3 && timeSinceLastMessage < MONKEY_BUFFER) {
     return {
       shouldRespond: false,
-      reason: "Same consecutive user or users",
+      reason: "Too many messages in last minute",
       scheduleDelayedCheck: false,
     };
   }
 
-  return {
-    shouldRespond: false,
-    reason: "Failed debug test",
-    scheduleDelayedCheck: false,
-  };
-  // time between last and second last
-  const timeBetweenMessages =
-    lastMessage.created_at - secondLastMessage.created_at;
-
-  if (
-    timeBetweenMessages > MONKEY_TIME_PAUSE &&
-    timeBetweenMessages < MONKEY_TIME_OVERTURE
-  ) {
-    return {
-      shouldRespond: false,
-      reason: "Monkey time pause",
-      scheduleDelayedCheck: false,
-    };
-  }
-
-  // If we've passed all checks, the agent should respond
   return {
     shouldRespond: true,
     reason: "Normal response conditions met",
