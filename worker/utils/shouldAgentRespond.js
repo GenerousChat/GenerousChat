@@ -50,15 +50,21 @@ async function shouldAgentRespond(roomId, messages, config) {
 
   // calculate time since last message in ms
   const lastMessage = lastMinuteMessages[lastMinuteMessages.length - 1];
+  const secondLastMessage = lastMinuteMessages[lastMinuteMessages.length - 2];
   const timeSinceLastMessage =
-    (new Date() - new Date(lastMessage.created_at)) * 10;
+    new Date() - new Date(secondLastMessage.created_at);
 
   console.log("==================");
   console.log("==================");
   console.log("==================");
   console.log("==================");
   console.log("==================");
-  console.log({ lastMessage, messagesPerMinute, timeSinceLastMessage });
+  console.log({
+    lastMessage,
+    secondLastMessage,
+    messagesPerMinute,
+    timeSinceLastMessage,
+  });
 
   if (messagesPerMinute > 3 && timeSinceLastMessage < MONKEY_BUFFER) {
     return {
