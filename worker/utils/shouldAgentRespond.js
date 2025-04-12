@@ -12,6 +12,7 @@ const supabaseService = require("../services/supabase");
  * @returns {Promise<Object>} Decision object with shouldRespond, reason, and scheduleDelayedCheck flags
  */
 async function shouldAgentRespond(roomId, messages, config) {
+  return true;
   // If there are no messages, don't respond
   console.log("=====", JSON.stringify(messages, null, 2));
   /*
