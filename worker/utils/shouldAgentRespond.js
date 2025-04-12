@@ -14,85 +14,89 @@ const supabaseService = require("../services/supabase");
 async function shouldAgentRespond(roomId, messages, config) {
   // If there are no messages, don't respond
   console.log("=====", JSON.stringify(messages, null, 2));
-  if (true || !messages || messages.length === 0) {
+  /*
+  ===== [
+  {
+    "id": "b5f7229b-d599-41da-8d2f-815d044392e0",
+    "room_id": "c4e00ce9-1407-4998-afed-5ad217efd714",
+    "user_id": "e92d83f8-b2cd-4ebe-8d06-6e232e64736a",
+    "content": "gu",
+    "created_at": "2025-04-11T23:16:21.447436+00:00",
+    "read_by_ai": false
+  },
+  {
+    "id": "f61d7434-16d7-44f4-b9da-8075274a5b75",
+    "room_id": "c4e00ce9-1407-4998-afed-5ad217efd714",
+    "user_id": "e92d83f8-b2cd-4ebe-8d06-6e232e64736a",
+    "content": "hi",
+    "created_at": "2025-04-11T23:17:08.49741+00:00",
+    "read_by_ai": false
+  },
+  
+]
+
+*/
+
+  const MONKEY_TIME_PAUSE = 10000;
+  const MONKEY_TIME_OVERTURE = 30000;
+  const MONKEY_TIME_DELAY = 5000;
+
+  const realTimeMessages = messages.map((msg) => ({
+    ...msg,
+    created_at: new Date(msg.created_at).getTime(),
+  }));
+
+  // fetch agent uuids from supabase
+  const agents = await supabaseService.fetchAIAgents();
+  const agentUuids = agents.map((agent) => agent.uuid);
+
+  // starting from the last message, we want to check the previous and see if its longer than MONKEY_TIME_PAUSE, just the message before
+
+  let lastMessage = realTimeMessages[realTimeMessages.length - 1];
+  const secondLastMessage = realTimeMessages[realTimeMessages.length - 2];
+  const sameConsecutiveUser = lastMessage.user_id === secondLastMessage.user_id;
+  const sameConsecutiveAnyUsers =
+    agentUuids.includes(lastMessage.user_id) &&
+    agentUuids.includes(secondLastMessage.user_id);
+
+  console.log("=======");
+  console.log("=======");
+  console.log("=======");
+  console.log("=======");
+
+  console.log({
+    sameConsecutiveUser,
+    sameConsecutiveAnyUsers,
+  });
+
+  if (sameConsecutiveUser || sameConsecutiveAnyUsers) {
+    // it should call this function after MONKEY_TIME_DELAY
+
     return {
       shouldRespond: false,
-      reason: "No messages to respond to",
+      reason: "Same consecutive user or users",
       scheduleDelayedCheck: false,
     };
   }
 
-  // If there are fewer messages than the minimum required, don't respond
-  if (messages.length < config.minMessagesBeforeResponse) {
+  return {
+    shouldRespond: false,
+    reason: "Failed debug test",
+    scheduleDelayedCheck: false,
+  };
+  // time between last and second last
+  const timeBetweenMessages =
+    lastMessage.created_at - secondLastMessage.created_at;
+
+  if (
+    timeBetweenMessages > MONKEY_TIME_PAUSE &&
+    timeBetweenMessages < MONKEY_TIME_OVERTURE
+  ) {
     return {
       shouldRespond: false,
-      reason: "Not enough messages to respond to",
+      reason: "Monkey time pause",
       scheduleDelayedCheck: false,
     };
-  }
-
-  // Get the most recent message
-  const lastMessage = messages[messages.length - 1];
-
-  // Count consecutive user messages
-  let consecutiveUserMessages = 0;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i];
-    const isUserMessage = !(await supabaseService.isUserAnAgent(
-      message.user_id
-    ));
-
-    if (isUserMessage) {
-      consecutiveUserMessages++;
-    } else {
-      break;
-    }
-  }
-
-  // If we've reached the maximum consecutive user messages, force a response
-  if (consecutiveUserMessages >= config.maxConsecutiveUserMessages) {
-    logger.info(
-      `Responding due to ${consecutiveUserMessages} consecutive user messages`
-    );
-    return {
-      shouldRespond: true,
-      reason: "Maximum consecutive user messages reached",
-      scheduleDelayedCheck: false,
-    };
-  }
-
-  // Check if messages are in rapid succession (within the threshold)
-  if (messages.length >= 2) {
-    const recentMessages = messages.slice(-3); // Look at the last 3 messages
-    const messageTimes = recentMessages.map((msg) =>
-      new Date(msg.created_at).getTime()
-    );
-
-    // Check if all recent messages are within the threshold
-    let allWithinThreshold = true;
-    for (let i = 1; i < messageTimes.length; i++) {
-      const timeDiff = messageTimes[i] - messageTimes[i - 1];
-      if (timeDiff > config.rapidMessageThresholdMs) {
-        allWithinThreshold = false;
-        break;
-      }
-    }
-
-    // If all messages are within the threshold, delay the response
-    if (allWithinThreshold) {
-      const lastMessageTime = new Date(lastMessage.created_at).getTime();
-      const currentTime = new Date().getTime();
-      const timeSinceLastMessage = currentTime - lastMessageTime;
-
-      // If the last message is very recent, schedule a delayed check
-      if (timeSinceLastMessage < config.rapidMessageThresholdMs) {
-        return {
-          shouldRespond: false,
-          reason: "Messages in rapid succession",
-          scheduleDelayedCheck: true,
-        };
-      }
-    }
   }
 
   // If we've passed all checks, the agent should respond
