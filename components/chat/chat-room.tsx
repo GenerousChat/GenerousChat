@@ -60,14 +60,14 @@ export default function ChatRoom({
   return (
     <div className="flex h-full gap-4">
       {/* Left Sidebar */}
-      <div className="w-1/4 flex flex-col">
+      {false && <div className="w-1/4 flex flex-col">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}
           showAudioRoom={showAudioRoom}
         />
         <Transcription onTranscript={handleSendMessage} />
-      </div>
+      </div>}
 
       {/* Main Chat Column */}
       <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
@@ -121,6 +121,8 @@ export default function ChatRoom({
         selectedGenerationId={selectedGenerationId}
         setSelectedGenerationId={setSelectedGenerationId}
         setLatestHtmlContent={setLatestHtmlContent}
+        user={currentUser}
+        messages={messages}
       />
     </div>
   );
