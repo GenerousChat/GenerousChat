@@ -461,6 +461,7 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
                       <label className="text-sm font-medium">Microphone</label>
                       <div className="space-y-2">
                         <select
+                          aria-label="Select microphone device"
                           className="w-full text-ellipsis bg-background border border-input p-2 rounded-md text-sm"
                           onChange={(e) =>
                             setDevice('audio', (e.target as HTMLSelectElement).value)
@@ -490,6 +491,7 @@ export default function AudioRoom({ roomId, userId, userName }: AudioRoomProps) 
                       <label className="text-sm font-medium">Speaker Output</label>
                       <div className="space-y-2">
                         <select
+                          aria-label="Select speaker output device"
                           className="w-full text-ellipsis bg-background border border-input p-2 rounded-md text-sm"
                           onChange={(e) =>
                             setDevice('speaker', (e.target as HTMLSelectElement).value)

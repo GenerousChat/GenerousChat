@@ -1,27 +1,25 @@
 # Canvas Visualization API Documentation
 
-This README documents the Canvas Visualization API system, which generates dynamic, interactive visualizations based on user prompts using OpenAI's GPT models and a template-based architecture.
+This README documents the Canvas Visualization API system, which generates dynamic, interactive visualizations based on user prompts using OpenAI's GPT models.
 
 ## Overview
 
-The Canvas Visualization API allows users to send text prompts and receive interactive React component visualizations in response. The system intelligently selects appropriate templates based on user intent, generates data that fits these templates, validates the data with Zod schemas, and renders JSX components using Babel.
+The Canvas Visualization API allows users to send text prompts and receive HTML-based interactive visualizations in response. The system directly integrates with OpenAI's powerful language models to generate custom HTML, CSS, and JavaScript visualizations that respond to user requests.
 
 ## Architecture
 
-The system uses a modular architecture with the following components:
+The system uses a simplified architecture with the following components:
 
 1. **Frontend Canvas Component** - React component that handles user input and displays visualizations
-2. **Template System** - Collection of reusable templates with Zod validation schemas
-3. **API Routes** - Next.js API routes that process requests and communicate with OpenAI
-4. **Database** - Supabase for storing templates, tools, messages, visualizations, and user data
-5. **AI Integration** - Direct integration with OpenAI via AI SDK
-6. **JSX Renderer** - Babel-based transpilation and execution of JSX in a sandbox
+2. **API Routes** - Next.js API routes that process requests and communicate with OpenAI
+3. **Database** - Supabase for storing messages, visualizations, and user data
+4. **AI Integration** - Direct integration with OpenAI via AI SDK
 
 ## API Endpoints
 
 ### 1. `/api/canvas/generate-visualization`
 
-Analyzes user prompts, selects appropriate templates, and generates visualizations.
+Generates HTML visualizations from user prompts using OpenAI.
 
 **Method:** `POST`
 
@@ -46,11 +44,7 @@ Analyzes user prompts, selects appropriate templates, and generates visualizatio
 {
   "success": true,
   "message": "Visualization generated successfully",
-  "templateId": "scheduler_template",
-  "confidence": 0.87,
-  "renderMethod": "jsx",
-  "component": "const SchedulerComponent = (props) => { /* component code */ }",
-  "data": { /* component props */ },
+  "html": "<html>...</html>",
   "generation_id": "generation-uuid"
 }
 ```
@@ -58,57 +52,11 @@ Analyzes user prompts, selects appropriate templates, and generates visualizatio
 **Error Response:**
 ```json
 {
-  "error": "Error message",
-  "fallback": true,
-  "html": "<html>...</html>" // Fallback HTML if available
+  "error": "Error message"
 }
 ```
 
-### 2. `/api/canvas/templates`
-
-Lists available visualization templates.
-
-**Method:** `GET`
-
-**Response:**
-```json
-{
-  "templates": [
-    {
-      "id": "scheduler_template",
-      "name": "Weekly Scheduler",
-      "description": "Generates a weekly schedule UI with date + label items",
-      "tags": ["calendar", "schedule", "planner"],
-      "confidenceThreshold": 0.75
-    }
-  ]
-}
-```
-
-### 3. `/api/canvas/template-preview`
-
-Generates a preview using a specific template.
-
-**Method:** `POST`
-
-**Request Body:**
-```json
-{
-  "templateId": "scheduler_template",
-  "prompt": "Make me a workout schedule for the week"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "component": "const PreviewComponent = (props) => { /* component code */ }",
-  "data": { /* example data */ }
-}
-```
-
-### 4. `/api/canvas-element`
+### 2. `/api/canvas-element`
 
 Stores canvas elements (messages, drawing elements, etc.) in the database.
 
@@ -128,12 +76,23 @@ Stores canvas elements (messages, drawing elements, etc.) in the database.
 }
 ```
 
+**Request Body (for other elements):**
+```json
+{
+  "canvasId": "unique-canvas-identifier",
+  "element": {
+    "type": "element-type",
+    "properties": {}
+  }
+}
+```
+
 **Response:**
 ```json
 {
   "success": true,
   "message": "Canvas message/element stored",
-  "messageId": "message-id"
+  "messageId": "message-id" // or "element": {...}
 }
 ```
 
@@ -144,27 +103,17 @@ Stores canvas elements (messages, drawing elements, etc.) in the database.
    - Frontend saves message to Supabase database
    - Frontend displays a loading visualization
 
-2. **Intent Analysis & Template Selection**:
+2. **Visualization Generation**:
    - Frontend sends request to `/api/canvas/generate-visualization`
    - API authenticates user with Supabase
-   - API analyzes intent and selects the most appropriate template
-   - API evaluates confidence score against template threshold
-   - If confidence is too low, system falls back to direct HTML generation
+   - API formats prompt and conversation history
+   - API calls OpenAI with the AI SDK
+   - OpenAI generates HTML content
+   - API stores the visualization in Supabase
+   - API returns HTML directly in response
 
-3. **Data Generation & Validation**:
-   - API prompts OpenAI to generate data fitting the selected template
-   - Data is validated against template's Zod schema
-   - If validation fails, system uses fallback mechanism
-
-4. **JSX Rendering**:
-   - API generates JSX code using the template and validated data
-   - Babel transpiles JSX to JavaScript for client-side execution
-   - JSX code and data are stored in Supabase
-   - API returns JSX component code and data in response
-
-5. **Client Rendering**:
-   - Frontend receives JSX component and data
-   - React renders the component within a sandboxed environment
+3. **Rendering**:
+   - Frontend receives HTML and renders it in an iframe
    - User can interact with the visualization
 
 ## Database Schema
@@ -192,12 +141,7 @@ CREATE TABLE canvas_generations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   canvas_id TEXT NOT NULL,
   created_by UUID NOT NULL REFERENCES auth.users(id),
-  template_id TEXT,
-  component_code TEXT,
-  component_data JSONB,
-  html TEXT, -- Fallback HTML if needed
-  confidence FLOAT,
-  render_method TEXT NOT NULL, -- 'jsx' or 'fallback_iframe'
+  html TEXT NOT NULL,
   summary TEXT,
   type TEXT NOT NULL,
   metadata JSONB,
@@ -205,53 +149,17 @@ CREATE TABLE canvas_generations (
 );
 ```
 
-### 3. `canvas_templates` Table
+### 3. `canvas_elements` Table
 
-Stores visualization templates:
+Stores other canvas elements:
 
 ```sql
-CREATE TABLE canvas_templates (
+CREATE TABLE canvas_elements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
+  canvas_id TEXT NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id),
   type TEXT NOT NULL,
-  template TEXT NOT NULL,
-  description TEXT,
-  tags TEXT[],
-  zod_schema TEXT NOT NULL,
-  confidence_threshold FLOAT DEFAULT 0.75,
-  fallback_html TEXT,
-  created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-### 4. `canvas_tools` Table
-
-Stores tools that can be used with templates:
-
-```sql
-CREATE TABLE canvas_tools (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL,
-  script_url TEXT,
-  config_schema JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-### 5. `canvas_triggers` Table
-
-Stores trigger phrases for template selection:
-
-```sql
-CREATE TABLE canvas_triggers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  template_id UUID REFERENCES canvas_templates(id),
-  tool_id UUID REFERENCES canvas_tools(id),
-  matcher JSONB NOT NULL,
+  properties JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
@@ -277,10 +185,10 @@ OPENAI_API_KEY="your-openai-api-key"
 
 The Canvas component in `components/canvas/canvas.tsx` provides a complete UI for interacting with the Canvas API. The component:
 
-1. Maintains state for messages, templates, and visualizations
+1. Maintains state for messages, loading, and errors
 2. Uses the `useCanvasData` hook to poll for new data
 3. Sends requests to the API routes
-4. Renders visualizations using either JSX or fallback iframes
+4. Displays visualizations in an iframe
 
 ## Error Handling
 
@@ -289,48 +197,45 @@ The system handles errors at multiple levels:
 1. **API Errors** - Return appropriate HTTP status codes and error messages
 2. **OpenAI Errors** - Fall back to a simple visualization with error details
 3. **Database Errors** - Logged and returned as 500 responses
-4. **Validation Errors** - Use fallback rendering for invalid data
-5. **Frontend Errors** - Display error messages to the user with retry options
+4. **Frontend Errors** - Display error messages to the user
 
-## Template-Based Generation
+## Visualization Generation
 
-The system uses a template-based approach where:
+The HTML generation prompt instructs OpenAI to:
 
-1. Templates define structure and expected data format
-2. Zod schemas validate data before rendering
-3. Confidence scores ensure appropriate template selection
-4. Tools can be attached to templates for enhanced functionality
+1. Analyze conversation context for build/create/generate requests
+2. Select appropriate technology (D3.js, Chart.js, Three.js, etc.)
+3. Generate responsive HTML, CSS, and JavaScript
+4. Ensure visualization works well in the sidebar panel
+5. Add interactivity and annotations as appropriate
 
 ## Fallback Mechanism
 
-If any part of the template-based generation fails, the system:
+If visualization generation fails, the system generates a simple fallback HTML that:
 
-1. Records the failure reason in metadata
-2. Uses template-specific fallback HTML if available
-3. Otherwise generates a simple fallback visualization
-4. Displays the error with helpful context
-5. Offers users the option to try again or refine their prompt
+1. Shows an error message
+2. Displays the original prompt
+3. Indicates the number of messages in the conversation
+4. Provides a close button to dismiss the visualization
 
 ## Debugging
 
 The API includes extensive logging that can be enabled to debug issues:
 
-1. Server-side logs show API calls, template selection, and OpenAI responses
-2. Client-side logs show requests, JSX rendering status, and tool initialization
-3. Template validation errors are recorded for debugging
+1. Server-side logs show API calls, authentication, and OpenAI responses
+2. Client-side logs show requests, responses, and rendering status
 
 ## Performance Considerations
 
-1. JSX components are lightweight and render efficiently
-2. Templates are cached to avoid regeneration
-3. Fallback mechanisms ensure visualization even if parts fail
-4. The frontend shows loading states for better user experience
-5. Polling is used to check for updates (with a 3-second interval)
+1. HTML generation can take several seconds depending on OpenAI's response time
+2. Visualizations are stored in the database to avoid regeneration
+3. The frontend shows loading states for better user experience
+4. Polling is used to check for updates (with a 3-second interval)
 
 ## Future Improvements
 
 1. Add WebSocket support for real-time updates
-2. Implement template versioning and history
-3. Support collaborative editing of visualizations
-4. Add analytics to track template performance
-5. Create a template designer UI for non-developers
+2. Implement caching for frequently requested visualizations
+3. Add visualization versioning and history
+4. Support collaborative editing of visualizations
+5. Add analytics to track visualization performance and usage

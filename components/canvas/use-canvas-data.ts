@@ -93,11 +93,68 @@ export function useCanvasData({
           
           // Only update if we have the proper setters available
           if (setTemplateId && setTemplateProps && setRenderMethod) {
-            setTemplateId(generation.template_id);
-            setTemplateProps(generation.component_data);
-            setRenderMethod('jsx');
-            setHtmlContent(null); // Clear any HTML content
-            setIsLoading(false);
+            // Check if props are valid
+            try {
+              if (generation.component_data && typeof generation.component_data === 'object') {
+                // Ensure we have the required fields based on template type
+                let hasRequiredFields = false;
+                
+                // Simple validation based on template type
+                if (generation.template_id === 'chart_template') {
+                  hasRequiredFields = generation.component_data.type && 
+                                     generation.component_data.data &&
+                                     generation.component_data.data.datasets;
+                } else if (generation.template_id === 'scheduler_template') {
+                  hasRequiredFields = generation.component_data.activities && 
+                                     Array.isArray(generation.component_data.activities);
+                } else if (generation.template_id === 'timeline_template') {
+                  hasRequiredFields = generation.component_data.events && 
+                                     Array.isArray(generation.component_data.events);
+                } else {
+                  // For unknown templates, just check if we have any properties
+                  hasRequiredFields = Object.keys(generation.component_data).length > 0;
+                }
+                
+                if (hasRequiredFields) {
+                  setTemplateId(generation.template_id);
+                  setTemplateProps(generation.component_data);
+                  setRenderMethod('jsx');
+                  setHtmlContent(null); // Clear any HTML content
+                  setIsLoading(false);
+                  if (setVisualizationError) {
+                    setVisualizationError(null);
+                  }
+                  console.log('Successfully loaded template props from database');
+                } else {
+                  console.error('Template props from database missing required fields');
+                  if (generation.html) {
+                    console.log('Falling back to HTML content');
+                    setHtmlContent(generation.html);
+                    setTemplateId(null);
+                    setTemplateProps(null);
+                    setRenderMethod('fallback_iframe');
+                  }
+                }
+              } else {
+                console.error('Invalid template props from database:', generation.component_data);
+                if (generation.html) {
+                  console.log('Falling back to HTML content');
+                  setHtmlContent(generation.html);
+                  setTemplateId(null);
+                  setTemplateProps(null);
+                  setRenderMethod('fallback_iframe');
+                }
+              }
+            } catch (error) {
+              console.error('Error processing template props:', error);
+              if (generation.html) {
+                console.log('Falling back to HTML content');
+                setHtmlContent(generation.html);
+                setTemplateId(null);
+                setTemplateProps(null);
+                setRenderMethod('fallback_iframe');
+              }
+            }
           }
         } else if (generation.html) {
           console.log('Found HTML-based visualization');
@@ -111,6 +168,9 @@ export function useCanvasData({
           }
           
           setIsLoading(false);
+          if (setVisualizationError) {
+            setVisualizationError(null);
+          }
         }
       }
     } catch (error) {
