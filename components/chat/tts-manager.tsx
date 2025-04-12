@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AbstractTTSService, TTSMessage } from "@/utils/text-to-speech/abstract-tts";
 import { OpenAITTSService, OpenAITTSOptions } from "@/utils/text-to-speech/openai-tts";
+import { useTTS } from "@/utils/tts-context";
+import { useSpeaking } from "@/utils/speaking-context";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, Settings } from "lucide-react";
 import {
@@ -38,9 +40,10 @@ type ChatMessage = {
 
 type StatusMessage = {
   type: 'status';
-  statusType: 'join' | 'leave';
+  statusType: 'join' | 'leave' | 'generation';
   userId: string;
   timestamp: string;
+  message?: string; // Optional custom message for status updates
 };
 
 type Message = ChatMessage | StatusMessage;
@@ -53,6 +56,8 @@ interface TTSManagerProps {
 }
 
 export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
+  const { ttsServiceRef, systemState, lastError, resetTTSService } = useTTS();
+  const { setParticipantSpeaking, isParticipantSpeaking } = useSpeaking();
   const [enabled, setEnabled] = useState(false);
   const [ttsService, setTtsService] = useState<AbstractTTSService | null>(null);
   const processedMessageIds = useRef<Set<string>>(new Set());
@@ -64,6 +69,11 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     volume: 1.0
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  type ServiceStatus = 'healthy' | 'warning' | 'error';
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>('healthy');
+  const serviceRecreationAttempts = useRef<number>(0);
+  const maxServiceRecreationAttempts = 3;
+  const lastServiceCreationTime = useRef<number>(Date.now());
   
   // Initialize TTS service
   useEffect(() => {
@@ -85,17 +95,67 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
     }
     
     // Create the TTS service
-    const service = new OpenAITTSService(ttsOptions);
-    
-    setTtsService(service);
+    createTTSService();
     
     // Cleanup on unmount
     return () => {
-      if (service) {
-        service.stop();
+      if (ttsService) {
+        try {
+          ttsService.stop();
+          ttsServiceRef.current = null;
+        } catch (error) {
+          console.error('Error cleaning up TTS service:', error);
+        }
       }
     };
   }, []);
+  
+  // Function to create a new TTS service
+  const createTTSService = useCallback(() => {
+    try {
+      console.log('Creating new TTS service instance...');
+      
+      // Limit recreation attempts to prevent infinite loops
+      if (serviceRecreationAttempts.current >= maxServiceRecreationAttempts) {
+        console.error('Maximum TTS service recreation attempts reached');
+        setServiceStatus('error');
+        return;
+      }
+      
+      // Enforce a minimum time between service recreations
+      const minTimeBetweenRecreations = 5000; // 5 seconds
+      const timeSinceLastCreation = Date.now() - lastServiceCreationTime.current;
+      if (timeSinceLastCreation < minTimeBetweenRecreations) {
+        console.log(`Delaying service recreation (${timeSinceLastCreation}ms since last attempt)`);
+        setTimeout(createTTSService, minTimeBetweenRecreations - timeSinceLastCreation);
+        return;
+      }
+      
+      // Stop existing service if it exists
+      if (ttsService) {
+        try {
+          ttsService.stop();
+        } catch (error) {
+          console.error('Error stopping existing TTS service:', error);
+        }
+      }
+      
+      // Create new service
+      const service = new OpenAITTSService(ttsOptions);
+      setTtsService(service);
+      ttsServiceRef.current = service;
+      setServiceStatus('healthy');
+      
+      // Update counters
+      serviceRecreationAttempts.current++;
+      lastServiceCreationTime.current = Date.now();
+      
+      console.log('TTS service created successfully');
+    } catch (error) {
+      console.error('Error creating TTS service:', error);
+      setServiceStatus('error');
+    }
+  }, [ttsOptions, ttsService, ttsServiceRef]);
   
   // Mark all initial messages as processed when component mounts
   useEffect(() => {
@@ -109,58 +169,137 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
       initialMessagesProcessed.current = true;
     }
   }, [messages]);
+  
+  // Monitor TTS system state and handle errors
+  useEffect(() => {
+    if (systemState === 'error' && serviceStatus !== 'error') {
+      console.warn('TTS system error detected, service may need recreation');
+      setServiceStatus('warning');
+    } else if (systemState === 'recovering') {
+      console.log('TTS system is recovering, recreating service...');
+      createTTSService();
+    }
+  }, [systemState, serviceStatus, createTTSService]);
+
+  // Use a simpler approach to manage speaking indicators
+  useEffect(() => {
+    // This effect handles cleanup of speaking indicators when TTS is disabled
+    if (!enabled && ttsService) {
+      // Turn off all agent speaking indicators when TTS is disabled
+      Object.keys(userCache).forEach(userId => {
+        if (userCache[userId].isAgent) {
+          setParticipantSpeaking(userId, 'tts', false);
+        }
+      });
+    }
+  }, [enabled, ttsService, userCache, setParticipantSpeaking]);
 
   // Process only new messages received through Pusher
-  // useEffect(() => {
-  //   if (!ttsService || !enabled || !newMessageReceived) return;
-  //   // Skip if it's a status message or already processed or it's the current user's message
-  //   if (newMessageReceived.type === 'status' || 
-  //       processedMessageIds.current.has(newMessageReceived.id) || 
-  //       newMessageReceived.user_id === currentUserId) {
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!ttsService || !enabled || !newMessageReceived || serviceStatus === 'error') return;
     
-  //   // Process the new chat message
-  //   const userName = newMessageReceived.name || 
-  //                    newMessageReceived.profile?.name ||
-  //                    userCache[newMessageReceived.user_id]?.name || 
-  //                    'Unknown User';
+    // Skip if it's a status message or already processed or it's the current user's message
+    if (newMessageReceived.type === 'status' || 
+        processedMessageIds.current.has(newMessageReceived.id) || 
+        newMessageReceived.user_id === currentUserId) {
+      return;
+    }
     
-  //   const ttsMessage: TTSMessage = {
-  //     id: newMessageReceived.id,
-  //     content: newMessageReceived.content,
-  //     userId: newMessageReceived.user_id,
-  //     userName: userName,
-  //     timestamp: newMessageReceived.created_at
-  //   };
+    // Check if the user is an agent using the userCache
+    const isAgent = userCache[newMessageReceived.user_id]?.isAgent || false;
+    if (!isAgent) {
+      console.log(`Skipping TTS for non-agent user ${newMessageReceived.user_id}`);
+      return;
+    }
     
-  //   ttsService.queueMessage(ttsMessage);
-  //   processedMessageIds.current.add(newMessageReceived.id);
-  // }, [newMessageReceived, ttsService, enabled, userCache, currentUserId]);
+    try {
+      // Process the new chat message
+      const userName = newMessageReceived.name || 
+                       newMessageReceived.profile?.name ||
+                       userCache[newMessageReceived.user_id]?.name || 
+                       'Unknown User';
+      
+      const ttsMessage: TTSMessage = {
+        id: newMessageReceived.id,
+        content: newMessageReceived.content,
+        userId: newMessageReceived.user_id,
+        userName: userName,
+        timestamp: newMessageReceived.created_at
+      };
+      
+      // Don't set the speaking indicator yet - we'll let the message processor handle that
+      // Just queue the message without changing indicators
+      
+      // Queue the message with error handling
+      try {
+        ttsService.queueMessage(ttsMessage);
+        processedMessageIds.current.add(newMessageReceived.id);
+      } catch (error) {
+        console.error('Error queueing TTS message:', error);
+        setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
+        
+        // If queueing fails, try to recover the service
+        if (serviceStatus === 'healthy' || serviceStatus === 'warning') {
+          setServiceStatus('warning');
+          resetTTSService();
+        }
+      }
+    } catch (error) {
+      console.error('Critical error processing message for TTS:', error);
+      setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
+    }
+  }, [newMessageReceived, ttsService, enabled, userCache, currentUserId, setParticipantSpeaking, serviceStatus, resetTTSService]);
   
   // Toggle TTS
   const toggleTTS = () => {
-    const newEnabled = !enabled;
-    setEnabled(newEnabled);
-    localStorage.setItem('tts-enabled', newEnabled.toString());
-    
-    if (!newEnabled && ttsService) {
-      ttsService.stop();
+    try {
+      const newEnabled = !enabled;
+      setEnabled(newEnabled);
+      localStorage.setItem('tts-enabled', newEnabled.toString());
+      
+      if (!newEnabled && ttsService) {
+        ttsService.stop();
+        
+        // Make sure to clear any speaking states when TTS is disabled
+        Object.keys(userCache).forEach(userId => {
+          if (userCache[userId].isAgent) {
+            setParticipantSpeaking(userId, 'tts', false);
+          }
+        });
+      } else if (newEnabled && serviceStatus === 'error') {
+        // If enabling and service is in error state, try to recreate it
+        createTTSService();
+      }
+    } catch (error) {
+      console.error('Error toggling TTS:', error);
     }
   };
   
   // Update TTS options
   const updateTTSOptions = (newOptions: Partial<OpenAITTSOptions>) => {
-    const updatedOptions = { ...ttsOptions, ...newOptions };
-    setTtsOptions(updatedOptions);
-    localStorage.setItem('tts-options', JSON.stringify(updatedOptions));
-    
-    // Recreate the TTS service with new options
-    if (ttsService) {
-      ttsService.stop();
+    try {
+      const updatedOptions = { ...ttsOptions, ...newOptions };
+      setTtsOptions(updatedOptions);
+      localStorage.setItem('tts-options', JSON.stringify(updatedOptions));
+      
+      // Reset service recreation counter when options are deliberately changed
+      serviceRecreationAttempts.current = 0;
+      
+      // Recreate the TTS service with new options
+      if (ttsService) {
+        try {
+          ttsService.stop();
+        } catch (error) {
+          console.error('Error stopping TTS service during options update:', error);
+        }
+      }
+      
+      // Create new service with updated options
+      createTTSService();
+    } catch (error) {
+      console.error('Error updating TTS options:', error);
+      setServiceStatus('warning');
     }
-    const service = new OpenAITTSService(updatedOptions);
-    setTtsService(service);
   };
   
   return (
@@ -170,8 +309,16 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
         size="icon"
         onClick={toggleTTS}
         title={enabled ? "Disable text-to-speech" : "Enable text-to-speech"}
+        className={serviceStatus === 'error' ? 'text-red-500' : 
+                  serviceStatus === 'warning' ? 'text-amber-500' : ''}
       >
         {enabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        {serviceStatus === 'error' && (
+          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+        )}
+        {serviceStatus === 'warning' && (
+          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-500"></span>
+        )}
       </Button>
       
       <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>

@@ -10,6 +10,7 @@
   "dependencies": {
     "@ai-sdk/google": "^1.2.10",
     "@ai-sdk/openai": "^1.3.9",
+    "@ai-sdk/xai": "^1.2.11",
     "@supabase/supabase-js": "^2.39.0",
     "ai": "^4.3.4",
     "crypto": "^1.0.1",

@@ -4,6 +4,8 @@ import { memo, useEffect, useState } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
+import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
+import { Mic, Volume2 } from "lucide-react";
 
 interface Participant {
   user_id: string;
@@ -20,11 +22,46 @@ interface ParticipantListProps {
 
 interface ParticipantInfo {
   name: string;
-  isAgent?: boolean;
+  isAgent: boolean;
+  id: string;
 }
 
 const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {
   const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
+  const [agents, setAgents] = useState<ParticipantInfo[]>([]);
+  const { isParticipantSpeaking, getParticipantActivityType } = useSpeaking();
+  
+  // Load agents from the database
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('agents')
+          .select('id, name');
+        
+        if (!error && data) {
+          const agentInfo = data.map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            isAgent: true
+          }));
+          setAgents(agentInfo);
+          
+          // Add agents to userInfo
+          const newInfo = { ...userInfo };
+          agentInfo.forEach(agent => {
+            newInfo[agent.id] = agent;
+          });
+          setUserInfo(newInfo);
+        }
+      } catch (error) {
+        console.error('Error loading agents:', error);
+      }
+    };
+    
+    loadAgents();
+  }, []);
   
   // Load profile names once when participants change
   useEffect(() => {
@@ -42,8 +79,9 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         profiles.forEach(profile => {
           if (profile.name) {
             newInfo[profile.id] = {
+              id: profile.id,
               name: profile.name,
-              isAgent: userInfo[profile.id]?.isAgent
+              isAgent: false
             };
           }
         });
@@ -92,8 +130,9 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       )}
       
       <div className="flex-1 p-2 space-y-1 overflow-auto">
+        {/* Human participants */}
         {participants.map((participant) => {
-          const info = userInfo[participant.user_id] || { name: 'Loading...' };
+          const info = userInfo[participant.user_id] || { id: participant.user_id, name: 'Loading...', isAgent: false };
           const isOnline = true; // TODO: Add online status tracking
           return (
             <div 
@@ -105,6 +144,37 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
               {info.isAgent && (
                 <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">AI</span>
               )}
+              
+              {/* Speaking indicator */}
+              {isParticipantSpeaking(participant.user_id) && (
+                <SpeakingIndicator 
+                  activityType={getParticipantActivityType(participant.user_id)} 
+                  isAgent={info.isAgent}
+                />
+              )}
+            </div>
+          );
+        })}
+        
+        {/* AI Agents */}
+        {agents.map((agent) => {
+          const isOnline = true; // Agents are always online
+          return (
+            <div 
+              key={agent.id} 
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100"
+            >
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <span className="text-sm truncate">{agent.name}</span>
+              <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">AI</span>
+              
+              {/* Speaking indicator */}
+              {isParticipantSpeaking(agent.id) && (
+                <SpeakingIndicator 
+                  activityType={getParticipantActivityType(agent.id)} 
+                  isAgent={true}
+                />
+              )}
             </div>
           );
         })}
@@ -114,5 +184,45 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
 });
 
 ParticipantList.displayName = 'ParticipantList';
+
+// Speaking indicator component
+interface SpeakingIndicatorProps {
+  activityType: SpeakingActivityType;
+  isAgent: boolean;
+}
+
+const SpeakingIndicator = ({ activityType, isAgent }: SpeakingIndicatorProps) => {
+  // Different animations based on activity type
+  const getAnimationClass = () => {
+    return 'animate-pulse'; // Basic animation for now
+  };
+  
+  // Different colors based on activity type
+  const getColorClass = () => {
+    switch (activityType) {
+      case 'transcribing':
+        return 'text-green-500';
+      case 'tts':
+        return 'text-blue-500';
+      default:
+        return 'text-gray-400';
+    }
+  };
+  
+  return (
+    <div className={`flex items-center ${getColorClass()} ${getAnimationClass()}`}>
+      {activityType === 'transcribing' ? (
+        <Mic className="h-4 w-4" />
+      ) : (
+        <Volume2 className="h-4 w-4" />
+      )}
+      <div className="ml-1 flex space-x-1">
+        <span className="block w-1 h-3 bg-current rounded-full animate-sound-wave-1"></span>
+        <span className="block w-1 h-4 bg-current rounded-full animate-sound-wave-2"></span>
+        <span className="block w-1 h-2 bg-current rounded-full animate-sound-wave-3"></span>
+      </div>
+    </div>
+  );
+};
 
 export default ParticipantList;

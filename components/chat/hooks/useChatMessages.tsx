@@ -3,6 +3,9 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Pusher from 'pusher-js';
 
+// Get messages table name from environment variable or use default
+const MESSAGES_TABLE = process.env.NEXT_PUBLIC_MESSAGES_TABLE || 'messages';
+
 export type StatusType = 'join' | 'leave' | 'generation';
 
 export type StatusMessage = {
@@ -163,7 +166,7 @@ export function useChatMessages(
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("messages").insert({
+      const { error } = await supabase.from(MESSAGES_TABLE).insert({
         room_id: roomId,
         user_id: currentUser.id,
         content: message,

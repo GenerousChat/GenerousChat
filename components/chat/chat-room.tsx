@@ -75,6 +75,7 @@ export default function ChatRoom({
             <AudioRoom
               roomId={roomId}
               userId={currentUser.id}
+              userName={currentUser.email?.split('@')[0] || 'User'}
             />
           </DyteProvider>
         )}

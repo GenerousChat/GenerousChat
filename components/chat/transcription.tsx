@@ -1,5 +1,54 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '../ui/button';
+import { useTTS } from '@/utils/tts-context';
+import { useSpeaking } from '@/utils/speaking-context';
+
+// Add type definitions for the Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+}
+
+// Add the global window interface extension
+declare global {
+  interface Window {
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface TranscriptionProps {
   className?: string;
@@ -9,7 +58,34 @@ interface TranscriptionProps {
 export function Transcription({ className, onTranscript }: TranscriptionProps) {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const { stopTTS } = useTTS();
+  const [speechDetected, setSpeechDetected] = useState(false);
+  const { setParticipantSpeaking } = useSpeaking();
+  
+  // Get current user ID from localStorage or session
+  const [currentUserId, setCurrentUserId] = useState<string>('');
 
+  // Get the current user ID when component mounts
+  useEffect(() => {
+    // Try to get the user ID from localStorage
+    const getUserId = async () => {
+      try {
+        // This is a simplified approach - in a real app, you would use a more robust method
+        // to get the current user ID, such as from auth context or session
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user?.id) {
+          setCurrentUserId(data.session.user.id);
+        }
+      } catch (error) {
+        console.error('Error getting user ID:', error);
+      }
+    };
+    
+    getUserId();
+  }, []);
+  
   const startTranscription = useCallback(() => {
     if (!('webkitSpeechRecognition' in window)) {
       console.error('Speech recognition is not supported in this browser');
@@ -25,10 +101,30 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
     newRecognition.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
+        
+        // If any speech is detected (even non-final), stop TTS immediately
+        if (!speechDetected && transcript.trim()) {
+          console.log('Speech detected, stopping TTS');
+          stopTTS();
+          setSpeechDetected(true);
+          
+          // Update speaking state in context if we have a user ID
+          if (currentUserId) {
+            setParticipantSpeaking(currentUserId, 'transcribing', true);
+          }
+        }
+        
         if (event.results[i].isFinal) {
           console.log('Transcription:', transcript);
-          if (onTranscript) {
-            onTranscript(`🎤 ${transcript}`);
+          if (onTranscript && transcript.trim()) {
+            onTranscript(transcript);
+          }
+          // Reset speech detected flag after final result
+          setSpeechDetected(false);
+          
+          // Update speaking state in context if we have a user ID
+          if (currentUserId) {
+            setParticipantSpeaking(currentUserId, 'transcribing', false);
           }
         }
       }
@@ -41,17 +137,24 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
 
     newRecognition.onend = () => {
       setIsTranscribing(false);
+      setSpeechDetected(false);
+      
+      // Update speaking state in context if we have a user ID
+      if (currentUserId) {
+        setParticipantSpeaking(currentUserId, 'transcribing', false);
+      }
     };
 
     setRecognition(newRecognition);
     newRecognition.start();
     setIsTranscribing(true);
-  }, [onTranscript]);
+  }, [onTranscript, currentUserId, setParticipantSpeaking, stopTTS]);
 
   const stopTranscription = useCallback(() => {
     if (recognition) {
       recognition.stop();
       setIsTranscribing(false);
+      setSpeechDetected(false);
     }
   }, [recognition]);
 

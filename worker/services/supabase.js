@@ -83,7 +83,7 @@ async function setupSupabaseListeners(onMessageInserted, onParticipantJoined, on
       {
         event: 'INSERT',
         schema: 'public',
-        table: 'messages',
+        table: config.supabase.messagesTable,
       },
       async (payload) => {
         logger.info('===== MESSAGE INSERTED CALLBACK TRIGGERED =====');
@@ -278,7 +278,7 @@ async function getAgentProfiles(agentIds) {
  */
 async function saveMessage(roomId, userId, content) {
   try {
-    const { data, error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from(config.supabase.messagesTable).insert({
       room_id: roomId,
       user_id: userId,
       content: content,

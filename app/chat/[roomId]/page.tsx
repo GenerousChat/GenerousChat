@@ -4,6 +4,9 @@ import ChatRoom from "@/components/chat/chat-room";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+// Get messages table name from environment variable or use default
+const MESSAGES_TABLE = process.env.MESSAGES_TABLE || 'messages';
+
 export default async function ChatRoomPage(props: any) {
   const roomId = props.params.roomId;
   const supabase = await createClient();
@@ -54,7 +57,7 @@ export default async function ChatRoomPage(props: any) {
 
   // Fetch messages
   const { data: messagesData, error: messagesError } = await supabase
-    .from("messages")
+    .from(MESSAGES_TABLE)
     .select(`
       id,
       content,

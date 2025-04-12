@@ -9,13 +9,23 @@ const config = require("../config");
 const logger = require("../utils/logger");
 const supabaseService = require("./supabase");
 const pusherService = require("./pusher");
+const shouldAgentRespond = require("../utils/shouldAgentRespond");
+const { createXai } = require("@ai-sdk/xai");
 
+const xai = createXai({
+  apiKey: process.env.XAI_API_KEY,
+});
 /**
  * Analyze a message for visualization intent
  * @param {Object} message - Message object
  * @returns {Promise<number>} Confidence score (0-1)
  */
-async function analyzeMessageForVisualizationIntent(message) {
+async function analyzeMessageForVisualizationIntent(
+  lastUserMessage,
+  lastGenerationHtml,
+  messageHistory
+) {
+  return 100;
   // Keywords that suggest a visualization request
   const visualizationKeywords = [
     "build",
@@ -82,94 +92,90 @@ async function analyzeMessageForVisualizationIntent(message) {
     "recommend",
   ];
 
-  // Simple keyword-based analysis
-  const messageText = message.content.toLowerCase();
-  const keywordMatch = visualizationKeywords.some((keyword) =>
-    messageText.includes(keyword)
-  );
+  const visualizationEvalPrompt = `You are an AI that analyzes whether a message is requesting a visualization. You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, games, or other interactive elements that enhance the conversation. When deciding whether to generate or update the canvas conduct the following steps:
 
-  // Initial confidence based on keyword matching
-  let confidence = keywordMatch ? 0.5 : 0.1;
+  1. Analyze the most recent message, ${lastUserMessage}, for canvas generation requests. Look for imperatives, commands, explicit requests that ask for something to be built, created, generated, visualized, rendered, or updated. Check for key phrases that indicate a request like "can you", "could you", "build", "create", "generate", "make", "show me", "visualize", etc. You can also refer to the following list of keywords that suggest a visualization request, ${visualizationKeywords}, if the message contains any of these treat it is likely a canvas generation request. 
+  
+  2. Try to interpret the users intent, checking whether there is an implicit request or intent to change the canvas, and when ambiguous use the following conversation history to better understand context and decide if generation is needed: 
+  ${messageHistory}
+  
+  3. Ignore casual conversation and messages that don't request anything, only respond to implied or explicit requests to generate or modify a canvas.  
+  
+  4. If the user requests to change, update, modify, or add to the canvas, use the following canvas as a starting point and modify only the parts that the user specifically says they wish to change: 
+  ${lastGenerationHtml}.`;
 
   // For more accurate analysis, use the AI to evaluate
-  if (keywordMatch) {
-    try {
-      // @todo - pass in last generation and message history
-      // Use generateObject with Zod schema as per the latest docs
-      const result = await generateObject({
-        model: openai.responses("gpt-4o"),
-        schema: z.object({
-          score: z
-            .number()
-            .describe(
-              "A score from 0 to 100 indicating the likelihood that the user is requesting something to be generated"
-            ),
-          reason: z
-            .string()
-            .describe("A brief explanation of why this score was given"),
-        }),
-        prompt: `Analyze this message and determine if it's explicitly requesting something to be built, created, visualized, or generated. Or improved upon, or ides about something
+  try {
+    // @todo - pass in last generation and message history
+    // Use generateObject with Zod schema as per the latest docs
+    const result = await generateObject({
+      // model: openai.responses("gpt-4o"),
+      model: xai("grok-3-mini-beta"),
+      schema: z.object({
+        score: z
+          .number()
+          .describe(
+            "A score from 0 to 100 indicating the likelihood that the user is requesting something to be generated"
+          ),
+        reason: z
+          .string()
+          .describe("A brief explanation of why this score was given"),
+      }),
+      prompt: visualizationEvalPrompt,
+      temperature: 0.1,
+    });
 
-Message: "${message.content}"
+    // Safely access properties with fallbacks
+    if (result && typeof result === "object") {
+      // Try to find score and reason properties at any level based on the actual structure
+      let score, reason;
 
-Return a score from 0 to 100 indicating the likelihood that the user is requesting something be generated, and a brief reason explaining why.`,
-        temperature: 0.1,
-      });
+      // Check for direct properties
+      if ("score" in result) {
+        score = result.score;
+        reason = result.reason;
+      }
+      // Check for object.score structure (this is the actual structure based on the debug output)
+      else if (result.object && typeof result.object === "object") {
+        score = result.object.score;
+        reason = result.object.reason;
+      }
+      // Check for analysis structure
+      else if (result.analysis && typeof result.analysis === "object") {
+        score = result.analysis.score;
+        reason = result.analysis.reason;
+      }
+      // Check for response structure
+      else if (
+        result.response &&
+        typeof result.response === "object" &&
+        result.response.body &&
+        result.response.body.output &&
+        result.response.body.output[0] &&
+        result.response.body.output[0].content
+      ) {
+        const content = JSON.parse(result.response.body.output[0].content.text);
+        score = content.score;
+        reason = content.reason;
+      }
 
-      // Safely access properties with fallbacks
-      if (result && typeof result === "object") {
-        // Try to find score and reason properties at any level based on the actual structure
-        let score, reason;
-
-        // Check for direct properties
-        if ("score" in result) {
-          score = result.score;
-          reason = result.reason;
-        }
-        // Check for object.score structure (this is the actual structure based on the debug output)
-        else if (result.object && typeof result.object === "object") {
-          score = result.object.score;
-          reason = result.object.reason;
-        }
-        // Check for analysis structure
-        else if (result.analysis && typeof result.analysis === "object") {
-          score = result.analysis.score;
-          reason = result.analysis.reason;
-        }
-        // Check for response structure
-        else if (
-          result.response &&
-          typeof result.response === "object" &&
-          result.response.body &&
-          result.response.body.output &&
-          result.response.body.output[0] &&
-          result.response.body.output[0].content
-        ) {
-          const content = JSON.parse(
-            result.response.body.output[0].content.text
-          );
-          score = content.score;
-          reason = content.reason;
-        }
-
-        if (typeof score === "number") {
-          confidence = score / 100;
-          logger.info(
-            `AI analysis of generation intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
-          );
-        } else {
-          logger.warn(
-            "Could not find valid score in AI response, using keyword-based confidence"
-          );
-        }
+      if (typeof score === "number") {
+        confidence = score / 100;
+        logger.info(
+          `AI analysis of generation intent: ${confidence * 100}% confidence. Reason: ${reason || "No reason provided"}`
+        );
       } else {
         logger.warn(
-          "AI analysis returned invalid result, using keyword-based confidence"
+          "Could not find valid score in AI response, using keyword-based confidence"
         );
       }
-    } catch (aiError) {
-      logger.error("Error getting AI analysis of message:", aiError);
+    } else {
+      logger.warn(
+        "AI analysis returned invalid result, using keyword-based confidence"
+      );
     }
+  } catch (aiError) {
+    logger.error("Error getting AI analysis of message:", aiError);
   }
 
   return confidence;
@@ -244,7 +250,9 @@ Based on these constraints, analyze the following message and rank the confidenc
     `;
 
     const result = await generateObject({
-      model: openai.responses("gpt-4o"),
+      // model: openai.responses("gpt-4o"),
+      model: xai("grok-3-mini-beta"),
+
       temperature: 0.1,
       schema: z.object({
         agents_confidence: z
@@ -261,22 +269,18 @@ Based on these constraints, analyze the following message and rank the confidenc
       prompt,
     });
 
+    console.log(result.response.body.choices);
+    const toolResult =
+      result.response.body.choices[0].message.tool_calls[0].function.arguments;
     // Parse the response to get the agent confidences
     let selectedAgents = [];
 
     try {
-      if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
-        // Parse the JSON text from the first content item
-        const parsedData = JSON.parse(
-          result.response.body.output[0].content[0].text
-        );
-        if (parsedData.agents_confidence) {
-          selectedAgents = parsedData.agents_confidence;
-          logger.debug(
-            "Successfully parsed agent confidences:",
-            selectedAgents
-          );
-        }
+      // Parse the JSON text from the first content item
+      const parsedData = JSON.parse(toolResult);
+      if (parsedData.agents_confidence) {
+        selectedAgents = parsedData.agents_confidence;
+        logger.debug("Successfully parsed agent confidences:", selectedAgents);
       }
     } catch (error) {
       logger.error("Error parsing agent selection result:", error);
@@ -352,11 +356,14 @@ async function generateAITextResponse(prompt) {
   try {
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
+      // model: xai("grok-3-mini-beta"),
       prompt: prompt,
       maxTokens: 300,
       temperature: 0.8,
     });
 
+    console.log({ text });
+    // const toolResult = result.response.body.choices[0].message.content[0].text;
     return text;
   } catch (error) {
     logger.error("Error generating AI text response:", error);
@@ -372,7 +379,9 @@ async function generateAITextResponse(prompt) {
 async function generateHTMLContent(prompt) {
   try {
     const { text: htmlContent } = await generateText({
-      model: openai.responses("o3-mini"),
+      // model: openai.responses("o3-mini"),
+      model: xai("grok-3-beta"),
+
       prompt: prompt,
       maxTokens: 35500,
       temperature: 0.8,
@@ -394,10 +403,10 @@ async function generateAIResponse(roomId) {
   try {
     logger.info("Generating AI response based on recent messages...");
 
-    // Fetch messages for the specific room
+    // Fetch messages for the specific room, including unread messages
     let { data: roomMessages, error: messagesError } =
       await supabaseService.supabase
-        .from("messages")
+        .from(config.supabase.messagesTable)
         .select("*")
         .eq("room_id", roomId)
         .order("created_at", { ascending: false })
@@ -414,7 +423,7 @@ async function generateAIResponse(roomId) {
       return false;
     }
 
-    // reverse roomMessages
+    // reverse roomMessages to have them in chronological order
     roomMessages.reverse();
 
     // Get the last message to analyze for visualization intent
@@ -425,20 +434,23 @@ async function generateAIResponse(roomId) {
       lastUserMessage.user_id
     );
 
-    console.log("isLastMessageFromAgent", isLastMessageFromAgent, {
-      lastUserMessage,
-    });
-
     if (isLastMessageFromAgent) {
       logger.info("Last message was from an AI agent, skipping response");
+      // Mark messages as read even if we're not responding
+      await markMessagesAsRead(roomId, roomMessages);
       return false;
     }
 
-    // Use all fetched messages (we already limited to 50 in the query)
-    const lastMessages = roomMessages;
+    // Get the response algorithm configuration
+    const {
+      rapidMessageThresholdMs,
+      responseDelayMs,
+      minMessagesBeforeResponse,
+      maxConsecutiveUserMessages,
+    } = config.ai.responseAlgorithm;
 
     // Get user IDs from messages to fetch their names
-    const userIds = [...new Set(lastMessages.map((msg) => msg.user_id))];
+    const userIds = [...new Set(roomMessages.map((msg) => msg.user_id))];
     logger.debug("User IDs to fetch:", userIds);
 
     // Fetch user profiles
@@ -456,7 +468,7 @@ async function generateAIResponse(roomId) {
     }
 
     // Format messages for the prompt with user names
-    const messageHistory = lastMessages
+    const messageHistory = roomMessages
       .map((msg) => {
         let userName = userNames[msg.user_id];
 
@@ -498,6 +510,37 @@ async function generateAIResponse(roomId) {
 }
 
 /**
+ * Mark messages as read by the AI
+ * @param {string} roomId - Room ID
+ * @param {Array} messages - Messages to mark as read
+ * @returns {Promise<void>}
+ */
+async function markMessagesAsRead(roomId, messages) {
+  try {
+    // Get the IDs of all messages to mark as read
+    const messageIds = messages.map((msg) => msg.id);
+
+    if (messageIds.length === 0) return;
+
+    // Update the read_by_ai flag for these messages
+    const { error } = await supabaseService.supabase
+      .from(config.supabase.messagesTable)
+      .update({ read_by_ai: true })
+      .in("id", messageIds);
+
+    if (error) {
+      logger.error(`Error marking messages as read: ${error.message}`);
+    } else {
+      logger.debug(
+        `Marked ${messageIds.length} messages as read in room ${roomId}`
+      );
+    }
+  } catch (error) {
+    logger.error("Error in markMessagesAsRead:", error);
+  }
+}
+
+/**
  * Generate a response with a specific agent
  * @param {string} roomId - Room ID
  * @param {Object} agent - The agent to use for response
@@ -515,29 +558,23 @@ async function generateResponseWithAgent(
 ) {
   try {
     // Create the prompt with stronger constraints and focus on responding to the last message
-    const prompt = `
-    You are participating in a group chat. The chat room has a canvas that is visible to all participants. The canvas is a collaborative space updated based on the conversation and the requests made by participants. It often contains visualizations, diagrams, or other interactive elements that enhance the conversation.  
+    const agentResponsePrompt = `
+    #AI Agent Response Generation
 
-    Consider the following context of the conversation and respond appropriately, whether that is engaging in casual conversation, banter or humor, providing information, asking questions, offering advice, or any other contextually appropriate input. Your responses should be relevant to the topic at hand and maintain the tone and style of the conversation. You should also consider the personalities of participants and how they may respond. 
+    ##Context:
+    You are in an online audio chat room participating in a conversation with multiple people. The room is a collaborative space and has a canvas that often contains visualizations, diagrams, or other interactive elements that enhance the discussion. This is the current canvas: ${lastGenerationHtml}
+    
+    ##Task:
+    You are responding to the most recent message in this group chat: ${messageHistory}. You were chosen to respond based on your personality and expertise, it is VITAL that you RESPOND IN CHARACTER! You must assume and maintain all aspects of the following persona: ${agent.personality_prompt}.
 
-    The conversation history is as follows:
-    ${messageHistory}
-
-    If appropriate you can choose to render a new canvas based on the conversation and the latest requests or updates. Simply say what should be rendered and another agent will take care of the rendering, do not respond with code. Only change the canvas if you are confident it fits the context of the conversation and the last message. If you do decide to render a new canvas, provide a brief description of what it should look like and what it should contain. Only do this if it will be helpful to the conversation. If you do not think a new canvas is needed, then do not render one.
-
-    This is the most recent canvas, it is visible to all participants in the conversation:
-    ${lastGenerationHtml}
-
-    You are one of the participants in the conversation, and your personality is as follows:
-    ${agent.personality_prompt}
-
-    Your response should reflect the topic and tone of the conversation, you must adapt to the conversation context, the personalities of the users and agents, and how they might respond, prioritizing relevance to the last message in the conversation, "${lastUserMessage.content}". It is important to keep the conversation flowing naturally while also addressing the needs of the users.
+    ##Instructions:
+    Reply to the following message: ${lastUserMessage.content} Your response should be consistent with the tone and style of the discussion. Ensure your reply is relevant to the message and pertinent to the topic at hand. Ensure your response fits the style and context of the conversation, you may use the full range of human expression, whether that is casual chat, banter or humor, asking questions, offering advice, providing information, or any other socially appropriate input. Your response must be relevant, consistent with your personality, and must keep the conversation flowing naturally while also addressing the needs of the users. If it is helpful to the conversational flow and fulfills the latest user request you can render a new visual on the shared chat canvas by stating simply and clearly the visual you wish to generate and the canvas controller will take care of the implementation. Just provide a brief description of what it should look like and what it should contain, do not respond with code. When considering whether to generate a new canvas you may refer to the current canvas, ${lastGenerationHtml}, which is visible to all participants. If you do not think a new canvas is needed, then do not render one.
     `;
 
-    logger.debug("Sending prompt to OpenAI", prompt);
+    logger.debug("Sending prompt to OpenAI", agentResponsePrompt);
 
     // Generate text using OpenAI with stricter constraints
-    const text = await generateAITextResponse(prompt);
+    const text = await generateAITextResponse(agentResponsePrompt);
     logger.debug("AI generated response:", text);
 
     // Save the regular AI response to the Supabase database
@@ -546,8 +583,11 @@ async function generateResponseWithAgent(
 
     // Determine if we should generate HTML based on confidence score
     // This should be passed from the parent function, but we'll recalculate it here for safety
-    const visualizationConfidence =
-      await analyzeMessageForVisualizationIntent(lastUserMessage);
+    const visualizationConfidence = await analyzeMessageForVisualizationIntent(
+      lastUserMessage,
+      lastGenerationHtml,
+      messageHistory
+    );
     const shouldGenerateHtml = visualizationConfidence * 100 > 70;
 
     logger.info(
@@ -565,74 +605,79 @@ async function generateResponseWithAgent(
         "Generating a canvas visualization"
       );
 
+      const canvasTemplates = [];
+      const canvasStyleGuide = `Make it look nice and responsive`;
+
       // Create a prompt for generating HTML content that responds to conversation intent
       const htmlPrompt = `# Conversation-Driven UI Generation
+## Message History:
+${messageHistory}
 
-## Last generated Canvas  
-Only use this if the person seemingly wants to update the last canvas 
-${lastGenerationHtml ? lastGenerationHtml : ""}
+## Last Message:
+${lastUserMessage.content}
 
-## PRIORITY: Focus on BUILD/CREATE/GENERATE Requests
-Analyze the conversation for the most recent message that explicitly asks for something to be built, created, generated, visualized, or updated. Ignore casual conversation or messages that don't request creation of something. Look for imperative commands and phrases like "build", "create", "generate", "make", "show me", "visualize", etc. For requests requiring update look at the most recent canvas code and only change the parts the user asks to change.
+## Last Generation:
+${lastGenerationHtml}
 
-## Context Analysis Guidelines:
-- Find the most recent message containing an EXPLICIT request to build/create something
-- Look for clear directives like "build X", "create Y", "generate Z", "make a...", "show me...", "update...",
-- Skip over casual messages, questions, or discussions that don't request creation or updates
-- Once found, implement exactly what that message requested
-- Use conversation history only as supporting context for implementing the request
+## Text/Agent Response:
+${agentResponsePrompt}
+# Canvas Generation Guide- You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space that reflects the following conversation: ${messageHistory} and the requests made by participants. You are in charge of writing the code that will be rendered onto the canvas. When deciding how to create the new generation or update the canvas use the following guidelines to determine what to build:
 
-## Technology Selection - Match the right tool to the request and check for dependencies:
+## User Intent- Choose the appropriate framework based on the user intent expressed in the most recent message, ${lastUserMessage.content}. Include the following details: ${agentResponsePrompt} added by an AI expert to inform your canvas generation choices to clarify and add information to the user request. If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. 
+- Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
+- Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
+- You are not a chat agent, your job is to create a new canvas or update the existing one based on the user request, you cannot interact with the user directly or clarify intents.
 
-- Data/statistics → Use D3.js or Chart.js (but only if actual data is present)
-- Timelines/processes → Use TimelineJS, fill in as much detail as possible and choose the best format
-- 3D objects/spaces → Use Three.js (only when truly beneficial)
-- Creative explanations → Use SVG/Canvas/p5.js for illustrations
-- Interactive tools → Use appropriate JS framework for the specific tool
+## Canvas Rules
+- **IMPORTANT: Only render the html and do not include any comments or markdown or code blocks**
+- Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
+- Everything must be rendered in html in the sidebar and must be responsive.
+- Keep every visualization centered in the viewport
+- Use responsive design principles to create the best possible user experience
+- Match the right tool/library to the request and check for dependencies
+- Where possible use libraries that are more performant and have less dependencies.
+- Prioritize user experience and pixel perfect design aesthetics.
+- Visuals may be rendered with react components and babel for pure html/css. 
+- Don't use WebGL as it does not work in the sidebar 
+
+## Technology Selection - Use the list below as a guideline for which tools are preferred, you may substitute better js frameworks where applicable.
+- Interactive tools → Use the javascript framework best fitted for the specific tool
+- Data/statistics → Use D3.js or Chart.js 
+- Timelines/processes → Use TimelineJS or vis.js
+- 3D objects/spaces → Use Three.js or babylon js
+- Creative explanations → Use SVG/Canvas/p5.js or paper js for illustrations
 - Math concepts → use MathJax or KaTeX for math, or custom SVG
 - Games/simulations → Use Phaser or p5.js, 
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
-- Physics simulations → Use Matter.js
+- Physics simulations → Use Matter.js or another physics engine
 - Simple animations → Use CSS animations or GSAP
 - Scientific visualizations → Use Plotly.js or Vega-Lite
 - Youtube videos → Use lite YouTube embed
-- Simple text/concepts → Use elegant typography 
-
-IMPORTANT: Use complex libraries only when simpler approaches are less visually appealing. Choose technology based on conversation needs, and always prioritize user experience and aesthetics.
-
-## Conversation:
-${messageHistory}
+- Simple text/concepts → Use elegant typography
 
 ## Your Creation Requirements:
-1. Ensure responsive design that works well in the sidebar panel
-2. Create a visualization that directly fulfills the most recent build/create/update request
-3. DO NOT INCLUDE markdown code comment blocks in the output as it will be rendered directly
-4. Optimize performance (lazy load libraries, efficient code) 
-5. Balance aesthetics with functionality - beautiful but purposeful
-6. Use libraries and technologies that fit the conversation needs
-7. Add thoughtful interactivity that improves understanding
-8. Provide clear visual cues for how to interact with your creation
-9. Include helpful annotations where appropriate
-10. Handle edge cases gracefully with fallbacks
+- Ensure responsive design that works well in the sidebar panel
+- Create a visualization that directly fulfills the most recent build/create/update request, ${lastUserMessage.content}
+- Optimize performance (lazy load libraries, efficient code) 
+- Balance aesthetics with functionality - beautiful but purposeful
+- Use libraries and technologies that fit the conversation needs
+- Add thoughtful interactivity that improves understanding
+- Provide clear visual cues for how to interact with your creation
+- Include helpful annotations where appropriate
+- Handle edge cases gracefully with fallbacks
 
 ## Implementation Details:
+- IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE
+- KEEP SCRIPTS OR LINK TAGS AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
+- RETURN FORMAT MUST BE VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
+- Use the latest stable versions of libraries
 - You may use external libraries from trusted CDNs (cdnjs, unpkg, jsdelivr)
 - The visualization must work immediately without setup steps
 - Use appropriate semantic HTML and accessibility features
 - Include fallback content if libraries fail to load
 - Create smooth loading experience with transitions
 - Make appropriate use of viewport dimensions
-
-## Expert Agent Response:
-${text}
-
-MAKE SURE YOUR SOLUTION INVOLVES EVERYTHING, DON"T WORRY ABOUT HOW BIG THE FILE IS
-
-IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE, KEEP THE SCRIPT OR LINK TAG AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
-
-## RETURN FORMAT: VALID HTML WITH NO COMMENTARY OR MARKDOWN - JUST RAW HTML/CSS/JS DOCUMENT
-
-Create something that directly fulfills the most recent build/create/update request and makes users say "This is exactly what I asked for!"`;
+`;
 
       // Generate HTML content
       const htmlContent = await generateHTMLContent(htmlPrompt);
@@ -682,4 +727,6 @@ module.exports = {
   selectBestAgent,
   generateAITextResponse,
   generateHTMLContent,
+  shouldAgentRespond, // Re-exported from agent-utils
+  markMessagesAsRead,
 };

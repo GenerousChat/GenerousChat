@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message, UserInfo } from './hooks/useChatMessages';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageListProps {
   messages: Message[];
@@ -72,7 +73,9 @@ export function MessageList({
                         {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                       </div>
                     )}
-                    <div className="break-words">{message.content}</div>
+                    <div className="break-words prose prose-sm max-w-none dark:prose-invert">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
                     <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                       {formatTime(getMessageTimestamp(message))}
                     </div>

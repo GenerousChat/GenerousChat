@@ -174,3 +174,6 @@
 {"level":"info","message":"Skipping message with null user_id: dca7b35c-5270-476e-9377-41e4f9862700","service":"worker-service","timestamp":"2025-04-11T07:59:20.705Z"}
 {"level":"info","message":"New message received: 46f4d4bb-5c83-4190-ac91-3287299f7277 in room a410926d-85d7-461b-9d34-a8cdc776111b","service":"worker-service","timestamp":"2025-04-11T07:59:23.537Z"}
 {"level":"info","message":"Skipping message with null user_id: 46f4d4bb-5c83-4190-ac91-3287299f7277","service":"worker-service","timestamp":"2025-04-11T07:59:24.131Z"}
+{"level":"info","message":"Connecting to Supabase...","service":"worker-service","timestamp":"2025-04-11T20:19:37.357Z"}
+{"level":"info","message":"Applying migration: add_read_by_ai_to_messages.sql","service":"worker-service","timestamp":"2025-04-11T20:19:37.397Z"}
+{"code":"PGRST202","details":"Searched for the function public.pgmigrate with parameter query or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.","hint":null,"level":"error","message":"Migration failed: Could not find the function public.pgmigrate(query) in the schema cache","service":"worker-service","timestamp":"2025-04-11T20:19:38.287Z"}
