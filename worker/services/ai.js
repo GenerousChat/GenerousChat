@@ -10,7 +10,11 @@ const logger = require("../utils/logger");
 const supabaseService = require("./supabase");
 const pusherService = require("./pusher");
 const shouldAgentRespond = require("../utils/shouldAgentRespond");
+const { createXai } = require("@ai-sdk/xai");
 
+const xai = createXai({
+  apiKey: process.env.XAI_API_KEY,
+});
 /**
  * Analyze a message for visualization intent
  * @param {Object} message - Message object
@@ -21,6 +25,7 @@ async function analyzeMessageForVisualizationIntent(
   lastGenerationHtml,
   messageHistory
 ) {
+  return 100;
   // Keywords that suggest a visualization request
   const visualizationKeywords = [
     "build",
@@ -104,7 +109,8 @@ async function analyzeMessageForVisualizationIntent(
     // @todo - pass in last generation and message history
     // Use generateObject with Zod schema as per the latest docs
     const result = await generateObject({
-      model: openai.responses("gpt-4o"),
+      // model: openai.responses("gpt-4o"),
+      model: xai("grok-3-mini-beta"),
       schema: z.object({
         score: z
           .number()
@@ -244,7 +250,9 @@ Based on these constraints, analyze the following message and rank the confidenc
     `;
 
     const result = await generateObject({
-      model: openai.responses("gpt-4o"),
+      // model: openai.responses("gpt-4o"),
+      model: xai("grok-3-mini-beta"),
+
       temperature: 0.1,
       schema: z.object({
         agents_confidence: z
@@ -261,22 +269,18 @@ Based on these constraints, analyze the following message and rank the confidenc
       prompt,
     });
 
+    console.log(result.response.body.choices);
+    const toolResult =
+      result.response.body.choices[0].message.tool_calls[0].function.arguments;
     // Parse the response to get the agent confidences
     let selectedAgents = [];
 
     try {
-      if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
-        // Parse the JSON text from the first content item
-        const parsedData = JSON.parse(
-          result.response.body.output[0].content[0].text
-        );
-        if (parsedData.agents_confidence) {
-          selectedAgents = parsedData.agents_confidence;
-          logger.debug(
-            "Successfully parsed agent confidences:",
-            selectedAgents
-          );
-        }
+      // Parse the JSON text from the first content item
+      const parsedData = JSON.parse(toolResult);
+      if (parsedData.agents_confidence) {
+        selectedAgents = parsedData.agents_confidence;
+        logger.debug("Successfully parsed agent confidences:", selectedAgents);
       }
     } catch (error) {
       logger.error("Error parsing agent selection result:", error);
@@ -352,11 +356,14 @@ async function generateAITextResponse(prompt) {
   try {
     const { text } = await generateText({
       model: openai.responses("gpt-4o"),
+      // model: xai("grok-3-mini-beta"),
       prompt: prompt,
       maxTokens: 300,
       temperature: 0.8,
     });
 
+    console.log({ text });
+    // const toolResult = result.response.body.choices[0].message.content[0].text;
     return text;
   } catch (error) {
     logger.error("Error generating AI text response:", error);
@@ -372,7 +379,9 @@ async function generateAITextResponse(prompt) {
 async function generateHTMLContent(prompt) {
   try {
     const { text: htmlContent } = await generateText({
-      model: openai.responses("o3-mini"),
+      // model: openai.responses("o3-mini"),
+      model: xai("grok-3-beta"),
+
       prompt: prompt,
       maxTokens: 35500,
       temperature: 0.8,
