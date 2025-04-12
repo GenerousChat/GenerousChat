@@ -60,7 +60,7 @@ export default function ChatRoom({
   return (
     <div className="flex h-full gap-4">
       {/* Left Sidebar */}
-      {false && <div className="w-1/4 flex flex-col">
+      {<div className="w-1/4 flex flex-col">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}

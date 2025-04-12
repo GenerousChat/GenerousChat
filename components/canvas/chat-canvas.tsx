@@ -51,6 +51,11 @@ export default function Canvas({
   
   log('Canvas ID:', canvasId);
 
+  // get the last message
+  const lastMessage = messages[messages.length - 1];
+
+  console.log({ lastMessage });
+
   // Use our data hook for fetching messages and visualizations
   useCanvasData({
     canvasId,
@@ -180,6 +185,12 @@ export default function Canvas({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (lastMessage) {
+      handleSendMessage(lastMessage.content);
+    }
+  }, [lastMessage]);
 
   // Listen for iframe messages
   useEffect(() => {
