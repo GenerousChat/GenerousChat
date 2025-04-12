@@ -49,10 +49,18 @@ async function shouldAgentRespond(roomId, messages, config) {
   const messagesPerMinute = (lastMinuteMessages.length / 60) * 100;
 
   // calculate time since last message in ms
-  const lastMessage = lastMinuteMessages[lastMinuteMessages.length - 1];
-  const secondLastMessage = lastMinuteMessages[lastMinuteMessages.length - 2];
-  const timeSinceLastMessage =
-    new Date() - new Date(secondLastMessage.created_at);
+  const lastMessage = messages[messages.length - 1];
+  const secondLastMessage = messages[messages.length - 2];
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXX");
+  console.log({ lastMessage, secondLastMessage });
+  const timeSinceLastMessage = new Date() - new Date(lastMessage.created_at);
 
   console.log("==================");
   console.log("==================");
@@ -66,7 +74,7 @@ async function shouldAgentRespond(roomId, messages, config) {
     timeSinceLastMessage,
   });
 
-  if (messagesPerMinute > 3 && timeSinceLastMessage < MONKEY_BUFFER) {
+  if (messagesPerMinute > 5 && timeSinceLastMessage < MONKEY_BUFFER) {
     return {
       shouldRespond: false,
       reason: "Too many messages in last minute",
