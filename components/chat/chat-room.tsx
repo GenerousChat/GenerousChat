@@ -10,6 +10,7 @@ import { Transcription } from './transcription';
 import { OptimizedInput } from './optimized-input';
 import { MessageList } from './message-list';
 import { VisualizationPanel } from './visualization-panel';
+import { CanvasPanel } from './canvas-panel';
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
 import { useAudioRoom } from './hooks/useAudioRoom';
 import { useVisualizations } from './hooks/useVisualizations';
@@ -106,6 +107,14 @@ export default function ChatRoom({
 
       {/* Visualization Panel */}
       <VisualizationPanel
+        latestHtmlContent={latestHtmlContent}
+        defaultHtmlContent={defaultHtmlContent}
+        generations={generations}
+        selectedGenerationId={selectedGenerationId}
+        setSelectedGenerationId={setSelectedGenerationId}
+        setLatestHtmlContent={setLatestHtmlContent}
+      />
+      <CanvasPanel
         latestHtmlContent={latestHtmlContent}
         defaultHtmlContent={defaultHtmlContent}
         generations={generations}

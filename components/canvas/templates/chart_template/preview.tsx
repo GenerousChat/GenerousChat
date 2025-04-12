@@ -3,11 +3,11 @@
 import React, { useEffect, useRef } from 'react';
 import type { ChartPropsType } from './schema';
 // We'd need to install chart.js in the actual implementation
-// import { Chart as ChartJS, registerables } from 'chart.js';
+import { Chart as ChartJS, registerables } from 'chart.js';
 
 // This is a mock component for demonstration purposes
 // In a real implementation, we would register Chart.js components
-// ChartJS.register(...registerables);
+ChartJS.register(...registerables);
 
 // Helper function to normalize props to a consistent format regardless of input format
 function normalizeChartProps(props: any) {
@@ -167,16 +167,55 @@ export function Chart(props: any) {
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // This would be the actual Chart.js implementation
-    console.log('Chart would be initialized with:', {
+    // Create new chart instance
+    const chart = new ChartJS(chartRef.current, {
       type,
       data,
-      options
+      options: {
+        ...options,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          ...options?.plugins,
+          legend: {
+            ...options?.plugins?.legend,
+            labels: {
+              ...options?.plugins?.legend?.labels,
+              color: colors.textColor
+            }
+          }
+        },
+        scales: {
+          ...options?.scales,
+          x: {
+            ...options?.scales?.x,
+            grid: {
+              ...options?.scales?.x?.grid,
+              color: colors.gridColor
+            },
+            ticks: {
+              ...options?.scales?.x?.ticks,
+              color: colors.textColor
+            }
+          },
+          y: {
+            ...options?.scales?.y,
+            grid: {
+              ...options?.scales?.y?.grid,
+              color: colors.gridColor
+            },
+            ticks: {
+              ...options?.scales?.y?.ticks,
+              color: colors.textColor
+            }
+          }
+        }
+      }
     });
 
-    // Mock cleanup function
+    // Cleanup function to destroy chart instance
     return () => {
-      console.log('Chart would be destroyed');
+      chart.destroy();
     };
   }, [type, data, options, theme]);
 

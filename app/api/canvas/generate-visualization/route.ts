@@ -521,6 +521,11 @@ export async function POST(request: Request) {
           // Validate the generated props against the template's schema
           logSection('VALIDATING GENERATED PROPS', 'Starting validation of generated props...');
           try {
+            console.log("=======");
+            console.log("=======");
+            console.log("=======");
+            console.log("=======");
+            console.log("=======");
             const validationResult = await validateProps(templateSelection.templateId, generatedProps);
             
             if (!validationResult.valid) {

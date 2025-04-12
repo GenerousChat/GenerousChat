@@ -39,9 +39,9 @@ export function CanvasInput({
         disabled={isLoading}
       />
       <div className="absolute bottom-3 right-3 flex items-center gap-2">
-        <kbd className="hidden sm:inline-flex px-1.5 py-0.5 text-xs bg-muted rounded border">
+        {/* <kbd className="hidden sm:inline-flex px-1.5 py-0.5 text-xs bg-muted rounded border">
           {navigator.platform.indexOf('Mac') > -1 ? '⌘' : 'Ctrl'}+Enter
-        </kbd>
+        </kbd> */}
         <Button 
           type="submit" 
           disabled={isLoading || message.trim() === ''}
