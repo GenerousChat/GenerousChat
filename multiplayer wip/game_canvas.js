@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Pusher, { Channel } from 'pusher-js';
-import { CanvasMessage } from './canvas-utils';
+import { CanvasMessage } from '../components/canvas/canvas-utils';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
 
