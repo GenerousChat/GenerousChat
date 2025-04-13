@@ -60,7 +60,7 @@ export default function ChatRoom({
   return (
     <div className="flex h-full gap-4">
       {/* Left Sidebar */}
-      {false && <div className="w-1/4 flex flex-col">
+      {<div className="w-1/4 flex flex-col">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}
@@ -71,7 +71,7 @@ export default function ChatRoom({
 
       {/* Main Chat Column */}
       <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
-        {false && showAudioRoom && meeting && (
+        {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
             <AudioRoom
               roomId={roomId}
@@ -81,7 +81,7 @@ export default function ChatRoom({
           </DyteProvider>
         )}
 
-        {false && <TTSManager 
+        { <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}
@@ -105,15 +105,7 @@ export default function ChatRoom({
         />
       </div>
 
-      {/* Visualization Panel */}
-      <VisualizationPanel
-        latestHtmlContent={latestHtmlContent}
-        defaultHtmlContent={defaultHtmlContent}
-        generations={generations}
-        selectedGenerationId={selectedGenerationId}
-        setSelectedGenerationId={setSelectedGenerationId}
-        setLatestHtmlContent={setLatestHtmlContent}
-      />
+     
       {<CanvasPanel
         latestHtmlContent={latestHtmlContent}
         defaultHtmlContent={defaultHtmlContent}
