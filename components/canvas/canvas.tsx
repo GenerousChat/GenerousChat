@@ -115,7 +115,7 @@ export default function Canvas({
         {
           event: '*',
           schema: 'public',
-          table: 'canvas_generation',
+          table: 'canvas_generations',
           filter: `room_id=eq.${roomId}`
         },
         (payload) => {
@@ -165,7 +165,7 @@ export default function Canvas({
       log('Cleaning up generations listener');
       subscription.unsubscribe();
     };
-  }, [roomId]);
+  }, [roomId]); // Don't include activeGeneration in dependencies
   
   // Function to load content from a generation
   const loadGenerationContent = (generation: CanvasGeneration) => {
@@ -218,7 +218,7 @@ export default function Canvas({
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  log('Canvas messages count:', canvasMessages.length);
+  // Log component state
   log('Render method:', renderMethod);
   log('Template ID:', templateId);
   log('HTML content status:', htmlContent ? 'present' : 'not present');

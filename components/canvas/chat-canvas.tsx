@@ -172,7 +172,7 @@ export default function Canvas({
       log('Cleaning up generations listener');
       subscription.unsubscribe();
     };
-  }, [roomId, activeGeneration]);
+  }, [roomId]); // Remove activeGeneration from dependencies to prevent re-render loops
   
   // Function to load content from a generation
   const loadGenerationContent = (generation: CanvasGeneration) => {
@@ -205,27 +205,22 @@ export default function Canvas({
   const handleSelectGeneration = (generation: CanvasGeneration) => {
     log('Selecting generation:', generation.id);
     setActiveGeneration(generation);
-    loadGenerationContent(generation);
+    loadGenerationContent(generation); // We don't need to track messages changes as we're only displaying generations
   };
 
+  // Reduce logging to minimize impact on performance
   useEffect(() => {
-    if (messages && messages.length > 0) {
-      log('Messages from props:', messages.length);
-      log('Last message:', messages[messages.length - 1]);
-    }
-  }, [messages]);
-
-  log('Render method:', renderMethod);
-  log('Template ID:', templateId);
-  log('Rendering with:');
-  log('Active generation:', activeGeneration?.id);
-  log('Total generations:', generations.length);
-
-  log('HTML content:', htmlContent ? 'present' : 'not present');
-  log('Template ID:', templateId);
-  log('isLoading:', isLoading);
-  log('Error status:', visualizationError ? 'error' : 'no error');
-  log('Room ID:', roomId);
+    log('Component state:', {
+      roomId,
+      activeGenerationId: activeGeneration?.id,
+      generationsCount: generations.length,
+      templateId,
+      renderMethod,
+      hasHtmlContent: !!htmlContent,
+      isLoading,
+      hasError: !!visualizationError
+    });
+  }, [roomId, activeGeneration?.id, generations.length, templateId, renderMethod, htmlContent, isLoading, visualizationError]);
 
   // If no roomId is provided, show a message
   if (!roomId) {
@@ -346,10 +341,7 @@ export default function Canvas({
               <ClientTemplateRenderer 
                 templateId={templateId}
                 props={templateProps}
-                onClose={() => {
-                  setTemplateId(null);
-                  setTemplateProps(null);
-                }}
+                onClose={() => null} // Simplified to prevent re-renders
               />
             </div>
           </div>
