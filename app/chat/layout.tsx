@@ -1,5 +1,5 @@
 import AuthButton from "@/components/header-auth";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import Link from "next/link";
 
 export default function ChatLayout({
