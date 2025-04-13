@@ -381,6 +381,36 @@ async function generateAITextResponse(prompt) {
  * @returns {Promise<string>} Generated HTML
  */
 async function generateHTMLContent(prompt) {
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("============================");
+  console.log("asdasdasdasdasda", prompt);
   try {
     const { text: htmlContent } = await generateText({
       // model: openai.responses("o3-mini"),

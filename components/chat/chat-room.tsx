@@ -121,7 +121,9 @@ export default function ChatRoom({
         selectedGenerationId={selectedGenerationId}
         setSelectedGenerationId={setSelectedGenerationId}
         setLatestHtmlContent={setLatestHtmlContent}
-      />}
+        user={currentUser}
+        messages={messages}
+      />
     </div>
   );
 }
