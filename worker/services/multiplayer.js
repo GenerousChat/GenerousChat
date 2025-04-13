@@ -1,94 +1,39 @@
 ## Multiplayer
+// Pusher integration for real-time multiplayer game
+// This example assumes a simple game where players take turns making moves
+import Pusher from 'pusher-js';
 
-PUSHER_SECRET="c508bc54a2ca619cfab8"
-PUSHER_APP_ID="1971423"
-PUSHER_CLUSTER="us3"
-PUSHER_KEY="96f9360f34a831ca1901"
+const pusher = new Pusher(process.env.PUSHER_KEY, {
+  cluster: process.env.PUSHER_CLUSTER
+  encrypted: true,
+});
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Pusher Client Example</title>
-  <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
-</head>
-<body>
-  <h2>Pusher Client Example</h2>
-  <p>Check your browser console for events.</p>
+const presenceChannel = pusher.subscribe(`presence-room-${roomId}`);
+presenceChannel.bind('pusher:subscription_succeeded', function(members) {
+  console.log('Connected players:', members);
+});
+presenceChannel.bind('pusher:member_added', function(member) {
+  console.log('New player joined:', member);
+  // Notify other players or start the game if enough players
+});
 
-  <script>
-    // Enable Pusher logging (optional)
-    Pusher.logToConsole = true;
+const channel = pusher.subscribe(`room-${roomId}`);
+channel.bind('player-move', function(data) {
+  // Update game state based on the received data, e.g., update the board
+  setGameState(prevState => ({
+    ...prevState,
+    board: data.board,
+    currentPlayer: data.currentPlayer,
+  }));
+});
 
-    // Create a Pusher instance
-    const pusher = new Pusher('96f9360f34a831ca1901', {
-      cluster: 'us3'
-    });
+const triggerMove = (data) => {
+  channel.trigger('client-player-move', data); // Use client- prefix for client events
+};
 
-    // Subscribe to a channel
-    const channel = pusher.subscribe('my-channel');
-
-    // Bind to an event within the channel
-    channel.bind('my-event', function(data) {
-      console.log('Received event data:', data);
-    });
-  </script>
-</body>
-</html>
-
-
-
-## Multiplayer — Pusher Integration Protocol
-
-You are building a **collaborative, real-time multiplayer visualization**. Multiple users in a chat are viewing the same canvas and interacting with it. To sync their views and actions, use **Pusher**.
-
-The following credentials are available:
-- PUSHER_APP_ID = "1971423"
-- PUSHER_KEY = "96f9360f34a831ca1901"
-- PUSHER_SECRET = "c508bc54a2ca619cfab8"
-- PUSHER_CLUSTER = "us3" g ∫ xzc gmm  
-## Multiplayer
-
-PUSHER_SECRET="c508bc54a2ca619cfab8"
-PUSHER_APP_ID="1971423"
-PUSHER_CLUSTER="us3"
-PUSHER_KEY="96f9360f34a831ca1901"
-
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Pusher Client Example</title>
-  <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
-</head>
-<body>
-  <h2>Pusher Client Example</h2>
-  <p>Check your browser console for events.</p>
-
-  <script>
-    // Enable Pusher logging (optional)
-    Pusher.logToConsole = true;
-
-    // Create a Pusher instance
-    const pusher = new Pusher('96f9360f34a831ca1901', {
-      cluster: 'us3'
-    });
-
-    // Subscribe to a channel
-    const channel = pusher.subscribe('my-channel');
-
-    // Bind to an event within the channel
-    channel.bind('my-event', function(data) {
-      console.log('Received event data:', data);
-    });
-  </script>
-</body>
-</html>
-
-## Multiplayer — Pusher Integration Protocol
-
-You are building a **collaborative, real-time multiplayer visualization**. Multiple users in a chat are viewing the same canvas and interacting with it. To sync their views and actions, use **Pusher**.
-
-The following credentials are available:
-- PUSHER_APP_ID = "1971423"
-- PUSHER_KEY = "96f9360f34a831ca1901"
-- PUSHER_SECRET = "c508bc54a2ca619cfab8"
-- PUSHER_CLUSTER = "us3"
+const handleMove = (position) => {
+  const newBoard = [...gameState.board];
+  newBoard[position] = currentPlayer;
+  triggerMove({ board: newBoard, currentPlayer: currentPlayer === 'X' ? 'O' : 'X' });
+  setGameState({ board: newBoard, currentPlayer: currentPlayer === 'X' ? 'O' : 'X' });
+};
