@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Parent Window</title>
+  <title>Generous</title>
   <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 </head>
 <body>
-  <h1>Parent Window</h1>
-  <iframe src="iframe.html" id="myIframe"></iframe>
+  <h1>Generation</h1>
+  <iframe src="iframe.html" id="Canvas"></iframe>
 
   <script>
     // Initialize Pusher in the parent window
-    const pusher = new Pusher('YOUR_APP_KEY', {
-      cluster: 'YOUR_CLUSTER'
+    const pusher = new Pusher('96f9360f34a831ca1901', {
+      cluster: 'us3'
     });
 
     // Subscribe to a channel
-    const channel = pusher.subscribe('my-channel');
+    const channel = pusher.subscribe('roomId');
 
     // Bind to an event
-    channel.bind('my-event', function(data) {
+    channel.bind('eventName', function(data) {
       console.log('Parent received:', data);
     });
 
