@@ -10,6 +10,7 @@ interface CanvasPanelProps {
   setLatestHtmlContent: (html: string) => void;
   user: any;
   messages: any[];
+  roomId: string;
 }
 
 export function CanvasPanel({
@@ -20,14 +21,16 @@ export function CanvasPanel({
   setSelectedGenerationId,
   setLatestHtmlContent,
   user,
-  messages
+  messages,
+  roomId
 }: CanvasPanelProps) {
 
   return (
-    <div>
+    <div className={`w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50`}>
       <Canvas 
         currentUser={user}
         messages={messages}
+        roomId={roomId}
       />
     </div>
   );

@@ -639,6 +639,9 @@ async function generateResponseWithAgent(
         "Generating a canvas visualization"
       );
 
+      // prompt agentResponsePrompt
+      // generate a full tech doc based off personality
+
       const canvasTemplates = [];
       const canvasStyleGuide = `Make it look nice and responsive`;
 

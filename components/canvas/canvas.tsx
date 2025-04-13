@@ -6,17 +6,13 @@ import { User } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { 
   CanvasVisualization,
-  CanvasInput,
   LoadingOverlay,
   ErrorMessage,
-  CanvasMessage,
-  createLoadingVisualization,
-  createErrorVisualization,
   ClientTemplateRenderer
 } from "./index";
-import { useCanvasData } from "./use-canvas-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/magicui";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Add debugging flag
 const DEBUG = true;
@@ -26,160 +22,186 @@ function log(...args: any[]) {
   }
 }
 
+// Type for canvas generations
+type CanvasGeneration = {
+  id: string;
+  canvas_id: string;
+  created_by: string;
+  template_id: string | null;
+  component_code: string | null;
+  component_data: any;
+  html: string | null;
+  confidence: number | null;
+  render_method: 'jsx' | 'fallback_iframe' | null;
+  summary: string | null;
+  type: string | null;
+  metadata: any;
+  created_at: string;
+  room_id: string;
+};
+
 export default function Canvas({
   currentUser,
+  roomId
 }: {
   currentUser: User;
+  roomId: string;
 }) {
-  log('Canvas component rendering, user:', currentUser.id);
+  log('Canvas component rendering, user:', currentUser.id, 'room:', roomId);
   
-  const [canvasMessages, setCanvasMessages] = useState<CanvasMessage[]>([]);
-  const [canvasId] = useState<string>(`canvas-${Date.now()}`);
+  // State for generations
+  const [generations, setGenerations] = useState<CanvasGeneration[]>([]);
+  const [activeGeneration, setActiveGeneration] = useState<CanvasGeneration | null>(null);
+  
+  // State for visualization content
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [visualizationError, setVisualizationError] = useState<string | null>(null);
-  
-  // New state for template-based visualizations
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [templateProps, setTemplateProps] = useState<any>(null);
   const [renderMethod, setRenderMethod] = useState<'jsx' | 'fallback_iframe'>('fallback_iframe');
   
+  const [isLoading, setIsLoading] = useState(true);
+  const [visualizationError, setVisualizationError] = useState<string | null>(null);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
-  
-  log('Canvas ID:', canvasId);
 
-  // Use our data hook for fetching messages and visualizations
-  useCanvasData({
-    canvasId,
-    setCanvasMessages,
-    setHtmlContent,
-    setIsLoading,
-    setVisualizationError,
-    setTemplateId,
-    setTemplateProps,
-    setRenderMethod,
-    supabase
-  });
-
-  // Handle message submission
-  const handleSendMessage = async (newMessage: string) => {
-    if (!newMessage.trim()) return;
+  // Setup Supabase listener for generations
+  useEffect(() => {
+    if (!roomId) return;
     
-    log('Sending new message:', newMessage);
+    log('Setting up generations listener for room:', roomId);
+    setIsLoading(true);
+    
+    // Initial fetch to get existing generations
+    const fetchInitialGenerations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("canvas_generations")
+          .select("*")
+          .eq("room_id", roomId)
+          .order("created_at", { ascending: false });
+          
+        if (error) {
+          log('Error fetching initial generations:', error);
+          setVisualizationError(`Error loading visualizations: ${error.message}`);
+          return;
+        }
+        
+        log(`Fetched ${data?.length || 0} generations for room ${roomId}`);
+        
+        if (data && data.length > 0) {
+          setGenerations(data);
+          // Set the most recent generation as active
+          setActiveGeneration(data[0]);
+          // Load the visualization content
+          loadGenerationContent(data[0]);
+        }
+      } catch (err) {
+        log('Error in fetchInitialGenerations:', err);
+        setVisualizationError(`Failed to load visualizations: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Call initial fetch
+    fetchInitialGenerations();
+
+    // Set up real-time listener for new generations
+    const subscription = supabase
+      .channel(`room-${roomId}-generations`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'canvas_generation',
+          filter: `room_id=eq.${roomId}`
+        },
+        (payload) => {
+          log('Received generation update:', payload);
+          
+          // Update the generations state based on the change type
+          if (payload.eventType === 'INSERT') {
+            const newGeneration = payload.new as CanvasGeneration;
+            setGenerations(prev => [newGeneration, ...prev]);
+            
+            // Set as active if it's the first one or if we don't have an active one
+            if (!activeGeneration || prev.length === 0) {
+              setActiveGeneration(newGeneration);
+              loadGenerationContent(newGeneration);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedGeneration = payload.new as CanvasGeneration;
+            setGenerations(prev => 
+              prev.map(gen => gen.id === updatedGeneration.id ? updatedGeneration : gen)
+            );
+            
+            // If this is the active generation, update the displayed content
+            if (activeGeneration && activeGeneration.id === updatedGeneration.id) {
+              setActiveGeneration(updatedGeneration);
+              loadGenerationContent(updatedGeneration);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = payload.old.id;
+            setGenerations(prev => {
+              const filtered = prev.filter(gen => gen.id !== deletedId);
+              
+              // If the active generation was deleted, set a new active one
+              if (activeGeneration && activeGeneration.id === deletedId && filtered.length > 0) {
+                setActiveGeneration(filtered[0]);
+                loadGenerationContent(filtered[0]);
+              }
+              
+              return filtered;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Return cleanup function
+    return () => {
+      log('Cleaning up generations listener');
+      subscription.unsubscribe();
+    };
+  }, [roomId]);
+  
+  // Function to load content from a generation
+  const loadGenerationContent = (generation: CanvasGeneration) => {
+    log('Loading generation content:', generation.id);
+    
+    // Reset state
+    setHtmlContent(null);
+    setTemplateId(null);
+    setTemplateProps(null);
     setVisualizationError(null);
     
     try {
-      // Save message to database
-      log('Saving message to Supabase...');
-      const { data, error } = await supabase
-        .from("canvas_messages")
-        .insert({
-          canvas_id: canvasId,
-          user_id: currentUser.id,
-          content: newMessage
-        })
-        .select()
-        .single();
-
-      if (error) {
-        log('Error saving message to Supabase:', error);
-        throw new Error(`Error saving message: ${error.message}`);
-      }
-
-      log('Message saved successfully, ID:', data.id);
-      const messageObject = {
-        id: data.id,
-        user_id: currentUser.id,
-        content: newMessage,
-        created_at: data.created_at
-      };
-      
-      // Update local state immediately
-      setCanvasMessages(prev => [...prev, messageObject]);
-      
-      // Start loading state and show loading visualization
-      log('Requesting visualization...');
-      setIsLoading(true);
-      
-      // Reset template state
-      setTemplateId(null);
-      setTemplateProps(null);
-      
-      // Show loading visualization immediately for better UX
-      const loadingHtml = createLoadingVisualization(newMessage);
-      setHtmlContent(loadingHtml);
-      setRenderMethod('fallback_iframe');
-      
-      // Request visualization directly from our API
-      try {
-        log('Sending request to /api/canvas/generate-visualization...');
-        log('Request payload:', {
-          canvasId,
-          messageCount: canvasMessages.length + 1,
-          promptLength: newMessage.length
-        });
-        
-        const response = await fetch('/api/canvas/generate-visualization', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            canvasId,
-            messages: [...canvasMessages, messageObject],
-            prompt: newMessage
-          }),
-        });
-        
-        log('Response status:', response.status);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          log('Error response:', errorText);
-          throw new Error(`Visualization request failed: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        log('Visualization request result:', result);
-        
-        // Handle response based on renderMethod
-        if (result.renderMethod === 'jsx' && result.templateId && result.data) {
-          log('Received template-based visualization:', result.templateId);
-          setTemplateId(result.templateId);
-          setTemplateProps(result.data);
-          setRenderMethod('jsx');
-          setHtmlContent(null); // Clear any HTML content
-          setIsLoading(false);
-        } else if (result.html) {
-          // Direct HTML rendering (fallback approach)
-          log('HTML content received, length:', result.html.length);
-          setHtmlContent(result.html);
-          setRenderMethod('fallback_iframe');
-          setTemplateId(null);
-          setTemplateProps(null);
-          setIsLoading(false);
-        } else {
-          log('Invalid response format:', result);
-          throw new Error('Invalid response format from visualization API');
-        }
-      } catch (error: any) {
-        console.error("Error requesting visualization:", error);
-        log('Error details:', error.message);
-        setVisualizationError(error.message || "Failed to generate visualization");
-        setIsLoading(false);
-        
-        // Show error visualization
-        setHtmlContent(createErrorVisualization(error.message || "Unknown error occurred"));
+      if (generation.render_method === 'jsx' && generation.template_id) {
+        // For JSX based renderings
+        setTemplateId(generation.template_id);
+        setTemplateProps(generation.component_data);
+        setRenderMethod('jsx');
+      } else {
+        // For HTML based renderings (fallback)
+        setHtmlContent(generation.html);
         setRenderMethod('fallback_iframe');
       }
-    } catch (error: any) {
-      console.error("Error sending message:", error);
-      log('Error details:', error.message);
-      setVisualizationError(error.message || "Failed to send message");
-      setIsLoading(false);
+    } catch (err) {
+      log('Error loading generation content:', err);
+      setVisualizationError(`Failed to load visualization: ${err.message}`);
     }
   };
-
-  // Listen for iframe messages
+  
+  // Handle selecting a different generation
+  const handleSelectGeneration = (generation: CanvasGeneration) => {
+    log('Selecting generation:', generation.id);
+    setActiveGeneration(generation);
+    loadGenerationContent(generation);
+  };
+  
+  // No message handling functionality needed since we're only displaying existing generations
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       log('Received message from iframe:', event.data);
@@ -202,10 +224,40 @@ export default function Canvas({
   log('HTML content status:', htmlContent ? 'present' : 'not present');
   log('Loading status:', isLoading);
   log('Error status:', visualizationError ? 'error' : 'no error');
+  log('Active generation:', activeGeneration?.id);
+  log('Total generations:', generations.length);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Main content area with visualization - extends to the top */}
+      {/* Generation history at the top */}
+      {generations.length > 0 && (
+        <div className="p-2 border-b border-border bg-card dark:bg-card">
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-2 p-1">
+              {generations.map(generation => (
+                <button
+                  key={generation.id}
+                  onClick={() => handleSelectGeneration(generation)}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                    activeGeneration?.id === generation.id 
+                      ? "bg-primary text-primary-foreground font-medium" 
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  }`}
+                  title={generation.summary || new Date(generation.created_at).toLocaleString()}
+                >
+                  {generation.summary 
+                    ? (generation.summary.length > 20 
+                        ? `${generation.summary.substring(0, 20)}...` 
+                        : generation.summary)
+                    : new Date(generation.created_at).toLocaleTimeString()}
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+      
+      {/* Main content area with visualization */}
       <div className="flex-1 relative overflow-hidden bg-background dark:bg-background">
         {/* Visualization container */}
         <div 
@@ -232,7 +284,7 @@ export default function Canvas({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    Ready to Visualize
+                    {generations.length === 0 ? "No Visualizations Yet" : "Select a Visualization"}
                   </motion.h2>
                   <motion.p 
                     className="text-muted-foreground mb-6"
@@ -240,7 +292,9 @@ export default function Canvas({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    Enter a prompt below to generate an interactive data visualization.
+                    {generations.length === 0 
+                      ? "No visualizations available for this room yet." 
+                      : "Click on a visualization in the history above to view it."}
                   </motion.p>
                 </CardContent>
               </Card>
@@ -282,17 +336,10 @@ export default function Canvas({
         
         {/* Loading overlay */}
         {isLoading && !htmlContent && !templateId && (
-          <LoadingOverlay message="Generating visualization..." />
+          <LoadingOverlay message="Loading visualizations..." />
         )}
       </div>
-      
-      {/* Input area at bottom */}
-      <div className="border-t border-border bg-card dark:bg-card p-4 shadow-md">
-        <CanvasInput 
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
-      </div>
+      {/* No input area needed since we're only displaying existing generations */}
     </div>
   );
 }

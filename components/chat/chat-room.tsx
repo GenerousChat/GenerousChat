@@ -123,7 +123,8 @@ export default function ChatRoom({
         setLatestHtmlContent={setLatestHtmlContent}
         user={currentUser}
         messages={messages}
-      />
+        roomId={roomId}
+      />}
     </div>
   );
 }
