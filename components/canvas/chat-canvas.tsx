@@ -114,74 +114,51 @@ export default function Canvas({
 
     // Call initial fetch
     fetchInitialGenerations();
+    
+    // Setup Pusher for real-time updates
+    const pusher = new Pusher('96f9360f34a831ca1901', {
+      cluster: 'us3',
+    });
 
-    useEffect(() => {
-      const pusher = new Pusher('96f9360f34a831ca1901', {
-        cluster: 'us3',
-      });
-  
-      const channel = pusher.subscribe(`room-${roomId}`);
-  
-      // Listen for new generation notifications
-      channel.bind('new-generation', async (data: any) => {
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        console.log("New generation received:", data);
-        try {
-          const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
-          
-          // Fetch the generation from the database
-          const { data: generation, error } = await supabase
-            .from('canvas_generations')
-            .select('*')
-            .eq('id', notificationData.generation_id)
-            .single();
-  
-          console.log("ASDASDASDSAS");
-          console.log("ASDASDASDSAS");
-          console.log("ASDASDASDSAS");
-          console.log("ASDASDASDSAS" , {generation, error});
-  
-          if (error) {
-            throw new Error(`Error fetching generation: ${error.message}`);
-          }
-          
-          if (generation?.html) {
-            // Add the new generation to the list and select it
-            setGenerations(prev => [generation, ...prev].slice(0, 20));
-            setActiveGeneration(generation.id);
-            loadGenerationContent(generation.html);
+    const channel = pusher.subscribe(`room-${roomId}`);
 
-            // setGenerations(prev => [newGeneration, ...prev]);
-            
-            // // Set as active if it's the first one or if we don't have an active one
-            // if (!activeGeneration || prev.length === 0) {
-            //   setActiveGeneration(newGeneration);
-            //   loadGenerationContent(newGeneration);
+    // Listen for new generation notifications
+    channel.bind('new-generation', async (data: any) => {
+      log("New generation received:", data);
+      try {
+        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Fetch the generation from the database
+        const { data: generation, error } = await supabase
+          .from('canvas_generations')
+          .select('*')
+          .eq('id', notificationData.generation_id)
+          .single();
 
-          } else {
-            console.warn('Generation found but no html field:', generation);
-          }
-        } catch (error) {
-          console.error('Error handling new generation notification:', error);
+        if (error) {
+          throw new Error(`Error fetching generation: ${error.message}`);
         }
-      });
-
-  
-      return () => {};
-    }, [roomId]);
-  
-
-    // Set up real-time listener for new generations
+        
+        if (generation) {
+          // Add the new generation to the list and select it
+          setGenerations(prev => [generation, ...prev].slice(0, 20));
+          setActiveGeneration(generation);
+          loadGenerationContent(generation);
+        } else {
+          console.warn('Generation found but no html field:', generation);
+        }
+      } catch (error) {
+        console.error('Error handling new generation notification:', error);
+      }
+    });
+    
+    // Return cleanup function
+    return () => {
+      log('Cleaning up Pusher connection');
+      channel.unbind_all();
+      pusher.unsubscribe(`room-${roomId}`);
+    };
+    // Set up real-time listener for new generations using Supabase
     const subscription = supabase
       .channel(`room-${roomId}`)
       .on(
@@ -193,14 +170,6 @@ export default function Canvas({
           filter: `room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
-          console.log("ppppppppppppppppppppppppppppppppppppp");
           log('Received generation update:', payload);
           
           // Update the generations state based on the change type
@@ -209,7 +178,7 @@ export default function Canvas({
             setGenerations(prev => [newGeneration, ...prev]);
             
             // Set as active if it's the first one or if we don't have an active one
-            if (!activeGeneration || prev.length === 0) {
+            if (!activeGeneration) {
               setActiveGeneration(newGeneration);
               loadGenerationContent(newGeneration);
             }
@@ -242,9 +211,11 @@ export default function Canvas({
       )
       .subscribe();
 
-    // Return cleanup function
+    // Return cleanup function for both Pusher and Supabase subscriptions
     return () => {
-      log('Cleaning up generations listener');
+      log('Cleaning up listeners');
+      channel.unbind_all();
+      pusher.unsubscribe(`room-${roomId}`);
       subscription.unsubscribe();
     };
   }, [roomId]); // Remove activeGeneration from dependencies to prevent re-render loops

@@ -287,10 +287,15 @@ export function useChatMessages(
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    // Create a date object from the timestamp
+    const date = new Date(timestamp);
+    
+    // Format hours and minutes manually to ensure consistent format
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    // Return in HH:MM format
+    return `${hours}:${minutes}`;
   };
 
   const isCurrentUser = (userId: string) => userId === currentUser.id;
