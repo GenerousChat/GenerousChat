@@ -71,7 +71,7 @@ export default function ChatRoom({
 
       {/* Main Chat Column */}
       <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
-        {showAudioRoom && meeting && (
+        {false && showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
             <AudioRoom
               roomId={roomId}
@@ -81,12 +81,12 @@ export default function ChatRoom({
           </DyteProvider>
         )}
 
-        <TTSManager 
+        {false && <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}
           newMessageReceived={newMessageReceived}
-        />
+        />}
         
         <MessageList
           messages={messages}

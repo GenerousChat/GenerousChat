@@ -11,6 +11,7 @@ import supabaseService, { Message, Participant } from "./supabase.js";
 import pusherService from "./pusher.js";
 import shouldAgentRespond from "../utils/shouldAgentRespond.js";
 import { createXai } from "@ai-sdk/xai";
+import { generateCanvasVisualization as generateCanvas } from "../../app/api/canvas/generate-visualization/generateCanvas";
 
 interface Agent {
   id: string;
@@ -44,9 +45,10 @@ const xai = createXai({
  * This is a placeholder as the actual function is imported from a different location
  */
 // Import directly in the places where it's used or define a mock function if needed
-async function generateCanvasVisualization(canvasId: string, messages: any[], prompt: string): Promise<void> {
+async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string): Promise<void> {
   // This is a placeholder - the actual implementation is imported from another module
   logger.info(`Generating canvas visualization for canvas ${canvasId}`);
+  generateCanvas(canvasId, messages, prompt);
 }
 
 /**
@@ -389,14 +391,15 @@ Based on these constraints, analyze the following message and rank the confidenc
  */
 async function generateAITextResponse(prompt: string): Promise<string> {
   try {
-    const response = await generateText({
+    const { text } = await generateText({
       model: openai("gpt-4o"),
       prompt,
       temperature: 0.8,
-      maxTokens: 750, // Adjust as needed for response length
+      maxTokens: 300, // Adjust as needed for response length
     });
 
-    return response;
+
+    return text;
   } catch (error) {
     logger.error("Error generating AI text response:", error instanceof Error ? error.message : String(error));
     return "I'm having trouble generating a response right now. Please try again.";
@@ -411,8 +414,8 @@ async function generateAITextResponse(prompt: string): Promise<string> {
 async function generateHTMLContent(prompt: string): Promise<string> {
   try {
     // First attempt - use AI to generate HTML content
-    const htmlResponse = await generateText({
-      model: openai("gpt-4o"),
+    const { text: htmlResponse } = await generateText({
+      model: openai("o3-mini"),
       prompt,
       temperature: 0.7,
     });
@@ -455,7 +458,7 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
 
     // Fetch the most recent messages for the room
     const { data: messages, error } = await supabaseService.supabase
-      .from("messages")
+      .from(config.supabase.messagesTable)
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false })
@@ -551,7 +554,7 @@ async function markMessagesAsRead(roomId: string, messages: Message[]): Promise<
 
     // Update the messages in the database
     const { error } = await supabaseService.supabase
-      .from("messages")
+      .from(config.supabase.messagesTable)
       .update({ read_by_ai: true })
       .in("id", unreadMessageIds);
 
@@ -615,9 +618,15 @@ Be playful, engaging, and humorous where appropriate.
 Your response:
 `;
 
+
     // Generate a text response
     const aiResponse = await generateAITextResponse(agentPrompt);
-    logger.info(`AI response generated: ${aiResponse.substring(0, 100)}...`);
+    
+
+
+    // Ensure aiResponse is a string before using substring
+    const responseText = typeof aiResponse === 'string' ? aiResponse : String(aiResponse);
+    logger.info(`AI response generated: ${responseText.substring(0, 100)}...`);
 
     // Save the AI response to the database
     await supabaseService.saveMessage(roomId, agent.id, aiResponse);
@@ -658,6 +667,7 @@ Chat history: ${messageHistory}
 - Include helpful annotations where appropriate
 - Handle edge cases gracefully with fallbacks
 
+
 ## Implementation Details:
 - IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE
 - KEEP SCRIPTS OR LINK TAGS AS SIMPLE AS POSSIBLE, JUST LOAD THE ASSET
@@ -691,7 +701,17 @@ Chat history: ${messageHistory}
 
         // Generate canvas visualization if needed
         try {
-          await generateCanvasVisualization("canvas-1744521365054", [], htmlPrompt);
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          console.log("129o837198371398173918237189237191");
+          await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt);
         } catch (e) {
           logger.error("Error calling canvas visualization function:", e);
         }

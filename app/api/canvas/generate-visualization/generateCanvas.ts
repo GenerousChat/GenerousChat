@@ -1,6 +1,6 @@
 "use server";
 
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@/utils/supabase/server";
 import { generateText, generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { selectTemplate, loadTemplate, validateProps, logTemplateInfo } from '../../../../components/canvas/lib';
@@ -61,7 +61,8 @@ export async function generateCanvasVisualization(canvasId: string, messages: Ca
     logSection('ERROR', 'Missing required fields (canvasId or prompt)');
     throw new Error('Missing required fields (canvasId or prompt)');
   }
-
+  // log the process env
+  console.log(process.env);
   // Verify user is authenticated
   logSection('AUTHENTICATION', 'Creating Supabase client for authentication check...');
   const supabase = await createClient();
