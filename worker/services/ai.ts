@@ -45,10 +45,10 @@ const xai = createXai({
  * This is a placeholder as the actual function is imported from a different location
  */
 // Import directly in the places where it's used or define a mock function if needed
-async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string): Promise<void> {
+async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<void> {
   // This is a placeholder - the actual implementation is imported from another module
   logger.info(`Generating canvas visualization for canvas ${canvasId}`);
-  generateCanvas(canvasId, messages, prompt);
+  generateCanvas(canvasId, messages, prompt, roomId);
 }
 
 /**
@@ -711,7 +711,7 @@ Chat history: ${messageHistory}
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
-          await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt);
+          await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
         } catch (e) {
           logger.error("Error calling canvas visualization function:", e);
         }

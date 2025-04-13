@@ -1,6 +1,6 @@
 "use server";
+import { createClient } from "@supabase/supabase-js";
 
-import { createClient } from "@/utils/supabase/server";
 import { generateText, generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { selectTemplate, loadTemplate, validateProps, logTemplateInfo } from '../../../../components/canvas/lib';
@@ -56,7 +56,7 @@ export function applyUpdates(target: any, updates: any) {
 }
 
 // Main function to generate canvas visualization
-export async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string) {
+export async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string, roomId: string) {
   if (!canvasId || !prompt) {
     logSection('ERROR', 'Missing required fields (canvasId or prompt)');
     throw new Error('Missing required fields (canvasId or prompt)');
@@ -65,23 +65,24 @@ export async function generateCanvasVisualization(canvasId: string, messages: Ca
   console.log(process.env);
   // Verify user is authenticated
   logSection('AUTHENTICATION', 'Creating Supabase client for authentication check...');
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const supabase = await createClient(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_ANON_KEY ?? '');
+  // @todo
+  // const { data: { user }, error: authError } = await supabase.auth.getUser();
   
-  if (authError) {
-    logSection('AUTH ERROR', authError);
-    throw new Error('Authentication error');
-  }
+  // if (authError) {
+  //   logSection('AUTH ERROR', authError);
+  //   throw new Error('Authentication error');
+  // }
   
-  if (!user) {
-    logSection('AUTH ERROR', 'User not authenticated');
-    throw new Error('Unauthorized');
-  }
+  // if (!user) {
+  //   logSection('AUTH ERROR', 'User not authenticated');
+  //   throw new Error('Unauthorized');
+  // }
   
-  logSection('USER AUTHENTICATED', {
-    userId: user.id,
-    email: user.email
-  });
+  // logSection('USER AUTHENTICATED', {
+  //   userId: user.id,
+  //   email: user.email
+  // });
   
   try {
     // Format message history for context
@@ -230,32 +231,45 @@ IMPORTANT INSTRUCTIONS:
     logSection('DIRECT HTML GENERATION', 'Starting direct HTML generation...');
     
     // Generate HTML directly using AI
-    const systemPrompt = `
-You are an expert data visualization creator that generates HTML visualizations.
+//     const systemPrompt = `
+// You are an expert data visualization creator that generates HTML visualizations.
 
-REQUIREMENTS:
-1. Create a SINGLE, SELF-CONTAINED HTML file with all CSS and JavaScript inline
-2. Use only vanilla JavaScript (no external libraries)
-3. Make visualizations interactive and responsive
-4. Use modern CSS and semantic HTML
-5. Support both light and dark mode with @media (prefers-color-scheme: dark)
-6. Ensure the visualization is accessible (proper ARIA attributes, color contrast)
-7. Use inline SVG for vector graphics when appropriate
-8. Keep the code clean and well-commented
-9. Optimize for performance (avoid unnecessary calculations)
-10. Handle edge cases gracefully
+// REQUIREMENTS:
+// 1. Create a SINGLE, SELF-CONTAINED HTML file with all CSS and JavaScript inline
+// 2. Use only vanilla JavaScript (no external libraries)
+// 3. Make visualizations interactive and responsive
+// 4. Use modern CSS and semantic HTML
+// 5. Support both light and dark mode with @media (prefers-color-scheme: dark)
+// 6. Ensure the visualization is accessible (proper ARIA attributes, color contrast)
+// 7. Use inline SVG for vector graphics when appropriate
+// 8. Keep the code clean and well-commented
+// 9. Optimize for performance (avoid unnecessary calculations)
+// 10. Handle edge cases gracefully
 
-Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending with </html>.
-`;
+// Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending with </html>.
+// `;
 
-    const htmlContent = await generateText({
-      model: openai('gpt-4o'),
-      system: systemPrompt,
-      messages: [
-        { role: 'user', content: `Create a visualization for: ${prompt}` }
-      ]
+    const { text: htmlContent } = await generateText({
+      model: openai('o3-mini'),
+      temperature: 0.7,
+      prompt,
+      // messages: [
+      //   { role: 'user', content: `${prompt}` }
+      // ]
     });
-    
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log("------------------------------------");
+    console.log({})
     // Store the generated HTML in the database
     const { data: generation, error: insertError } = await supabase
       .from("canvas_generations")
@@ -264,14 +278,18 @@ Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending w
         html: htmlContent,
         render_method: 'fallback_iframe',
         summary: `Visualization for: ${prompt.substring(0, 50)}...`,
-        created_by: user.id,
+        created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a', // @todo
         type: "visualization",
+        room_id: roomId,
         metadata: {
           fallback: true
         },
       })
       .select()
       .single();
+
+    // @todo - when invoking this function need to authenticate as a super user in supabase
+    // because the worker can't really auth as another
     
     if (insertError) {
       logSection('DATABASE ERRORa', insertError);
@@ -294,7 +312,7 @@ Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending w
     
   } catch (processingError: any) {
     logSection('ERROR', 'Error processing visualization request');
-    
+    console.log({processingError});
     // Generate a basic error visualization
     const errorHtml = `
       <!DOCTYPE html>
@@ -369,7 +387,7 @@ Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending w
     `;
     
     // Store the error visualization
-    const supabase = await createClient();
+    const supabase = await createClient(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_ANON_KEY ?? '');
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data: errorGeneration } = await supabase
