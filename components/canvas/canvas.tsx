@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
+import Pusher from 'pusher-js';
+
 import { 
   CanvasVisualization,
   LoadingOverlay,
@@ -68,9 +70,61 @@ export default function Canvas({
   // Setup Supabase listener for generations
   useEffect(() => {
     if (!roomId) return;
-    
+ 
+
+
     log('Setting up generations listener for room:', roomId);
     setIsLoading(true);
+
+       
+
+    const pusher = new Pusher('96f9360f34a831ca1901', {
+      cluster: 'us3',
+    });
+
+    const channel = pusher.subscribe(`room-${roomId}`);
+
+
+    // Listen for new generation notifications
+    channel.bind('new-generation', async (data: any) => {
+      console.log("New generati222on received:", data);
+      console.log("New generat2222ion received:", data);
+      console.log("New gener222ation received:", data);
+
+      try {
+        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Fetch the generation from the database
+        const { data: generation, error } = await supabase
+          .from('canvas_generations')
+          .select('*')
+          .eq('id', notificationData.generation_id)
+          .single();
+
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS" , {generation, error});
+
+        if (error) {
+          throw new Error(`Error fetching generation: ${error.message}`);
+        }
+        
+        if (generation?.html) {
+          // Add the new generation to the list and select it
+          setGenerations(prev => [generation, ...prev].slice(0, 20));
+          // Set the most recent generation as active
+          setActiveGeneration(generation.id);
+          // Load the visualization content
+          loadGenerationContent(generation.html);
+        } else {
+          console.warn('Generation found but no html field:', generation);
+        }
+      } catch (error) {
+        console.error('Error handling new generation notification:', error);
+      }
+    });
+    
     
     // Initial fetch to get existing generations
     const fetchInitialGenerations = async () => {
@@ -109,7 +163,7 @@ export default function Canvas({
 
     // Set up real-time listener for new generations
     const subscription = supabase
-      .channel(`room-${roomId}-generations`)
+      .channel(`room-${roomId}`)
       .on(
         'postgres_changes',
         {
