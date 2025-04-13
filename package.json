@@ -4,7 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "worker:dev": "ts-node-dev --respawn --transpile-only worker/index.ts",
+    "worker:dev": "ts-node-dev --respawn worker/index.ts",
     "worker:build": "tsc -p worker/tsconfig.build.json",
     "worker:start": "node worker/dist/index.js"
   },

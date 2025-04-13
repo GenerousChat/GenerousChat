@@ -2,6 +2,8 @@
  * Supabase to Pusher Bridge Worker
  * This worker listens to Supabase database changes and forwards them to Pusher
  */
+
+// Import modules normally
 import express from 'express';
 import config from './config';
 import logger from './utils/logger';
@@ -26,15 +28,7 @@ interface Participant {
   joined_at?: string;
 }
 
-// Express server setup
-const app = express();
-app.use(express.json());
-
-// Register routes
-app.use('/', routes);
-
-// Error handling middleware
-app.use(errorHandler);
+// Main application setup will be done after imports are resolved
 
 // Message handler for Supabase real-time events
 async function handleMessageInserted(message: Message): Promise<void> {
@@ -136,6 +130,16 @@ async function init(): Promise<void> {
     process.exit(1);
   }
 }
+
+// Express server setup
+const app = express();
+app.use(express.json());
+
+// Register routes
+app.use('/', routes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 // Start the application
 init();
