@@ -2,10 +2,12 @@
   "name": "hackathon-floral-sun-886",
   "version": "1.0.0",
   "description": "Worker service to bridge Supabase events to Pusher",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only index.ts",
+    "watch": "tsc --watch"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.10",
@@ -21,7 +23,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.10.2",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18"
