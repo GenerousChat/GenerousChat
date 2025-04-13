@@ -5,7 +5,7 @@
     "build": "next build",
     "start": "next start",
     "worker:dev": "tsx watch worker/index.ts",
-    "worker:build": "tsx build worker/index.ts --outDir worker/dist",
+    "worker:build": "cd worker && tsc",
     "worker:start": "node worker/dist/index.js"
   },
   "dependencies": {

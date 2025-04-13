@@ -8,6 +8,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "noEmit": false,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "NodeNext",
@@ -26,6 +27,9 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "../components",
+    "../app",
+    "../utils"
   ]
 }

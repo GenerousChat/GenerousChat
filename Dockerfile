@@ -6,11 +6,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy application code
-COPY . .
+# Copy only the worker directory
+COPY worker /app/worker
 
-# Build the worker
-RUN npm run worker:build
+# Create a simple JavaScript version of the worker
+RUN mkdir -p /app/worker/dist
+
+RUN cd /app/worker && tsc
 
 # Create a .env file if it doesn't exist (will be overridden by secrets in production)
 RUN touch .env
@@ -19,4 +21,4 @@ RUN touch .env
 EXPOSE 3001
 
 # Start the worker
-CMD ["npm", "run", "worker:start"]
+CMD ["node", "worker/dist/index.js"]
