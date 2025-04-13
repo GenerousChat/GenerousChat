@@ -711,7 +711,17 @@ Chat history: ${messageHistory}
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
-          await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
+         const { someGeneration } = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
+
+          await pusherService.sendNewGeneration(
+            roomId,
+            someGeneration.id,
+            "visualization",
+            someGeneration.created_at || new Date().toISOString()
+          );
+  
+
+          return true;
         } catch (e) {
           logger.error("Error calling canvas visualization function:", e);
         }

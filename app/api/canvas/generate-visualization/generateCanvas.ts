@@ -307,7 +307,8 @@ IMPORTANT INSTRUCTIONS:
       message: 'HTML visualization generated successfully',
       html: htmlContent,
       generation_id: generation.id,
-      renderMethod: 'fallback_iframe'
+      renderMethod: 'fallback_iframe',
+      id: generation.id
     };
     
   } catch (processingError: any) {

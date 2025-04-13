@@ -12,7 +12,7 @@ export function useVisualizations(roomId: string) {
   const fetchGenerations = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('chat_room_generations')
+        .from('canvas_generations')
         .select('*')
         .eq('room_id', roomId)
         .eq('type', 'visualization')
@@ -60,7 +60,7 @@ export function useVisualizations(roomId: string) {
         
         // Fetch the generation from the database
         const { data: generation, error } = await supabase
-          .from('chat_room_generations')
+          .from('canvas_generations')
           .select('*')
           .eq('id', notificationData.generation_id)
           .single();
