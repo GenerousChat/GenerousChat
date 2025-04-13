@@ -268,12 +268,9 @@ Based on these constraints, analyze the following message and rank the confidenc
       prompt,
     });
 
-    console.log(result.response.body.choices);
-    const toolResult =
-      result.response.body.choices[0].message.tool_calls[0].function.arguments;
-    // Parse the response to get the agent confidences
     let selectedAgents = [];
-
+    const body = result.response.body;
+    console.log(JSON.stringify(body, undefined, 2));
     try {
       // Parse the JSON text from the first content item
       if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
