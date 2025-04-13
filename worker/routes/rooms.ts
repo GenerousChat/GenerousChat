@@ -19,12 +19,9 @@ interface RequestWithParams extends Request {
   };
 }
 
-interface RequestWithSupabase extends Request {
-  app: {
-    locals: {
-      supabase: SupabaseClient;
-    }
-  }
+// Define a custom type for request with Supabase client
+type RequestWithSupabase = Request & {
+  // Use type assertion when accessing app.locals.supabase in the handlers
 }
 
 const router = express.Router();

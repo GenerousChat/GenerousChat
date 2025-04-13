@@ -3,7 +3,13 @@
  */
 import express, { Request, Response } from 'express';
 import logger from '../utils/logger.js';
-import pusherService, { VisualizationData } from '../services/pusher.js';
+import pusherService from '../services/pusher.js';
+
+// Define the VisualizationData interface locally to avoid import issues
+interface VisualizationData {
+  html: string;
+  metadata?: Record<string, any>;
+}
 
 const router = express.Router();
 

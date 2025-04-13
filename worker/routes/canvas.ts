@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, RequestHandler } from 'express';
 import logger from '../config/logger.js';
 import { SupabaseClient } from '@supabase/supabase-js';
 import pusherService from '../services/pusher.js';
@@ -11,22 +11,18 @@ interface CanvasGenerationBody {
   createdBy: string;
 }
 
-// Define a custom type for request with Supabase client
+// Define a custom type for the request
 type RequestWithSupabase = Request & {
-  app: {
-    locals: {
-      supabase: SupabaseClient;
-    }
-  }
+  // Use type assertion when accessing app.locals.supabase in the handlers
 }
 
 const router = express.Router();
 
-router.post('/generation', async (req: RequestWithSupabase, res: Response) => {
+router.post('/generation', (async (req: RequestWithSupabase, res: Response) => {
     const { roomId, htmlContent, summary, createdBy } = req.body as CanvasGenerationBody;
     
     try {
-        const { data: generation, error } = await req.app.locals.supabase
+        const { data: generation, error } = await (req as any).app.locals.supabase
             .from('chat_room_generations')
             .insert({
                 room_id: roomId,
@@ -59,13 +55,13 @@ router.post('/generation', async (req: RequestWithSupabase, res: Response) => {
         });
         res.status(500).json({ error: 'Failed to create canvas generation' });
     }
-});
+}) as RequestHandler);
 
-router.get('/:roomId/latest', async (req: RequestWithSupabase, res: Response) => {
+router.get('/:roomId/latest', (async (req: RequestWithSupabase, res: Response) => {
     const { roomId } = req.params;
     
     try {
-        const { data, error } = await req.app.locals.supabase
+        const { data, error } = await (req as any).app.locals.supabase
             .from('chat_room_generations')
             .select('*')
             .eq('room_id', roomId)
@@ -85,6 +81,6 @@ router.get('/:roomId/latest', async (req: RequestWithSupabase, res: Response) =>
         });
         res.status(500).json({ error: 'Failed to fetch latest canvas' });
     }
-});
+}) as RequestHandler);
 
 export default router;

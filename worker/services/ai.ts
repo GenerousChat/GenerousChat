@@ -169,33 +169,47 @@ async function analyzeMessageForVisualizationIntent(
       let reason: string | undefined;
 
       // Check for direct properties
-      if ("score" in result) {
-        score = (result as VisualizationAnalysisResult).score;
-        reason = (result as VisualizationAnalysisResult).reason;
+      if ("score" in result && typeof result.score === 'number') {
+        score = result.score;
+        reason = "reason" in result && typeof result.reason === 'string' ? result.reason : 'No reason provided';
       }
       // Check for object.score structure
-      else if (result.object && typeof result.object === "object") {
-        score = (result.object as VisualizationAnalysisResult).score;
-        reason = (result.object as VisualizationAnalysisResult).reason;
+      else if (result.object && typeof result.object === "object" && "score" in result.object && typeof result.object.score === 'number') {
+        score = result.object.score;
+        reason = "reason" in result.object && typeof result.object.reason === 'string' ? result.object.reason : 'No reason provided';
       }
       // Check for analysis structure
-      else if (result.analysis && typeof result.analysis === "object") {
-        score = (result.analysis as VisualizationAnalysisResult).score;
-        reason = (result.analysis as VisualizationAnalysisResult).reason;
+      else if ('analysis' in result && result.analysis && typeof result.analysis === "object") {
+        // Use type-safe property access
+        if ('score' in result.analysis && typeof result.analysis.score === 'number') {
+          score = result.analysis.score;
+        }
+        if ('reason' in result.analysis && typeof result.analysis.reason === 'string') {
+          reason = result.analysis.reason;
+        }
       }
       // Check for response structure
-      else if (
-        result.response &&
-        typeof result.response === "object" &&
-        result.response.body &&
-        result.response.body.output &&
-        result.response.body.output[0] &&
-        result.response.body.output[0].content
-      ) {
+      else if ('response' in result && result.response) {
         try {
-          const content = JSON.parse(result.response.body.output[0].content.text);
-          score = content.score;
-          reason = content.reason;
+          // Use type-safe property access with optional chaining
+          const responseObj = result.response as Record<string, any>;
+          if (responseObj.body && 
+              typeof responseObj.body === 'object' && 
+              'output' in responseObj.body && 
+              Array.isArray(responseObj.body.output) && 
+              responseObj.body.output.length > 0 && 
+              responseObj.body.output[0]?.content?.text) {
+            
+            const content = JSON.parse(responseObj.body.output[0].content.text);
+            if (typeof content === 'object' && content !== null) {
+              if ('score' in content && typeof content.score === 'number') {
+                score = content.score;
+              }
+              if ('reason' in content && typeof content.reason === 'string') {
+                reason = content.reason;
+              }
+            }
+          }
         } catch (parseError) {
           logger.error("Error parsing AI response:", parseError);
         }
@@ -276,7 +290,7 @@ Based on these constraints, analyze the following message and rank the confidenc
         Agent Id: 
         ${agent.id}
         Agent Personality:
-        ${agent.personality_prompt || "No personality defined"}
+        ${(agent as any).personality_prompt || "No personality defined"}
       `
         )
         .join("\n\n\n")}
@@ -316,11 +330,23 @@ Based on these constraints, analyze the following message and rank the confidenc
     let selectedAgents: AgentConfidence[] = [];
     
     try {
-      // Parse the JSON text from the first content item
-      if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
+      // Use type assertion to safely access nested properties
+      const responseObj = result.response as Record<string, any>;
+      
+      // Check if we have the expected nested structure
+      if (responseObj?.body && 
+          typeof responseObj.body === 'object' && 
+          'output' in responseObj.body && 
+          Array.isArray(responseObj.body.output) && 
+          responseObj.body.output.length > 0 && 
+          responseObj.body.output[0]?.content && 
+          Array.isArray(responseObj.body.output[0].content) && 
+          responseObj.body.output[0].content.length > 0 && 
+          responseObj.body.output[0].content[0]?.text) {
+        
         // Parse the JSON text from the first content item
         const parsedData = JSON.parse(
-          result.response.body.output[0].content[0].text
+          responseObj.body.output[0].content[0].text
         );
         if (parsedData.agents_confidence) {
           selectedAgents = parsedData.agents_confidence;
@@ -434,7 +460,7 @@ async function generateHTMLContent(prompt: string): Promise<string> {
     // If no HTML found, make a second attempt with more specific instructions
     const secondAttemptPrompt = `${prompt}\n\nVERY IMPORTANT: Respond ONLY with the raw HTML. Do not include any explanations, markdown formatting, or code block markers. Start your response with '<' and end with '>' for a proper HTML document or fragment.`;
     
-    const secondResponse = await generateText({
+    const { text: secondResponse } = await generateText({
       model: openai("gpt-4o"),
       prompt: secondAttemptPrompt,
       temperature: 0.5,
@@ -487,10 +513,16 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
       .join("\n");
 
     // Check if this message should receive an AI response
+    // Create a compatible AgentResponseConfig object from the available config
+    const agentResponseConfig = {
+      timeThreshold: config.ai.responseAlgorithm.responseDelayMs,
+      messageRateThreshold: config.ai.responseAlgorithm.maxConsecutiveUserMessages
+    };
+    
     const responseDecision = await shouldAgentRespond(
       roomId,
       messages as Message[],
-      config.ai.responseAlgorithm
+      agentResponseConfig
     );
 
     if (!responseDecision.shouldRespond) {
@@ -737,17 +769,21 @@ Chat history: ${messageHistory}
         }
 
         // Send a notification to clients about the new generation
-        await pusherService.sendNewGeneration(
-          roomId,
-          generation.id,
-          "new-generation",
-          generation.created_at || new Date().toISOString()
-        );
+        if (generation && generation.id) {
+          await pusherService.sendNewGeneration(
+            roomId,
+            generation.id,
+            "new-generation",
+            generation.created_at || new Date().toISOString()
+          );
 
-        logger.info(
-          "Notification sent to clients about new generation:",
-          generation.id
-        );
+          logger.info(
+            "Notification sent to clients about new generation:",
+            generation.id
+          );
+        } else {
+          logger.warn("Cannot send notification: generation ID is undefined");
+        }
       } catch (error) {
         logger.error("Error saving HTML generation:", error);
       }
