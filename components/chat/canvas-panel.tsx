@@ -31,6 +31,7 @@ export function CanvasPanel({
         currentUser={user}
         messages={messages}
         roomId={roomId}
+
       />
     </div>
   );

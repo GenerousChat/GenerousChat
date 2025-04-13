@@ -83,7 +83,12 @@ export default function Canvas({
     });
 
     const channel = pusher.subscribe(`room-${roomId}`);
-
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
 
     // Listen for new generation notifications
     channel.bind('new-generation', async (data: any) => {
@@ -101,15 +106,19 @@ export default function Canvas({
           .eq('id', notificationData.generation_id)
           .single();
 
+        console.log("ASDASDASDSA22S");
         console.log("ASDASDASDSAS");
-        console.log("ASDASDASDSAS");
-        console.log("ASDASDASDSAS");
-        console.log("ASDASDASDSAS" , {generation, error});
-
+        console.log("ASDASDASDS22AS");
+        console.log("ASDASDASDS333AS" , {generation, error});
+        console.log("11111");
+        console.log("11111");
+        console.log("11111");
+        console.log("11111");
+        console.log("11111");
         if (error) {
           throw new Error(`Error fetching generation: ${error.message}`);
         }
-        
+        console.log('22222222222')
         if (generation?.html) {
           // Add the new generation to the list and select it
           setGenerations(prev => [generation, ...prev].slice(0, 20));

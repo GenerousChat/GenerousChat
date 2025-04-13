@@ -14,6 +14,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/magicui";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Pusher from 'pusher-js';
 
 // Add debugging flag
 const DEBUG = true;
@@ -114,9 +115,75 @@ export default function Canvas({
     // Call initial fetch
     fetchInitialGenerations();
 
+    useEffect(() => {
+      const pusher = new Pusher('96f9360f34a831ca1901', {
+        cluster: 'us3',
+      });
+  
+      const channel = pusher.subscribe(`room-${roomId}`);
+  
+      // Listen for new generation notifications
+      channel.bind('new-generation', async (data: any) => {
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        console.log("New generation received:", data);
+        try {
+          const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+          
+          // Fetch the generation from the database
+          const { data: generation, error } = await supabase
+            .from('canvas_generations')
+            .select('*')
+            .eq('id', notificationData.generation_id)
+            .single();
+  
+          console.log("ASDASDASDSAS");
+          console.log("ASDASDASDSAS");
+          console.log("ASDASDASDSAS");
+          console.log("ASDASDASDSAS" , {generation, error});
+  
+          if (error) {
+            throw new Error(`Error fetching generation: ${error.message}`);
+          }
+          
+          if (generation?.html) {
+            // Add the new generation to the list and select it
+            setGenerations(prev => [generation, ...prev].slice(0, 20));
+            setActiveGeneration(generation.id);
+            loadGenerationContent(generation.html);
+
+            // setGenerations(prev => [newGeneration, ...prev]);
+            
+            // // Set as active if it's the first one or if we don't have an active one
+            // if (!activeGeneration || prev.length === 0) {
+            //   setActiveGeneration(newGeneration);
+            //   loadGenerationContent(newGeneration);
+
+          } else {
+            console.warn('Generation found but no html field:', generation);
+          }
+        } catch (error) {
+          console.error('Error handling new generation notification:', error);
+        }
+      });
+
+  
+      return () => {};
+    }, [roomId]);
+  
+
     // Set up real-time listener for new generations
     const subscription = supabase
-      .channel(`room-${roomId}-generations`)
+      .channel(`room-${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -126,6 +193,14 @@ export default function Canvas({
           filter: `room_id=eq.${roomId}`
         },
         (payload) => {
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
+          console.log("ppppppppppppppppppppppppppppppppppppp");
           log('Received generation update:', payload);
           
           // Update the generations state based on the change type
@@ -261,6 +336,7 @@ export default function Canvas({
 
   return (
     <div className="flex flex-col h-full">
+      asdasd
       {/* Generation history at the top */}
       {generations.length > 0 && (
         <div className="p-2 border-b border-border bg-card dark:bg-card">
