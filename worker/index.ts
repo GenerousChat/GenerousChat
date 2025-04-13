@@ -5,13 +5,12 @@
 
 // Import modules normally
 import express from 'express';
-import config from './config';
-import logger from './utils/logger';
-import supabaseService from './services/supabase';
-import pusherService from './services/pusher';
-import aiService from './services/ai';
-import routes from './routes';
-import errorHandler from './middleware/error-handler';
+import logger from './utils/logger.js';
+import supabaseService from './services/supabase.js';
+import pusherService from './services/pusher.js';
+import aiService from './services/ai.js';
+import routes from './routes.js';
+import errorHandler from './middleware/error-handler.js';
 
 // Define types for the message and participant objects
 interface Message {
@@ -121,7 +120,7 @@ async function init(): Promise<void> {
     );
 
     // Start the server
-    const PORT = config.server.port;
+    const PORT = process.env.PORT || 3001;
     app.listen(PORT, () => {
       logger.info(`Supabase to Pusher bridge worker running on port ${PORT}`);
     });
