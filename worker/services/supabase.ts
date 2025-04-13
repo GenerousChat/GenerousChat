@@ -46,6 +46,8 @@ export interface Generation {
   created_at?: string;
 }
 
+console.log("config", {config});
+
 // Initialize Supabase client
 const keyType = config.supabase.serviceKey ? "service role" : "anon";
 logger.info(

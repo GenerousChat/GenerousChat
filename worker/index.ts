@@ -1,9 +1,9 @@
-/**
- * Supabase to Pusher Bridge Worker
- * This worker listens to Supabase database changes and forwards them to Pusher
- */
+// Load environment variables from .env file
+import dotenv from 'dotenv';
 
-// Import modules
+// Configure dotenv to load from the parent directory's .env file
+dotenv.config({ path: '../.env' });
+
 import express from 'express';
 import logger from './utils/logger.js';
 import supabaseService, { Message, Participant } from './services/supabase.js'; 
@@ -12,11 +12,6 @@ import aiService from './services/ai.js';
 import routes from './routes/index.js';
 import errorHandler from './middleware/error-handler.js';
 
-// Message and Participant types are now imported from services/supabase.ts
-
-// Main application setup will be done after imports are resolved
-
-// Message handler for Supabase real-time events
 async function handleMessageInserted(message: Message): Promise<void> {
   try {
     
