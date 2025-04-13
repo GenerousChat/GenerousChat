@@ -25,7 +25,6 @@ async function analyzeMessageForVisualizationIntent(
   lastGenerationHtml,
   messageHistory
 ) {
-  return 100;
   // Keywords that suggest a visualization request
   const visualizationKeywords = [
     "build",
@@ -109,8 +108,8 @@ async function analyzeMessageForVisualizationIntent(
     // @todo - pass in last generation and message history
     // Use generateObject with Zod schema as per the latest docs
     const result = await generateObject({
-      // model: openai.responses("gpt-4o"),
-      model: xai("grok-3-mini-beta"),
+      model: openai.responses("gpt-4o"),
+      // model: xai("grok-3-mini-beta"),
       schema: z.object({
         score: z
           .number()
@@ -277,10 +276,18 @@ Based on these constraints, analyze the following message and rank the confidenc
 
     try {
       // Parse the JSON text from the first content item
-      const parsedData = JSON.parse(toolResult);
-      if (parsedData.agents_confidence) {
-        selectedAgents = parsedData.agents_confidence;
-        logger.debug("Successfully parsed agent confidences:", selectedAgents);
+      if (result.response?.body?.output?.[0]?.content?.[0]?.text) {
+        // Parse the JSON text from the first content item
+        const parsedData = JSON.parse(
+          result.response.body.output[0].content[0].text
+        );
+        if (parsedData.agents_confidence) {
+          selectedAgents = parsedData.agents_confidence;
+          logger.debug(
+            "Successfully parsed agent confidences:",
+            selectedAgents
+          );
+        }
       }
     } catch (error) {
       logger.error("Error parsing agent selection result:", error);
