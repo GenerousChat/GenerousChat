@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from '@/utils/supabase/server';
+const { createClient } = require("@supabase/supabase-js");
 import { generateText, generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { selectTemplate, loadTemplate, validateProps, TemplateSelectionResult, logTemplateInfo } from '@/components/canvas/lib';
+import { selectTemplate, loadTemplate, validateProps, logTemplateInfo } from '../../../../components/canvas/lib';
 import { z } from 'zod';
 
 // Define the CanvasMessage type for TypeScript
@@ -197,7 +197,7 @@ IMPORTANT INSTRUCTIONS:
           .single();
         
         if (insertError) {
-          logSection('DATABASE ERROR', insertError);
+          logSection('DATABASE ERRORb', insertError);
           throw new Error('Failed to store visualization');
         }
         
@@ -273,7 +273,7 @@ Your HTML must be valid and complete, starting with <!DOCTYPE html> and ending w
       .single();
     
     if (insertError) {
-      logSection('DATABASE ERROR', insertError);
+      logSection('DATABASE ERRORa', insertError);
       throw new Error('Failed to store visualization');
     }
 

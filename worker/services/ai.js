@@ -11,7 +11,9 @@ const supabaseService = require("./supabase");
 const pusherService = require("./pusher");
 const shouldAgentRespond = require("../utils/shouldAgentRespond");
 const { createXai } = require("@ai-sdk/xai");
-
+const {
+  generateCanvasVisualization,
+} = require("../../app/api/canvas/generate-visualization/generateCanvas");
 const xai = createXai({
   apiKey: process.env.XAI_API_KEY,
 });
@@ -25,6 +27,8 @@ async function analyzeMessageForVisualizationIntent(
   lastGenerationHtml,
   messageHistory
 ) {
+  let confidence = 0;
+
   // Keywords that suggest a visualization request
   const visualizationKeywords = [
     "build",
@@ -734,6 +738,24 @@ ${agentResponsePrompt}
           }
         );
 
+        // insert into canvas_generations
+        // this is not the right way, we should be invoking travis thing
+        // const { data: generationNeo, error: insertErrorNeo } = await supabase
+        //   .from("canvas_generations")
+        //   .insert({
+        //     room_id: roomId,
+        //     html: html,
+        //     summary: summary,
+        //     template_id: null,
+        //     render_method: "fallback_iframe",
+        //     type: "visualization",
+        //     metadata: metadata,
+        //   })
+        //   .select()
+        //   .single();
+        // export async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string) {
+        //   if (!canvasId || !prompt) {
+        generateCanvasVisualization("canvas-1744521365054", [], htmlPrompt);
         // Send a notification to clients about the new generation
         await pusherService.sendNewGeneration(
           roomId,

@@ -342,22 +342,6 @@ async function saveGeneration(
       .select()
       .single();
 
-    // insert into canvas_generations
-    // this is not the right way, we should be invoking travis thing
-    const { data: generationNeo, error: insertErrorNeo } = await supabase
-      .from("canvas_generations")
-      .insert({
-        room_id: roomId,
-        html: html,
-        summary: summary,
-        template_id: null,
-        render_method: "fallback_iframe",
-        type: "visualization",
-        metadata: metadata,
-      })
-      .select()
-      .single();
-
     if (insertError) {
       throw new Error(`Error storing generation: ${insertError.message}`);
     }
