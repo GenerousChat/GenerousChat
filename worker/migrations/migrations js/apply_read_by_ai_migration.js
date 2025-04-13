@@ -4,8 +4,8 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-const config = require('./config');
-const logger = require('./config/logger');
+const config = require('../../config');
+const logger = require('../../config/logger');
 
 async function applyMigration() {
   try {
