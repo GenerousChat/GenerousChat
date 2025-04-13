@@ -1,13 +1,51 @@
 /**
  * Pusher service for real-time messaging
  */
-const https = require('https');
-const config = require('../config');
-const { md5, generatePusherSignature } = require('../utils/crypto');
-const logger = require('../utils/logger');
+import https from 'https';
+import config from '../config/index.js';
+import { md5, generatePusherSignature } from '../utils/crypto.js';
+import logger from '../utils/logger.js';
+import { Message } from './supabase.js';
+
+// Define interfaces for Pusher data
+interface PusherConfig {
+  appId: string;
+  key: string;
+  secret: string;
+  cluster: string;
+}
+
+interface PusherResponse {
+  success: boolean;
+  statusCode: number;
+  data?: any;
+}
+
+interface MessageData {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+}
+
+interface VisualizationData {
+  html: string;
+  metadata?: Record<string, any>;
+}
+
+interface NewGenerationData {
+  generation_id: string;
+  type: string;
+  created_at: string;
+}
+
+interface StatusMessageData {
+  status_type: string;
+  message?: string;
+}
 
 // Pusher configuration
-const pusherConfig = {
+const pusherConfig: PusherConfig = {
   appId: config.pusher.appId || '1971423',
   key: config.pusher.key || '96f9360f34a831ca1901',
   secret: config.pusher.secret || 'c508bc54a2ca619cfab8',
@@ -16,12 +54,12 @@ const pusherConfig = {
 
 /**
  * Send event to Pusher
- * @param {string} channel - Channel name
- * @param {string} eventName - Event name
- * @param {Object} data - Event data
- * @returns {Promise<Object>} Response from Pusher
+ * @param channel - Channel name
+ * @param eventName - Event name
+ * @param data - Event data
+ * @returns Response from Pusher
  */
-async function sendToPusher(channel, eventName, data) {
+async function sendToPusher(channel: string, eventName: string, data: any): Promise<PusherResponse> {
   return new Promise((resolve, reject) => {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
@@ -61,7 +99,7 @@ async function sendToPusher(channel, eventName, data) {
         });
 
         res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             logger.info(`Event sent to Pusher: ${eventName} on channel ${channel}`);
             resolve({ success: true, statusCode: res.statusCode });
           } else {
@@ -79,7 +117,7 @@ async function sendToPusher(channel, eventName, data) {
       req.write(body);
       req.end();
     } catch (error) {
-      logger.error('Error in sendToPusher:', error);
+      logger.error('Error in sendToPusher:', error instanceof Error ? error.message : String(error));
       reject(error);
     }
   });
@@ -87,11 +125,11 @@ async function sendToPusher(channel, eventName, data) {
 
 /**
  * Send a new message event to a room channel
- * @param {string} roomId - Room ID
- * @param {Object} message - Message object
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param message - Message object
+ * @returns Response from Pusher
  */
-async function sendNewMessage(roomId, message) {
+async function sendNewMessage(roomId: string, message: MessageData): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'new-message', {
     id: message.id,
     content: message.content,
@@ -102,12 +140,12 @@ async function sendNewMessage(roomId, message) {
 
 /**
  * Send a user joined event to a room channel
- * @param {string} roomId - Room ID
- * @param {string} userId - User ID
- * @param {string} joinedAt - Join timestamp
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param userId - User ID
+ * @param joinedAt - Join timestamp
+ * @returns Response from Pusher
  */
-async function sendUserJoined(roomId, userId, joinedAt) {
+async function sendUserJoined(roomId: string, userId: string, joinedAt: string): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'user-joined', {
     user_id: userId,
     joined_at: joinedAt,
@@ -116,11 +154,11 @@ async function sendUserJoined(roomId, userId, joinedAt) {
 
 /**
  * Send a user left event to a room channel
- * @param {string} roomId - Room ID
- * @param {string} userId - User ID
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param userId - User ID
+ * @returns Response from Pusher
  */
-async function sendUserLeft(roomId, userId) {
+async function sendUserLeft(roomId: string, userId: string): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'user-left', {
     user_id: userId,
   });
@@ -128,23 +166,28 @@ async function sendUserLeft(roomId, userId) {
 
 /**
  * Send an HTML visualization event to a room channel
- * @param {string} roomId - Room ID
- * @param {Object} visualization - Visualization object
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param visualization - Visualization object
+ * @returns Response from Pusher
  */
-async function sendHtmlVisualization(roomId, visualization) {
+async function sendHtmlVisualization(roomId: string, visualization: VisualizationData): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'html-visualization', visualization);
 }
 
 /**
  * Send a new generation notification to a room channel
- * @param {string} roomId - Room ID
- * @param {string} generationId - Generation ID
- * @param {string} type - Generation type
- * @param {string} createdAt - Creation timestamp
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param generationId - Generation ID
+ * @param type - Generation type
+ * @param createdAt - Creation timestamp
+ * @returns Response from Pusher
  */
-async function sendNewGeneration(roomId, generationId, type, createdAt) {
+async function sendNewGeneration(
+  roomId: string, 
+  generationId: string, 
+  type: string, 
+  createdAt: string
+): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'new-generation', {
     generation_id: generationId,
     type: type,
@@ -154,19 +197,24 @@ async function sendNewGeneration(roomId, generationId, type, createdAt) {
 
 /**
  * Send a status message to a room channel
- * @param {string} roomId - Room ID
- * @param {string} statusType - Status type (join, leave, generation, etc.)
- * @param {string} message - Optional custom message
- * @returns {Promise<Object>} Response from Pusher
+ * @param roomId - Room ID
+ * @param statusType - Status type (join, leave, generation, etc.)
+ * @param message - Optional custom message
+ * @returns Response from Pusher
  */
-async function sendStatusMessage(roomId, statusType, message) {
+async function sendStatusMessage(
+  roomId: string, 
+  statusType: string, 
+  message?: string
+): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'new-status', {
     status_type: statusType,
     message: message,
   });
 }
 
-module.exports = {
+// Export individual functions
+export {
   sendToPusher,
   sendNewMessage,
   sendUserJoined,
@@ -175,3 +223,16 @@ module.exports = {
   sendNewGeneration,
   sendStatusMessage,
 };
+
+// Export as default for compatibility with existing imports
+const pusherService = {
+  sendToPusher,
+  sendNewMessage,
+  sendUserJoined,
+  sendUserLeft,
+  sendHtmlVisualization,
+  sendNewGeneration,
+  sendStatusMessage,
+};
+
+export default pusherService;

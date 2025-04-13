@@ -1,9 +1,50 @@
 /**
  * Supabase service for database operations
  */
-const { createClient } = require("@supabase/supabase-js");
-const config = require("../config");
-const logger = require("../utils/logger");
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import config from "../config/index.js";
+import logger from "../utils/logger.js";
+
+// Define interfaces for the data models
+export interface Message {
+  id: string;
+  room_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  read_by_ai?: boolean;
+}
+
+export interface Participant {
+  user_id: string;
+  room_id: string;
+  joined_at?: string;
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  description?: string;
+  avatar_url?: string;
+  created_at?: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  avatar_url?: string;
+}
+
+export interface Generation {
+  id?: string;
+  room_id: string;
+  html: string;
+  summary: string;
+  created_by: string;
+  type: string;
+  metadata?: Record<string, any>;
+  created_at?: string;
+}
 
 // Initialize Supabase client
 const keyType = config.supabase.serviceKey ? "service role" : "anon";
@@ -11,7 +52,7 @@ logger.info(
   `Initializing Supabase client with URL: ${config.supabase.url ? "URL is set" : "URL is NOT set"} and ${keyType} key: ${config.supabase.serviceKey || config.supabase.anonKey ? "Key is set" : "Key is NOT set"}`
 );
 
-const supabase = createClient(
+const supabase: SupabaseClient = createClient(
   config.supabase.url,
   config.supabase.serviceKey || config.supabase.anonKey
 );
@@ -19,16 +60,16 @@ const supabase = createClient(
 logger.info(`Supabase client initialized with ${keyType} key`);
 
 // Store AI agents fetched from the database
-let aiAgents = [];
+let aiAgents: Agent[] = [];
 
 // Set to store AI agent user IDs to prevent AI from responding to its own messages
-let aiAgentIds = new Set();
+let aiAgentIds: Set<string> = new Set();
 
 /**
  * Fetch AI agents from the database
- * @returns {Promise<Array>} Array of AI agents
+ * @returns Array of AI agents
  */
-async function fetchAIAgents() {
+async function fetchAIAgents(): Promise<Agent[]> {
   try {
     const { data, error } = await supabase
       .from("agents")
@@ -51,31 +92,31 @@ async function fetchAIAgents() {
       return [];
     }
   } catch (error) {
-    logger.error("Error in fetchAIAgents:", error);
+    logger.error("Error in fetchAIAgents:", error instanceof Error ? error.message : String(error));
     return [];
   }
 }
 
 /**
  * Fetch the last 50 messages from Supabase
- * @returns {Promise<Array>} Array of recent messages
+ * @returns Array of recent messages
  */
-async function fetchRecentMessages() {
+async function fetchRecentMessages(): Promise<Message[]> {
   // Deprecated - messages are now fetched live when needed
   return [];
 }
 
 /**
  * Set up Supabase real-time listeners
- * @param {Function} onMessageInserted - Callback for message insertion
- * @param {Function} onParticipantJoined - Callback for participant joining
- * @param {Function} onParticipantLeft - Callback for participant leaving
- * @returns {Promise<Object>} Supabase channel
+ * @param onMessageInserted - Callback for message insertion
+ * @param onParticipantJoined - Callback for participant joining
+ * @param onParticipantLeft - Callback for participant leaving
+ * @returns Supabase channel
  */
 async function setupSupabaseListeners(
-  onMessageInserted,
-  onParticipantJoined,
-  onParticipantLeft
+  onMessageInserted: (message: Message) => Promise<void>,
+  onParticipantJoined: (participant: Participant) => Promise<void>,
+  onParticipantLeft: (participant: Participant) => Promise<void>
 ) {
   logger.info("Setting up Supabase real-time listeners...");
 
@@ -94,7 +135,7 @@ async function setupSupabaseListeners(
         logger.info("===== MESSAGE INSERTED CALLBACK TRIGGERED =====");
         logger.debug("New message received:", payload);
 
-        const message = payload.new;
+        const message = payload.new as Message;
 
         // Note: We're not adding the message to recentMessages here anymore
         // This is now handled in the onMessageInserted callback to avoid duplication
@@ -118,7 +159,7 @@ async function setupSupabaseListeners(
         logger.debug("User joined room:", payload);
 
         if (onParticipantJoined) {
-          await onParticipantJoined(payload.new);
+          await onParticipantJoined(payload.new as Participant);
         }
       }
     )
@@ -134,35 +175,29 @@ async function setupSupabaseListeners(
         logger.debug("User left room:", payload);
 
         if (onParticipantLeft) {
-          await onParticipantLeft(payload.old);
+          await onParticipantLeft(payload.old as Participant);
         }
       }
     );
 
   // Subscribe to the channel
   logger.info("Subscribing to channel...");
-  channel.subscribe((status) => {
-    logger.info(`Subscription status changed: ${status}`);
-    if (status === "SUBSCRIBED") {
-      logger.info("Successfully subscribed to database changes!");
-    }
-    if (status === "CHANNEL_ERROR") {
-      logger.error("Failed to subscribe to database changes");
-    }
-  });
-
-  logger.info("Supabase real-time listeners set up successfully");
-  logger.debug("Channel subscription state:", channel.state);
-
-  return { channel };
+  try {
+    await channel.subscribe();
+    logger.info("Successfully subscribed to real-time events");
+    return channel;
+  } catch (error) {
+    logger.error("Error subscribing to channel:", error instanceof Error ? error.message : String(error));
+    throw error;
+  }
 }
 
 /**
  * Get user profiles for a list of user IDs
- * @param {Array<string>} userIds - Array of user IDs
- * @returns {Promise<Object>} Map of user IDs to names
+ * @param userIds - Array of user IDs
+ * @returns Map of user IDs to names
  */
-async function getUserProfiles(userIds) {
+async function getUserProfiles(userIds: string[]): Promise<Record<string, string>> {
   try {
     // Filter out null or undefined user IDs to prevent database errors
     const validUserIds = userIds.filter(
@@ -176,7 +211,7 @@ async function getUserProfiles(userIds) {
     }
 
     // Create a mapping for null/undefined IDs
-    const userNames = {};
+    const userNames: Record<string, string> = {};
     userIds.forEach((id) => {
       if (id === null || id === undefined) {
         userNames[id] = "System";
@@ -208,22 +243,17 @@ async function getUserProfiles(userIds) {
 
     return userNames;
   } catch (error) {
-    logger.error("Error getting user profiles:", error);
+    logger.error("Error getting user profiles:", error instanceof Error ? error.message : String(error));
     return {};
   }
 }
 
 /**
- * Get agent profiles for a list of agent IDs
- * @param {Array<string>} agentIds - Array of agent IDs
- * @returns {Promise<Object>} Map of agent IDs to names
- */
-/**
  * Check if a user ID belongs to an AI agent
- * @param {string} userId - User ID to check
- * @returns {Promise<boolean>} True if user is an AI agent
+ * @param userId - User ID to check
+ * @returns True if user is an AI agent
  */
-async function isUserAnAgent(userId) {
+async function isUserAnAgent(userId: string): Promise<boolean> {
   // If userId is null/undefined, it's not an agent
   if (!userId) {
     logger.debug(
@@ -246,12 +276,17 @@ async function isUserAnAgent(userId) {
 
     return data !== null;
   } catch (error) {
-    logger.error("Error in isUserAnAgent:", error);
+    logger.error("Error in isUserAnAgent:", error instanceof Error ? error.message : String(error));
     return false;
   }
 }
 
-async function getAgentProfiles(agentIds) {
+/**
+ * Get agent profiles for a list of agent IDs
+ * @param agentIds - Array of agent IDs
+ * @returns Map of agent IDs to names
+ */
+async function getAgentProfiles(agentIds: string[]): Promise<Record<string, string>> {
   try {
     const { data: agentData, error: agentError } = await supabase
       .from("agents")
@@ -263,7 +298,7 @@ async function getAgentProfiles(agentIds) {
       return {};
     }
 
-    const agentNames = {};
+    const agentNames: Record<string, string> = {};
     if (agentData && agentData.length > 0) {
       agentData.forEach((agent) => {
         agentNames[agent.id] = agent.name;
@@ -273,19 +308,19 @@ async function getAgentProfiles(agentIds) {
 
     return agentNames;
   } catch (error) {
-    logger.error("Error getting agent profiles:", error);
+    logger.error("Error getting agent profiles:", error instanceof Error ? error.message : String(error));
     return {};
   }
 }
 
 /**
  * Save a message to the database
- * @param {string} roomId - Room ID
- * @param {string} userId - User ID
- * @param {string} content - Message content
- * @returns {Promise<Object>} Saved message
+ * @param roomId - Room ID
+ * @param userId - User ID
+ * @param content - Message content
+ * @returns Saved message
  */
-async function saveMessage(roomId, userId, content) {
+async function saveMessage(roomId: string, userId: string, content: string): Promise<Message> {
   try {
     const { data, error } = await supabase
       .from(config.supabase.messagesTable)
@@ -305,29 +340,29 @@ async function saveMessage(roomId, userId, content) {
     logger.info(`Message saved to database for room: ${roomId}`);
     return data;
   } catch (error) {
-    logger.error("Error in saveMessage:", error);
+    logger.error("Error in saveMessage:", error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
 
 /**
  * Save a generation to the database
- * @param {string} roomId - Room ID
- * @param {string} html - HTML content
- * @param {string} summary - Summary
- * @param {string} createdBy - Creator ID
- * @param {string} type - Generation type
- * @param {Object} metadata - Additional metadata
- * @returns {Promise<Object>} Saved generation
+ * @param roomId - Room ID
+ * @param html - HTML content
+ * @param summary - Summary
+ * @param createdBy - Creator ID
+ * @param type - Generation type
+ * @param metadata - Additional metadata
+ * @returns Saved generation
  */
 async function saveGeneration(
-  roomId,
-  html,
-  summary,
-  createdBy,
-  type,
-  metadata
-) {
+  roomId: string,
+  html: string,
+  summary: string,
+  createdBy: string,
+  type: string,
+  metadata?: Record<string, any>
+): Promise<Generation> {
   try {
     const { data: generation, error: insertError } = await supabase
       .from("chat_room_generations")
@@ -349,17 +384,17 @@ async function saveGeneration(
     logger.info(`Generation stored in database with ID: ${generation.id}`);
     return generation;
   } catch (error) {
-    logger.error("Error saving generation:", error);
+    logger.error("Error saving generation:", error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
 
 /**
  * Get the last generation for a room
- * @param {string} roomId - Room ID
- * @returns {Promise<Object>} Last generation
+ * @param roomId - Room ID
+ * @returns Last generation
  */
-async function getLastGeneration(roomId) {
+async function getLastGeneration(roomId: string): Promise<Generation | null> {
   try {
     const { data, error } = await supabase
       .from("chat_room_generations")
@@ -375,12 +410,13 @@ async function getLastGeneration(roomId) {
 
     return data && data.length > 0 ? data[0] : null;
   } catch (error) {
-    logger.error("Error in getLastGeneration:", error);
+    logger.error("Error in getLastGeneration:", error instanceof Error ? error.message : String(error));
     return null;
   }
 }
 
-module.exports = {
+// Export individual functions and types
+export {
   supabase,
   isUserAnAgent,
   fetchAIAgents,
@@ -392,3 +428,19 @@ module.exports = {
   saveGeneration,
   getLastGeneration,
 };
+
+// Export as default for compatibility with existing imports
+const supabaseService = {
+  supabase,
+  isUserAnAgent,
+  fetchAIAgents,
+  fetchRecentMessages,
+  setupSupabaseListeners,
+  getUserProfiles,
+  getAgentProfiles,
+  saveMessage,
+  saveGeneration,
+  getLastGeneration,
+};
+
+export default supabaseService;

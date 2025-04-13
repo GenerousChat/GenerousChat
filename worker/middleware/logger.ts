@@ -1,7 +1,10 @@
-const morgan = require('morgan');
-const winston = require('winston');
+import morgan from 'morgan';
+import winston from 'winston';
 
-// Configure winston logger
+/**
+ * Configure winston logger
+ * Logs information to files and console based on environment
+ */
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
@@ -21,14 +24,17 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 
-// Request logging middleware
+/**
+ * Request logging middleware
+ * Uses morgan to format HTTP request logs and sends them to winston
+ */
 const requestLogger = morgan('combined', {
     stream: {
-        write: (message) => logger.info(message.trim())
+        write: (message: string) => logger.info(message.trim())
     }
 });
 
-module.exports = {
+export {
     logger,
     requestLogger
 };

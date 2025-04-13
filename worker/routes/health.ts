@@ -1,17 +1,18 @@
 /**
  * Health check endpoint
  */
-const express = require('express');
+import express, { Request, Response } from 'express';
+import logger from '../utils/logger.js';
+
 const router = express.Router();
-const logger = require('../utils/logger');
 
 /**
  * GET /health
  * Health check endpoint
  */
-router.get('/', (req, res) => {
+router.get('/', (req: Request, res: Response) => {
   logger.info('Health check requested');
   res.status(200).json({ status: 'ok' });
 });
 
-module.exports = router;
+export default router;

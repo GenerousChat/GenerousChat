@@ -1,9 +1,29 @@
-const express = require('express');
-const router = express.Router();
-const logger = require('../config/logger');
+import express, { Request, Response } from 'express';
+import logger from '../config/logger.js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import pusherService from '../services/pusher.js';
 
-router.post('/generation', async (req, res) => {
-    const { roomId, htmlContent, summary, createdBy } = req.body;
+// Define interfaces for request body and application locals
+interface CanvasGenerationBody {
+  roomId: string;
+  htmlContent: string;
+  summary?: string;
+  createdBy: string;
+}
+
+// Extend Express Request to include app.locals types
+interface RequestWithSupabase extends Request {
+  app: {
+    locals: {
+      supabase: SupabaseClient;
+    }
+  }
+}
+
+const router = express.Router();
+
+router.post('/generation', async (req: RequestWithSupabase, res: Response) => {
+    const { roomId, htmlContent, summary, createdBy } = req.body as CanvasGenerationBody;
     
     try {
         const { data: generation, error } = await req.app.locals.supabase
@@ -23,21 +43,25 @@ router.post('/generation', async (req, res) => {
 
         if (error) throw error;
 
-        await req.app.locals.pusher.sendEvent(`room-${roomId}`, 'new-generation', {
-            generation_id: generation.id,
-            type: 'visualization',
-            created_at: generation.created_at,
-        });
+        await pusherService.sendNewGeneration(
+            roomId,
+            generation.id,
+            'visualization',
+            generation.created_at
+        );
 
         logger.info('Canvas generation created', { roomId, generationId: generation.id });
         res.json(generation);
     } catch (error) {
-        logger.error('Error creating canvas generation', { error, roomId });
+        logger.error('Error creating canvas generation', { 
+            error: error instanceof Error ? error.message : String(error), 
+            roomId 
+        });
         res.status(500).json({ error: 'Failed to create canvas generation' });
     }
 });
 
-router.get('/:roomId/latest', async (req, res) => {
+router.get('/:roomId/latest', async (req: RequestWithSupabase, res: Response) => {
     const { roomId } = req.params;
     
     try {
@@ -55,9 +79,12 @@ router.get('/:roomId/latest', async (req, res) => {
         logger.info('Latest canvas retrieved', { roomId });
         res.json(data);
     } catch (error) {
-        logger.error('Error fetching latest canvas', { error, roomId });
+        logger.error('Error fetching latest canvas', { 
+            error: error instanceof Error ? error.message : String(error), 
+            roomId 
+        });
         res.status(500).json({ error: 'Failed to fetch latest canvas' });
     }
 });
 
-module.exports = router;
+export default router;

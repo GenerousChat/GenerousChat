@@ -1,13 +1,13 @@
 /**
  * Main router that combines all route handlers
  */
-const express = require('express');
+import express, { Request, Response } from 'express';
 const router = express.Router();
 
 // Import route handlers
-const healthRoutes = require('./health');
-const pusherRoutes = require('./pusher');
-const aiRoutes = require('./ai');
+import healthRoutes from './health.js';
+import pusherRoutes from './pusher.js';
+import aiRoutes from './ai.js';
 
 // Register routes
 router.use('/health', healthRoutes);
@@ -15,8 +15,8 @@ router.use('/test-pusher', pusherRoutes);
 router.use('/ai', aiRoutes);
 
 // Root health check
-router.get('/', (req, res) => {
+router.get('/', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'Supabase to Pusher bridge worker is running' });
 });
 
-module.exports = router;
+export default router;

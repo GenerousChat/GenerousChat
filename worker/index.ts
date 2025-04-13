@@ -3,29 +3,16 @@
  * This worker listens to Supabase database changes and forwards them to Pusher
  */
 
-// Import modules normally
+// Import modules
 import express from 'express';
 import logger from './utils/logger.js';
-import supabaseService from './services/supabase.js';
+import supabaseService, { Message, Participant } from './services/supabase.js'; 
 import pusherService from './services/pusher.js';
 import aiService from './services/ai.js';
-import routes from './routes.js';
+import routes from './routes/index.js';
 import errorHandler from './middleware/error-handler.js';
 
-// Define types for the message and participant objects
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  room_id: string;
-}
-
-interface Participant {
-  user_id: string;
-  room_id: string;
-  joined_at?: string;
-}
+// Message and Participant types are now imported from services/supabase.ts
 
 // Main application setup will be done after imports are resolved
 

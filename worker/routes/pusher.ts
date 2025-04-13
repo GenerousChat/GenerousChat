@@ -1,25 +1,32 @@
 /**
  * Pusher test endpoints
  */
-const express = require('express');
+import express, { Request, Response } from 'express';
+import logger from '../utils/logger.js';
+import pusherService, { VisualizationData } from '../services/pusher.js';
+
 const router = express.Router();
-const logger = require('../utils/logger');
-const pusherService = require('../services/pusher');
+
+// Define interface for request body
+interface PusherTestRequest {
+  roomId?: string;
+  message?: string;
+  messageType?: string;
+  htmlContent?: string;
+}
 
 /**
  * POST /test-pusher
  * Test Pusher integration
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     logger.info('Testing Pusher integration');
-    const roomId = req.body.roomId || 'test-room';
-    const message = req.body.message || 'Test message';
-    const messageType = req.body.messageType || 'text';
+    const { roomId = 'test-room', message = 'Test message', messageType = 'text', htmlContent } = req.body as PusherTestRequest;
 
     if (messageType === 'html') {
       // Test sending HTML content
-      const htmlContent = req.body.htmlContent || `
+      const html = htmlContent || `
         <!DOCTYPE html>
         <html>
         <head>
@@ -43,12 +50,14 @@ router.post('/', async (req, res) => {
       // Send HTML content as a special event type
       logger.info('Sending test HTML visualization to Pusher');
 
-      const visualizationData = {
-        id: 'test-viz-' + Date.now(),
-        html: htmlContent,
-        summary: 'Test HTML Visualization',
-        created_at: new Date().toISOString(),
-        user_id: 'test-user',
+      const visualizationData: VisualizationData = {
+        html: html,
+        metadata: {
+          id: 'test-viz-' + Date.now(),
+          summary: 'Test HTML Visualization',
+          created_at: new Date().toISOString(),
+          user_id: 'test-user',
+        }
       };
 
       try {
@@ -59,7 +68,7 @@ router.post('/', async (req, res) => {
           message: 'Test HTML visualization sent to Pusher',
         });
       } catch (error) {
-        logger.error('Error sending test HTML visualization to Pusher:', error);
+        logger.error('Error sending test HTML visualization to Pusher:', error instanceof Error ? error.message : String(error));
         res.status(500).json({ error: 'Failed to send HTML visualization to Pusher' });
       }
     } else {
@@ -74,9 +83,9 @@ router.post('/', async (req, res) => {
       res.status(200).json({ success: true, message: 'Test message sent to Pusher' });
     }
   } catch (error) {
-    logger.error('Error testing Pusher:', error);
+    logger.error('Error testing Pusher:', error instanceof Error ? error.message : String(error));
     res.status(500).json({ error: 'Failed to send test message to Pusher' });
   }
 });
 
-module.exports = router;
+export default router;

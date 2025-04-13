@@ -1,13 +1,19 @@
-const morgan = require('morgan');
-const logger = require('../config/logger');
+import morgan from 'morgan';
+import logger from '../config/logger.js';
+import { Request } from 'express';
 
 // Create a write stream for morgan that writes to our winston logger
 const stream = {
-    write: (message) => logger.info(message.trim())
+    write: (message: string) => logger.info(message.trim())
 };
 
+// Define a type for the request with body
+interface RequestWithBody extends Request {
+    body: Record<string, any>;
+}
+
 // Create custom morgan token for request body
-morgan.token('body', (req) => {
+morgan.token('body', (req: RequestWithBody) => {
     if (req.body) {
         const bodyClone = { ...req.body };
         // Remove sensitive information if present
@@ -25,4 +31,4 @@ const morganMiddleware = morgan(
     { stream }
 );
 
-module.exports = morganMiddleware;
+export default morganMiddleware;

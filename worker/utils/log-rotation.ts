@@ -1,11 +1,15 @@
-const fs = require('fs');
-const path = require('path');
-const logger = require('../config/logger');
+import fs from 'fs';
+import path from 'path';
+import logger from '../config/logger.js';
 
 const MAX_LOG_FILES = 5;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
-function rotateLogs() {
+/**
+ * Rotates log files when they exceed the maximum size
+ * Creates backup files with incrementing numbers and removes the oldest logs
+ */
+function rotateLogs(): void {
     const logsDir = path.join(__dirname, '../logs');
     const logFiles = ['error.log', 'combined.log'];
 
@@ -13,6 +17,12 @@ function rotateLogs() {
         const filePath = path.join(logsDir, filename);
 
         try {
+            // Check if file exists before attempting to rotate
+            if (!fs.existsSync(filePath)) {
+                logger.debug(`Log file does not exist: ${filename}`);
+                return;
+            }
+
             const stats = fs.statSync(filePath);
             
             if (stats.size >= MAX_FILE_SIZE_BYTES) {
@@ -39,7 +49,7 @@ function rotateLogs() {
                 logger.info(`Rotated log file: ${filename}`);
             }
         } catch (error) {
-            logger.error(`Error rotating log file ${filename}:`, error);
+            logger.error(`Error rotating log file ${filename}:`, error instanceof Error ? error.message : String(error));
         }
     });
 }
@@ -47,5 +57,4 @@ function rotateLogs() {
 // Run log rotation check every hour
 setInterval(rotateLogs, 60 * 60 * 1000);
 
-// Export for manual rotation if needed
-module.exports = rotateLogs;
+export default rotateLogs;
