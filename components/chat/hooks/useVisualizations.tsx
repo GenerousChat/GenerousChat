@@ -51,12 +51,20 @@ export function useVisualizations(roomId: string) {
 
     // Listen for new generation notifications
     channel.bind('new-generation', async (data: any) => {
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
+      console.log("New generation received:", data);
       try {
         const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
-        
-        if (notificationData.type !== 'visualization') {
-          return; // Only handle visualization type generations
-        }
         
         // Fetch the generation from the database
         const { data: generation, error } = await supabase
@@ -64,6 +72,11 @@ export function useVisualizations(roomId: string) {
           .select('*')
           .eq('id', notificationData.generation_id)
           .single();
+
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS");
+        console.log("ASDASDASDSAS" , {generation, error});
 
         if (error) {
           throw new Error(`Error fetching generation: ${error.message}`);

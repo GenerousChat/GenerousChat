@@ -45,10 +45,10 @@ const xai = createXai({
  * This is a placeholder as the actual function is imported from a different location
  */
 // Import directly in the places where it's used or define a mock function if needed
-async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<void> {
+async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<any> {
   // This is a placeholder - the actual implementation is imported from another module
   logger.info(`Generating canvas visualization for canvas ${canvasId}`);
-  generateCanvas(canvasId, messages, prompt, roomId);
+  return await generateCanvas(canvasId, messages, prompt, roomId);
 }
 
 /**
@@ -711,12 +711,22 @@ Chat history: ${messageHistory}
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
-         const { someGeneration } = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
+         const someGeneration  = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
 
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+         console.log("DREAM");
+
+         console.log({ someGeneration });
           await pusherService.sendNewGeneration(
             roomId,
             someGeneration.id,
-            "visualization",
+            "new-generation",
             someGeneration.created_at || new Date().toISOString()
           );
   
@@ -730,7 +740,7 @@ Chat history: ${messageHistory}
         await pusherService.sendNewGeneration(
           roomId,
           generation.id,
-          "visualization",
+          "new-generation",
           generation.created_at || new Date().toISOString()
         );
 
