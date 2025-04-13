@@ -249,8 +249,8 @@ Based on these constraints, analyze the following message and rank the confidenc
     `;
 
     const result = await generateObject({
-      // model: openai.responses("gpt-4o"),
-      model: xai("grok-3-mini-beta"),
+      model: openai.responses("gpt-4o"),
+      // model: xai("grok-3-mini-beta"),
 
       temperature: 0.1,
       schema: z.object({
