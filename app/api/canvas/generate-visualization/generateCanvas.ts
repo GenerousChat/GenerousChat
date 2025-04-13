@@ -15,7 +15,7 @@ export interface CanvasMessage {
 }
 
 // Utility function for logging sections
-export function logSection(title: string, content?: any) {
+export async function logSection(title: string, content?: any) {
   console.log(`\n${'='.repeat(80)}`);
   console.log(`💡 ${title.toUpperCase()} 💡`);
   console.log(`${'='.repeat(80)}`);
@@ -30,7 +30,7 @@ export function logSection(title: string, content?: any) {
 }
 
 // Helper function to apply updates recursively
-export function applyUpdates(target: any, updates: any) {
+export async function applyUpdates(target: any, updates: any) {
   if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
     return updates;
   }
@@ -56,7 +56,7 @@ export function applyUpdates(target: any, updates: any) {
 }
 
 // Main function to generate canvas visualization
-export async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string, roomId: string) {
+export async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string, roomId?: string) {
   if (!canvasId || !prompt) {
     logSection('ERROR', 'Missing required fields (canvasId or prompt)');
     throw new Error('Missing required fields (canvasId or prompt)');
@@ -114,7 +114,7 @@ export async function generateCanvasVisualization(canvasId: string, messages: Ca
         
         // Load the template configuration
         const template = await loadTemplate(templateSelection.templateId);
-        logTemplateInfo(template);
+        logTemplateInfo('TEMPLATE_INFO', template);
         
         // Extract properties from the prompt using AI
         logSection('EXTRACTING PROPERTIES', 'Using AI to extract properties from prompt...');
@@ -123,7 +123,7 @@ export async function generateCanvasVisualization(canvasId: string, messages: Ca
 You are a helpful assistant that extracts structured data from user prompts.
 You need to extract properties for a visualization template with the following schema:
 
-${template.schema}
+${template?.zod_schema || 'No schema provided - please extract reasonable properties based on the prompt'}
 
 IMPORTANT INSTRUCTIONS:
 1. Extract ONLY the properties defined in the schema above
@@ -148,12 +148,15 @@ IMPORTANT INSTRUCTIONS:
         logSection('EXTRACTED PROPERTIES', extractedProps);
         
         // Validate the extracted properties against the template schema
-        const { isValid, validatedProps, errors } = validateProps(extractedProps, template.schema);
+        const templateType = template?.type || template?.id || templateSelection.templateId;
+        const validationResult = await validateProps(templateType, extractedProps);
         
-        if (!isValid) {
-          logSection('VALIDATION ERRORS', errors);
-          throw new Error(`Template property validation failed: ${errors.join(', ')}`);
+        if (!validationResult.valid) {
+          logSection('VALIDATION ERRORS', validationResult.detailedErrors || 'Validation failed');
+          throw new Error(`Template property validation failed: ${validationResult.detailedErrors || 'Unknown error'}`);
         }
+        
+        const validatedProps = validationResult.data;
         
         logSection('VALIDATED PROPERTIES', validatedProps);
         
@@ -164,20 +167,49 @@ IMPORTANT INSTRUCTIONS:
         const templateData = {
           props: validatedProps,
           metadata: {
-            templateId: template.id,
+            templateId: template?.id || templateSelection.templateId,
             confidence: templateSelection.confidence,
-            prompt: prompt,
-            userId: user.id
+            prompt: prompt
+            // User authentication is commented out, so we can't access user.id
           }
         };
         
         // Generate HTML using the template
-        let htmlContent = template.generateHtml(templateData);
+        let htmlContent = '';
         
-        logSection('TEMPLATE HTML GENERATED', {
-          length: htmlContent.length,
-          templateId: template.id
-        });
+        // Check if template exists and has a generateHtml method
+        if (template) {
+          // Since generateHtml is not part of the TemplateConfig interface, we need to handle this differently
+          // We'll use the template string from the TemplateConfig and do simple variable substitution
+          htmlContent = template.template || '';
+          
+          // Simple template substitution for demonstration
+          if (templateData.props) {
+            // Replace placeholders with actual values
+            Object.entries(templateData.props).forEach(([key, value]) => {
+              const placeholder = `{{{${key}}}}`;
+              htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), JSON.stringify(value));
+            });
+          }
+          
+          // If we still don't have HTML content, use fallback
+          if (!htmlContent || htmlContent.trim() === '') {
+            htmlContent = template.fallback_html || '<div>No visualization could be generated</div>';
+          }
+          
+          logSection('TEMPLATE HTML GENERATED', {
+            length: htmlContent.length,
+            templateId: template?.id || templateSelection.templateId
+          });
+        } else {
+          // Fallback HTML if no template is available
+          htmlContent = '<div>No template available for visualization</div>';
+          
+          logSection('FALLBACK HTML GENERATED', {
+            length: htmlContent.length,
+            reason: 'No template available'
+          });
+        }
         
         // Store the generated visualization in the database
         const { data: generation, error: insertError } = await supabase
@@ -186,11 +218,12 @@ IMPORTANT INSTRUCTIONS:
             canvas_id: canvasId,
             html: htmlContent,
             render_method: 'template',
-            summary: `${template.name}: ${prompt.substring(0, 50)}...`,
-            created_by: user.id,
-            type: template.type || "visualization",
+            summary: `${template?.name || 'Visualization'}: ${prompt.substring(0, 50)}...`,
+            // User authentication is commented out, so we can't access user.id
+            // created_by: user.id,
+            type: template?.type || "visualization",
             metadata: {
-              template_id: template.id,
+              template_id: template?.id || templateSelection.templateId,
               template_confidence: templateSelection.confidence,
               properties: validatedProps
             },
@@ -206,7 +239,7 @@ IMPORTANT INSTRUCTIONS:
         logSection('TEMPLATE VISUALIZATION STORED', {
           id: generation.id,
           canvasId: canvasId,
-          templateId: template.id
+          templateId: template?.id || templateSelection.templateId
         });
         
         // Return the HTML content and generation details

@@ -1,8 +1,8 @@
 import { signOutAction } from "@/app/actions";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Badge } from "./badge";
+import { Button } from "./button";
 import { createClient } from "@/utils/supabase/server";
 import { UserCircle, LogOut } from "lucide-react";
 import { ShinyButton } from "@/components/ui/magicui/shiny-button";

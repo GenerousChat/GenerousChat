@@ -11,8 +11,8 @@ interface CanvasGenerationBody {
   createdBy: string;
 }
 
-// Extend Express Request to include app.locals types
-interface RequestWithSupabase extends Request {
+// Define a custom type for request with Supabase client
+type RequestWithSupabase = Request & {
   app: {
     locals: {
       supabase: SupabaseClient;

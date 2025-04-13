@@ -44,10 +44,10 @@ type CanvasGeneration = {
 
 export default function Canvas({
   currentUser,
-  roomId
+  roomId = 'default-room' // Provide a default value for roomId
 }: {
   currentUser: User;
-  roomId: string;
+  roomId?: string; // Make roomId optional
 }) {
   log('Canvas component rendering, user:', currentUser.id, 'room:', roomId);
   
@@ -161,7 +161,9 @@ export default function Canvas({
         }
       } catch (err) {
         log('Error in fetchInitialGenerations:', err);
-        setVisualizationError(`Failed to load visualizations: ${err.message}`);
+        // Handle the unknown error type properly
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setVisualizationError(`Failed to load visualizations: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
@@ -190,7 +192,7 @@ export default function Canvas({
             setGenerations(prev => [newGeneration, ...prev]);
             
             // Set as active if it's the first one or if we don't have an active one
-            if (!activeGeneration || prev.length === 0) {
+            if (!activeGeneration || generations.length === 0) {
               setActiveGeneration(newGeneration);
               loadGenerationContent(newGeneration);
             }
@@ -253,7 +255,9 @@ export default function Canvas({
       }
     } catch (err) {
       log('Error loading generation content:', err);
-      setVisualizationError(`Failed to load visualization: ${err.message}`);
+      // Handle the unknown error type properly
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setVisualizationError(`Failed to load visualization: ${errorMessage}`);
     }
   };
   

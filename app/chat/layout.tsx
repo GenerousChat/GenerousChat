@@ -1,4 +1,4 @@
-import AuthButton from "@/components/header-auth";
+import AuthButton from "@/components/ui/header-auth";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import Link from "next/link";
 

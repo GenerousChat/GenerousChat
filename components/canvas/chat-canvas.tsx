@@ -106,7 +106,9 @@ export default function Canvas({
         }
       } catch (err) {
         log('Error in fetchInitialGenerations:', err);
-        setVisualizationError(`Failed to load visualizations: ${err.message}`);
+        // Handle the unknown error type properly
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        setVisualizationError(`Failed to load visualizations: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
@@ -243,7 +245,9 @@ export default function Canvas({
       }
     } catch (err) {
       log('Error loading generation content:', err);
-      setVisualizationError(`Failed to load visualization: ${err.message}`);
+      // Handle the unknown error type properly
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setVisualizationError(`Failed to load visualization: ${errorMessage}`);
     }
   };
   
