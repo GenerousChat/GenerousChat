@@ -4,10 +4,8 @@ import { redirect } from "next/navigation";
 import CreateRoomForm from "@/components/chat/create-room-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Plus, Users } from "lucide-react";
-import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { ShinyButton } from "@/components/ui/magicui/shiny-button";
 
 export default async function ChatPage() {
   const supabase = await createClient();
@@ -33,19 +31,19 @@ export default async function ChatPage() {
   return (
     <div className="flex flex-col gap-10 pb-12 pt-8">
       <div className="flex justify-between items-center">
-        <BlurFade delay={0.2}>
+        <div>
           <h2 className="text-xl font-semibold">Spaces</h2>
-        </BlurFade>
+        </div>
         
-        <BlurFade delay={0.3}>
+        <div>
           <CreateRoomForm userId={user.id} />
-        </BlurFade>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rooms && rooms.length > 0 ? (
           rooms.map((room, index) => (
-            <BlurFade key={room.id} delay={0.2 + (index * 0.1)} className="h-full">
+            <div key={room.id} className="h-full">
               <div className="w-full h-full [perspective:1000px]">
                 <CardContainer className="w-full h-full [transform-style:preserve-3d]">
                   <div className="w-full h-full rounded-xl p-[1px] [transform-style:preserve-3d] relative overflow-hidden shadow-md dark:shadow-primary/5 bg-gradient-to-br from-primary/40 via-primary/25 to-primary/5 dark:from-primary/30 dark:via-primary/20 dark:to-primary/10">
@@ -68,9 +66,9 @@ export default async function ChatPage() {
                           </CardItem>
                           <CardItem translateZ={35} className="[transform-style:preserve-3d]">
                             <Link href={`/chat/${room.id}`} className="block [transform-style:preserve-3d]">
-                              <ShinyButton className="px-4 py-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white dark:text-primary-foreground rounded-lg shadow-md dark:shadow-primary/20 transition-all duration-300 hover:scale-105">
+                              <button className="px-4 py-2 rounded-lg">
                                 Join Chat
-                              </ShinyButton>
+                              </button>
                             </Link>
                           </CardItem>
                         </div>
@@ -79,10 +77,10 @@ export default async function ChatPage() {
                   </div>
                 </CardContainer>
               </div>
-            </BlurFade>
+            </div>
           ))
         ) : (
-          <BlurFade delay={0.3} className="col-span-full bg-muted/10 dark:bg-muted/5 rounded-xl border border-primary/10 dark:border-primary/20 p-12 text-center shadow-sm">
+          <div className="col-span-full rounded-xl border p-12 text-center">
             <div className="flex flex-col items-center gap-3">
               <div className="h-16 w-16 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-inner">
                 <MessageSquare className="h-8 w-8 text-primary" />
@@ -95,7 +93,7 @@ export default async function ChatPage() {
                 <CreateRoomForm userId={user.id} />
               </div>
             </div>
-          </BlurFade>
+          </div>
         )}
       </div>
     </div>
