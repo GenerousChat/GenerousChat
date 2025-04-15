@@ -1,18 +1,13 @@
-/**
- * AI service for generating responses and visualizations
- */
 import { generateText, generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import config from "../config/index.js";
 import logger from "../utils/logger.js";
-import supabaseService, { Message, Participant } from "./supabase.js";
+import supabaseService, { Message } from "./supabase.js";
 import pusherService from "./pusher.js";
 import shouldAgentRespond from "../utils/shouldAgentRespond.js";
-import { createXai } from "@ai-sdk/xai";
-// Import placeholder for canvas visualization - to be implemented in worker context
 import { generateCanvasVisualization as generateCanvas } from "./ai/generateCanvas";
+import selectBestAgent from "./ai/selectBestAgent";
 interface Agent {
   id: string;
   name: string;
@@ -21,24 +16,6 @@ interface Agent {
   avatar_url?: string;
 }
 
-interface VisualizationAnalysisResult {
-  score: number;
-  reason: string;
-}
-
-interface AgentConfidence {
-  agent_id: string;
-  confidence: number;
-}
-
-interface AgentSelectionResult {
-  agents_confidence: AgentConfidence[];
-}
-
-// Initialize XAI client if API key is available
-const xai = createXai({
-  apiKey: process.env.XAI_API_KEY,
-});
 
 /**
  * Function to generate canvas visualizations - imported from external module
@@ -244,178 +221,6 @@ async function analyzeMessageForVisualizationIntent(
   return confidence;
 }
 
-/**
- * Select the best AI agent for a conversation
- * @param roomId - Room ID
- * @param lastUserMessage - Last user message
- * @param messageHistory - Message history
- * @returns Selected agent or null if no agents available
- */
-async function selectBestAgent(
-  roomId: string, 
-  lastUserMessage: Message, 
-  messageHistory: string
-): Promise<Agent | null> {
-  try {
-    // Get AI agents from the service
-    const aiAgents = await supabaseService.fetchAIAgents();
-
-    // Log the number of agents available for debugging
-    logger.info(`Selecting from ${aiAgents.length} available AI agents`);
-
-    if (!aiAgents || aiAgents.length === 0) {
-      // No agents available, return null
-      logger.info("No AI agents available in the database");
-      return null;
-    }
-
-    // If there's only one agent, return it immediately
-    if (aiAgents.length === 1) {
-      logger.info(`Only one agent available, selecting ${aiAgents[0].name}`);
-      return aiAgents[0] as Agent;
-    }
-
-    // Get the last generation HTML for context
-    const lastGeneration = await supabaseService.getLastGeneration(roomId);
-    const lastGenerationHtml = lastGeneration?.html || "";
-
-    // Create a prompt for agent selection
-    const prompt = `
-You are controlling a group of AI agents with distinct personalities. Each agent has its own unique perspective and expertise. Your task is to analyze the last message in the conversation and determine if any of the agents should respond. Consider the context of the conversation, the personalities of the agents, and the content of the last message.
- 
-First, decide whether it is converationally appropriate to respond. You should engage in natural conversation within the group, adapting to the current social context and being careful not to let any one agent dominate the conversation. 
-
-If a response is warranted, then decide which agent will respond by judging how likely each agent is to offer meaningful contributions to the conversation, based on their personality and the context of the conversation. Only respond if you are confident that it is converationally appropriate and the agent's personality aligns with the topic of the last message.
-
-Based on these constraints, analyze the following message and rank the confidence interval for each agent:      
-      Agents:
-      ${aiAgents
-        .map(
-          (agent) => `
-        Agent Name:
-        ${agent.name}: 
-        Agent Id: 
-        ${agent.id}
-        Agent Personality:
-        ${(agent as any).personality_prompt || "No personality defined"}
-      `
-        )
-        .join("\n\n\n")}
-
-      This is the current conversation canvas, only use it in ranking if it is extremely relevant.
-      ${lastGenerationHtml}
-
-      Message History:
-      ${messageHistory}
-
-      Last Message: 
-      ${lastUserMessage.content}
-
-      All things considered, should an agent chime in on the conversation given it's personality and the context of the conversation?
-      
-      Return an array of objects containing agent IDs and their confidence scores for a meaningful response.
-    `;
-
-    const result = await generateObject({
-      model: openai.responses("gpt-4o"),
-      temperature: 0.1,
-      schema: z.object({
-        agents_confidence: z
-          .array(
-            z.object({
-              agent_id: z.string(),
-              confidence: z.number(),
-            })
-          )
-          .describe(
-            "An array of objects containing agent IDs and their confidence scores for a meaningful response"
-          ),
-      }),
-      prompt,
-    });
-
-    let selectedAgents: AgentConfidence[] = [];
-    
-    try {
-      // Use type assertion to safely access nested properties
-      const responseObj = result.response as Record<string, any>;
-      
-      // Check if we have the expected nested structure
-      if (responseObj?.body && 
-          typeof responseObj.body === 'object' && 
-          'output' in responseObj.body && 
-          Array.isArray(responseObj.body.output) && 
-          responseObj.body.output.length > 0 && 
-          responseObj.body.output[0]?.content && 
-          Array.isArray(responseObj.body.output[0].content) && 
-          responseObj.body.output[0].content.length > 0 && 
-          responseObj.body.output[0].content[0]?.text) {
-        
-        // Parse the JSON text from the first content item
-        const parsedData = JSON.parse(
-          responseObj.body.output[0].content[0].text
-        );
-        if (parsedData.agents_confidence) {
-          selectedAgents = parsedData.agents_confidence;
-          logger.debug(
-            "Successfully parsed agent confidences:",
-            selectedAgents
-          );
-        }
-      }
-    } catch (error) {
-      logger.error("Error parsing agent selection result:", error instanceof Error ? error.message : String(error));
-    }
-
-    if (selectedAgents.length === 0) {
-      return null;
-    }
-
-    // Map agent IDs to names and confidences for logging
-    const agentConfidenceMap = selectedAgents.reduce<Record<string, number>>(
-      (acc, item) => {
-        acc[item.agent_id] = item.confidence;
-        return acc;
-      },
-      {}
-    );
-
-    logger.info(
-      "Agent selection confidence scores:",
-      JSON.stringify(agentConfidenceMap)
-    );
-
-    // Sort agents by confidence (descending)
-    selectedAgents.sort((a, b) => b.confidence - a.confidence);
-
-    // If highest confidence is below threshold, don't select any agent
-    if (selectedAgents[0].confidence < 0.05) {
-      logger.info(
-        `Highest agent confidence (${selectedAgents[0].confidence}) is below threshold, not selecting any agent`
-      );
-      return null;
-    }
-
-    // Find the agent with the highest confidence
-    const bestAgentId = selectedAgents[0].agent_id;
-    const bestAgent = aiAgents.find((agent) => agent.id === bestAgentId);
-
-    if (!bestAgent) {
-      logger.warn(
-        `Selected agent ID ${bestAgentId} not found in available agents`
-      );
-      return null;
-    }
-
-    logger.info(
-      `Selected agent: ${bestAgent.name} (ID: ${bestAgent.id}) with confidence ${selectedAgents[0].confidence}`
-    );
-    return bestAgent as Agent;
-  } catch (error) {
-    logger.error("Error selecting best agent:", error instanceof Error ? error.message : String(error));
-    return null;
-  }
-}
 
 /**
  * Generate an AI text response
@@ -569,41 +374,7 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
   }
 }
 
-/**
- * Mark messages as read by the AI
- * @param roomId - Room ID
- * @param messages - Messages to mark as read
- */
-async function markMessagesAsRead(roomId: string, messages: Message[]): Promise<void> {
-  try {
-    if (!messages || messages.length === 0) {
-      return;
-    }
 
-    // Get IDs of messages that haven't been read by AI
-    const unreadMessageIds = messages
-      .filter((msg) => !msg.read_by_ai)
-      .map((msg) => msg.id);
-
-    if (unreadMessageIds.length === 0) {
-      return;
-    }
-
-    logger.info(`Marking ${unreadMessageIds.length} messages as read by AI`);
-
-    // Update the messages in the database
-    const { error } = await supabaseService.supabase
-      .from(config.supabase.messagesTable)
-      .update({ read_by_ai: true })
-      .in("id", unreadMessageIds);
-
-    if (error) {
-      logger.error("Error marking messages as read:", error);
-    }
-  } catch (error) {
-    logger.error("Error in markMessagesAsRead:", error instanceof Error ? error.message : String(error));
-  }
-}
 
 /**
  * Generate a response with a specific agent
@@ -811,7 +582,6 @@ export {
   generateHTMLContent,
   generateAIResponse,
   shouldAgentRespond,
-  markMessagesAsRead,
 };
 
 // Export as default for compatibility with existing imports
@@ -822,7 +592,6 @@ const aiService = {
   generateHTMLContent,
   generateAIResponse,
   shouldAgentRespond, 
-  markMessagesAsRead,
 };
 
 export default aiService;
