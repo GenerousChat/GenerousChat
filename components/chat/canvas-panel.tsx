@@ -26,7 +26,7 @@ export function CanvasPanel({
 }: CanvasPanelProps) {
 
   return (
-    <div className={`w-full`}>
+    <div className={`w-full h-full`}>
       <Canvas 
         currentUser={user}
         messages={messages}

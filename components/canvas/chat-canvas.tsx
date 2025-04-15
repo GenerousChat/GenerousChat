@@ -309,24 +309,24 @@ export default function Canvas({
     );
   }
   const canvasGenButton = (generation: CanvasGeneration) => {
-    return <span>Gen</span>
-//   <button
-//   key={generation.id}
-//   onClick={() => handleSelectGeneration(generation)}
-//   className={`px-3 py-1 rounded text-sm transition-colors ${
-//     activeGeneration?.id === generation.id 
-//       ? "bg-primary text-primary-foreground font-medium" 
-//       : "bg-muted hover:bg-muted/80 text-muted-foreground"
-//   }`}
-//   title={generation.summary || new Date(generation.created_at).toLocaleString()}
-// >
-//   {generation.summary 
-//     ? (generation.summary.length > 20 
-//         ? `${generation.summary.substring(0, 20)}...` 
-//         : generation.summary)
-//     : new Date(generation.created_at).toLocaleTimeString()}
-// </button>
-}
+    return <span
+    key={generation.id}
+    onClick={() => handleSelectGeneration(generation)}
+    className={`px-3 py-1 rounded text-sm transition-colors ${
+      activeGeneration?.id === generation.id 
+        ? "bg-primary text-primary-foreground font-medium" 
+        : "bg-muted hover:bg-muted/80 text-muted-foreground"
+    }`}
+    title={generation.summary || new Date(generation.created_at).toLocaleString()}
+  >
+    Gen
+    {/* {generation.summary 
+      ? (generation.summary.length > 20 
+          ? `${generation.summary.substring(0, 20)}...` 
+          : generation.summary)
+      : new Date(generation.created_at).toLocaleTimeString()} */}
+  </span>
+  }
   return (
     <div className="flex flex-col h-full w-full">
       {/* Generation history at the top */}
@@ -343,47 +343,14 @@ export default function Canvas({
       )}
       
       {/* Main content area with visualization */}
-      <div className="flex-1 relative overflow-hidden bg-background dark:bg-background w-full">
+      <div className="flex-1 h-full relative bg-background dark:bg-background w-full bg-red-500">
         {/* Visualization container */}
         <div 
           ref={containerRef}
           className="absolute inset-0 flex items-center justify-center"
         >
           {!htmlContent && !templateId && !isLoading && !visualizationError && (
-            <BlurFade className="max-w-lg w-full">
-              <Card className="shadow-lg border-border bg-card text-card-foreground overflow-hidden">
-                <CardContent className="p-8 flex flex-col items-center text-center">
-                  <div className="mb-6">
-                    <div className="relative w-20 h-20 mx-auto mb-4">
-                      <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping [animation-duration:3s]"></div>
-                      <div className="relative flex items-center justify-center w-full h-full bg-primary/5 rounded-full border border-primary/20">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <motion.h2 
-                    className="text-xl font-semibold mb-3 text-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    {generations.length === 0 ? "No Visualizations Yet" : "Select a Visualization"}
-                  </motion.h2>
-                  <motion.p 
-                    className="text-muted-foreground mb-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    {generations.length === 0 
-                      ? "No visualizations available for this room yet." 
-                      : "Click on a visualization in the history above to view it."}
-                  </motion.p>
-                </CardContent>
-              </Card>
-            </BlurFade>
+            <div>no canvas, show loading iamge or fun stuff</div>
           )}
         </div>
         
@@ -399,7 +366,7 @@ export default function Canvas({
             </div>
           </div>
         )}
-        
+        asd
         {/* HTML-based visualization (iframe) */}
         {renderMethod === 'fallback_iframe' && htmlContent && (
           <CanvasVisualization 
