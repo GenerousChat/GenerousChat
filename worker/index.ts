@@ -10,7 +10,6 @@ import supabaseService, { Message, Participant } from './services/supabase.js';
 import pusherService from './services/pusher.js';
 import aiService from './services/ai.js';
 import routes from './routes/index.js';
-import errorHandler from './middleware/error-handler.js';
 
 async function handleMessageInserted(message: Message): Promise<void> {
   try {
@@ -88,11 +87,6 @@ async function init(): Promise<void> {
       ? 'SERVICE ROLE (privileged)' 
       : 'ANON (limited)');
     
-    // Fetch recent messages first
-    await supabaseService.fetchRecentMessages();
-
-    // Fetch AI agents
-    await supabaseService.fetchAIAgents();
 
     // Set up Supabase listeners
     await supabaseService.setupSupabaseListeners(
@@ -119,8 +113,6 @@ app.use(express.json());
 // Register routes
 app.use('/', routes);
 
-// Error handling middleware
-app.use(errorHandler);
 
 // Start the application
 init();
