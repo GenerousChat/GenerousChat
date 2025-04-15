@@ -1,8 +1,13 @@
+import { EnvVarWarning } from "@/components/env-var-warning";
+import HeaderAuth from "@/components/header-auth";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
+import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
+import { MobileNav } from "@/components/mobile-nav";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
@@ -74,7 +79,16 @@ export default async function RootLayout({
                   </span>
                 </Link>
                 
-         
+                <div className="flex items-center gap-2">
+                  {/* Desktop navigation - hidden on mobile */}
+                  <div className="hidden md:flex md:items-center md:gap-4">
+                    {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                    <ThemeSwitcher />
+                  </div>
+                  
+                  {/* Mobile navigation - only visible on mobile */}
+                  <MobileNav user={user} />
+                </div>
               </div>
             </nav>
 
