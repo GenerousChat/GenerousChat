@@ -8,11 +8,8 @@ COPY package.json package-lock.json* ./
 # Install dependencies including dev dependencies needed for build
 RUN npm install
 
-# Copy the main tsconfig.json
-COPY tsconfig.json ./
-
-# Copy the worker directory with its tsconfig.json
-COPY worker/ ./worker/
+# Copy the entire codebase
+COPY . .
 
 # Create the dist directory if it doesn't exist
 RUN mkdir -p ./worker/dist
