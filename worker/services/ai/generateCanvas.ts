@@ -94,7 +94,11 @@ async function generateCanvas(canvasId: string, messages: CanvasMessage[], promp
       currentPrompt: prompt
     });
 
+    // Flag to bypass template selection/generation
+    const bypassTemplateSelection = true;
+
     // Step 1: Try the template-based approach first
+    if (!bypassTemplateSelection) {
     try {
       logSection('TEMPLATE SELECTION', 'Starting template selection process...');
       
@@ -258,9 +262,10 @@ IMPORTANT INSTRUCTIONS:
       });
       logSection('FALLBACK', 'Template approach failed, falling back to direct HTML generation');
     }
+    }
     
-    // Step 2: Fallback to direct HTML generation
-    logSection('DIRECT HTML GENERATION', 'Starting direct HTML generation...');
+    // Step 2: Always use direct HTML generation when bypass flag is true
+    logSection('DIRECT HTML GENERATION', bypassTemplateSelection ? 'Bypassing templates, using direct HTML generation...' : 'Starting direct HTML generation...');
     
     // Generate HTML directly using AI
 //     const systemPrompt = `
@@ -283,8 +288,9 @@ IMPORTANT INSTRUCTIONS:
 
     const { text: htmlContent } = await generateText({
       model: openai('o3-mini'),
-      temperature: 0.7,
+      temperature: 0.9,
       prompt,
+      maxTokens: 10000,
       // messages: [
       //   { role: 'user', content: `${prompt}` }
       // ]

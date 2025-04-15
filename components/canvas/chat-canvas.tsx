@@ -334,7 +334,7 @@ export default function Canvas({
         <div className="p-2 border-b border-border bg-card dark:bg-card">
           <div className="overflow-x-auto" style={{ width: '100%', maxWidth: '100%' }}>
             <div className="flex flex-nowrap space-x-2 p-1">
-              {generations.map(generation => (
+              {generations.slice(0, 8).map(generation => (
                 canvasGenButton(generation)
               ))}
             </div>
@@ -366,7 +366,6 @@ export default function Canvas({
             </div>
           </div>
         )}
-        asd
         {/* HTML-based visualization (iframe) */}
         {renderMethod === 'fallback_iframe' && htmlContent && (
           <CanvasVisualization 

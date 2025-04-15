@@ -69,8 +69,6 @@ Your response:
 
     // Generate a text response
     const aiResponse = await generateAITextResponse(agentPrompt);
-    
-
 
     // Ensure aiResponse is a string before using substring
     const responseText = typeof aiResponse === 'string' ? aiResponse : String(aiResponse);
@@ -87,6 +85,11 @@ Your response:
 # Visualization Generator
 
 You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on the latest request. 
+
+## Last Generation
+${lastGenerationHtml}
+
+Only use this as inspiration if appropriate
 
 ## Conversation Information:
 Most recent user message: ${lastUserMessage.content}
@@ -129,25 +132,8 @@ Chat history: ${messageHistory}
 - Make appropriate use of viewport dimensions
 `;
 
-      // Generate HTML content
-      const htmlContent = await generateHTMLContent(htmlPrompt);
-      logger.info("HTML content generated, length:", htmlContent.length);
 
-      try {
-        // Store the generation in the database
-        const generation = await supabaseService.saveGeneration(
-          roomId,
-          htmlContent,
-          "Generated a visual summary of this conversation",
-          agent.id,
-          "visualization",
-          {
-            model: "o3-mini",
-            messageCount: messageHistory.split("\n").length, // Estimate message count from history
-          }
-        );
-
-        // Generate canvas visualization if needed
+      
         try {
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
@@ -159,7 +145,7 @@ Chat history: ${messageHistory}
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
-         const someGeneration  = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
+         const generation  = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
 
          console.log("DREAM");
          console.log("DREAM");
@@ -170,19 +156,16 @@ Chat history: ${messageHistory}
          console.log("DREAM");
          console.log("DREAM");
 
-         console.log({ someGeneration });
+         console.log({ generation });
           await pusherService.sendNewGeneration(
             roomId,
-            someGeneration.id,
+            generation.id,
             "new-generation",
-            someGeneration.created_at || new Date().toISOString()
+            generation.created_at || new Date().toISOString()
           );
   
 
-          return true;
-        } catch (e) {
-          logger.error("Error calling canvas visualization function:", e);
-        }
+     
 
         // Send a notification to clients about the new generation
         if (generation && generation.id) {
@@ -200,8 +183,9 @@ Chat history: ${messageHistory}
         } else {
           logger.warn("Cannot send notification: generation ID is undefined");
         }
-      } catch (error) {
-        logger.error("Error saving HTML generation:", error);
+        return true;
+      } catch (e) {
+        logger.error("Error calling canvas visualization function:", e);
       }
     } // Close the if (shouldGenerateHtml) block
 
