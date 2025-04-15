@@ -14,61 +14,7 @@ export function CanvasVisualization({
   onClose: () => void;
   generationId: string | null;
 }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isRendered, setIsRendered] = useState(false);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  
-  // Apply HTML content to iframe when it changes
-  useEffect(() => {
-    if (htmlContent && iframeRef.current) {
-      const iframe = iframeRef.current;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (iframeDoc) {
-        iframeDoc.open();
-        iframeDoc.write(htmlContent);
-        iframeDoc.close();
-        
-        setIsRendered(true);
-        
-        // Check when iframe content has loaded
-        iframe.onload = () => {
-          setIframeLoaded(true);
-          
-          // Add dark mode styles when in dark mode
-          if (document.documentElement.classList.contains('dark') && iframeDoc.body) {
-            const style = iframeDoc.createElement('style');
-            style.textContent = `
-              :root { 
-                color-scheme: dark;
-                --text-color: #e2e8f0;
-                --bg-color: #1e293b;
-                --accent-color: #60a5fa;
-              }
-              body { 
-                background-color: var(--bg-color); 
-                color: var(--text-color); 
-              }
-              .chart-title, .chart-subtitle, text { 
-                color: var(--text-color) !important; 
-                fill: var(--text-color) !important; 
-              }
-              .gridlines line, .axis line, .axis path {
-                stroke: #475569 !important;
-              }
-              .tooltip, .legend {
-                background: #334155 !important;
-                color: #e2e8f0 !important;
-                border-color: #475569 !important;
-              }
-            `;
-            iframeDoc.head.appendChild(style);
-          }
-        };
-      }
-    }
-  }, [htmlContent]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -131,16 +77,7 @@ export function CanvasVisualization({
         </div>
       </div>
       
-      {/* Loading overlay */}
-      {isRendered && !iframeLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-20">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-sm font-medium text-foreground">Loading visualization...</p>
-          </div>
-        </div>
-      )}
-      
+
       {/* Iframe container with animation */}
       <motion.div
         className="w-full h-full"
@@ -149,8 +86,7 @@ export function CanvasVisualization({
         transition={{ duration: 0.3, ease: "easeOut" }}
       >
         <iframe
-          ref={iframeRef}
-          // srcDoc={latestHtmlContent || defaultHtmlContent}
+          srcDoc={htmlContent}
           className="w-full h-full border-0"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
           allow="camera; microphone; geolocation; fullscreen"

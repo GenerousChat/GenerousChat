@@ -350,7 +350,7 @@ export default function Canvas({
           className="absolute inset-0 flex items-center justify-center"
         >
           {!htmlContent && !templateId && !isLoading && !visualizationError && (
-            <div>no canvas, show loading iamge or fun stuff</div>
+            <div><img src="/canvas_loading.png" alt="Loading" /></div>
           )}
         </div>
         
@@ -386,7 +386,7 @@ export default function Canvas({
         
         {/* Loading overlay */}
         {isLoading && !htmlContent && !templateId && (
-          <LoadingOverlay message="Loading visualizations..." />
+          <div><img src="/canvas_loading.png" alt="Loading" /></div>
         )}
       </div>
     </div>
