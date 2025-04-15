@@ -5,7 +5,7 @@
     "build": "next build",
     "start": "next start",
     "worker:dev": "tsx watch worker/index.ts",
-    "worker:build": "cd worker && tsc",
+    "worker:build": "cd worker && tsc && tsc-alias",
     "worker:start": "node worker/dist/index.js"
   },
   "dependencies": {
@@ -59,6 +59,7 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.15",
     "tsx": "^4.19.3",
     "typescript": "5.7.2"
   }
