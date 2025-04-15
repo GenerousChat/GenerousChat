@@ -158,6 +158,7 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
     }
   }, [recognition]);
 
+
   return (
     <div className={`p-3 border-b ${className}`}>
       <Button

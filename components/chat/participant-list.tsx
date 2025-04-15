@@ -99,7 +99,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       </div>
       
       {/* Audio Room Join Button */}
-      {onJoinAudio && !showAudioRoom && (
+      {false && onJoinAudio && !showAudioRoom && (
         <div className="p-3 border-b">
           <Button 
             onClick={onJoinAudio} 
@@ -146,7 +146,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
               )}
               
               {/* Speaking indicator */}
-              {isParticipantSpeaking(participant.user_id) && (
+              {false && isParticipantSpeaking(participant.user_id) && (
                 <SpeakingIndicator 
                   activityType={getParticipantActivityType(participant.user_id)} 
                   isAgent={info.isAgent}
@@ -169,7 +169,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
               <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">AI</span>
               
               {/* Speaking indicator */}
-              {isParticipantSpeaking(agent.id) && (
+              {false && isParticipantSpeaking(agent.id) && (
                 <SpeakingIndicator 
                   activityType={getParticipantActivityType(agent.id)} 
                   isAgent={true}

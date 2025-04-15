@@ -59,14 +59,26 @@ export default function ChatRoom({
 
   return (
     <div className="flex h-full gap-4">
+
+{<CanvasPanel
+        latestHtmlContent={latestHtmlContent}
+        defaultHtmlContent={defaultHtmlContent}
+        generations={generations}
+        selectedGenerationId={selectedGenerationId}
+        setSelectedGenerationId={setSelectedGenerationId}
+        setLatestHtmlContent={setLatestHtmlContent}
+        user={currentUser}
+        messages={messages}
+        roomId={roomId}
+      />}
       {/* Left Sidebar */}
-      {<div className="w-1/4 flex flex-col">
+      {<div className="w-1/8 flex flex-col">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}
           showAudioRoom={showAudioRoom}
         />
-        <Transcription onTranscript={handleSendMessage} />
+        {false && <Transcription onTranscript={handleSendMessage} />}
       </div>}
 
       {/* Main Chat Column */}
@@ -81,7 +93,7 @@ export default function ChatRoom({
           </DyteProvider>
         )}
 
-        { <TTSManager 
+        {false &&  <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}
@@ -106,17 +118,6 @@ export default function ChatRoom({
       </div>
 
      
-      {<CanvasPanel
-        latestHtmlContent={latestHtmlContent}
-        defaultHtmlContent={defaultHtmlContent}
-        generations={generations}
-        selectedGenerationId={selectedGenerationId}
-        setSelectedGenerationId={setSelectedGenerationId}
-        setLatestHtmlContent={setLatestHtmlContent}
-        user={currentUser}
-        messages={messages}
-        roomId={roomId}
-      />}
     </div>
   );
 }
