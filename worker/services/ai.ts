@@ -12,8 +12,7 @@ import pusherService from "./pusher.js";
 import shouldAgentRespond from "../utils/shouldAgentRespond.js";
 import { createXai } from "@ai-sdk/xai";
 // Import placeholder for canvas visualization - to be implemented in worker context
-// import { generateCanvasVisualization as generateCanvas } from "../../app/api/canvas/generate-visualization/generateCanvas";
-
+import { generateCanvasVisualization as generateCanvas } from "../../app/api/canvas/generate-visualization/generateCanvas";
 interface Agent {
   id: string;
   name: string;
@@ -49,7 +48,7 @@ const xai = createXai({
 async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<any> {
   // This is a simplified implementation that doesn't depend on external modules
   logger.info(`Generating canvas visualization for canvas ${canvasId}`);
-  
+  return await generateCanvas(canvasId, messages, prompt, roomId);
   // Return a mock canvas visualization result
   return {
     id: `canvas-${Date.now()}`,
@@ -390,7 +389,7 @@ Based on these constraints, analyze the following message and rank the confidenc
     selectedAgents.sort((a, b) => b.confidence - a.confidence);
 
     // If highest confidence is below threshold, don't select any agent
-    if (selectedAgents[0].confidence < 0.3) {
+    if (selectedAgents[0].confidence < 0.05) {
       logger.info(
         `Highest agent confidence (${selectedAgents[0].confidence}) is below threshold, not selecting any agent`
       );
