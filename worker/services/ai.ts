@@ -12,7 +12,7 @@ import pusherService from "./pusher.js";
 import shouldAgentRespond from "../utils/shouldAgentRespond.js";
 import { createXai } from "@ai-sdk/xai";
 // Import placeholder for canvas visualization - to be implemented in worker context
-import { generateCanvasVisualization as generateCanvas } from "../../app/api/canvas/generate-visualization/generateCanvas";
+import { generateCanvasVisualization as generateCanvas } from "./ai/generateCanvas";
 interface Agent {
   id: string;
   name: string;

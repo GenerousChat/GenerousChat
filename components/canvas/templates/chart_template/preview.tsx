@@ -3,11 +3,8 @@
 import React, { useEffect, useRef } from 'react';
 import type { ChartPropsType } from './schema';
 // We'd need to install chart.js in the actual implementation
-import { Chart as ChartJS, registerables } from 'chart.js';
-
+// Using dynamic import for chart.js instead of static import
 // This is a mock component for demonstration purposes
-// In a real implementation, we would register Chart.js components
-ChartJS.register(...registerables);
 
 // Helper function to normalize props to a consistent format regardless of input format
 function normalizeChartProps(props: any) {
@@ -163,59 +160,72 @@ export function Chart(props: any) {
 
   const colors = themeColors[theme];
 
-  // In a real implementation, we would initialize Chart.js here
+  // Initialize Chart.js using dynamic import
   useEffect(() => {
-    if (!chartRef.current) return;
+    const canvas = chartRef.current;
+    if (!canvas) return;
 
-    // Create new chart instance
-    const chart = new ChartJS(chartRef.current, {
-      type,
-      data,
-      options: {
-        ...options,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          ...options?.plugins,
-          legend: {
-            ...options?.plugins?.legend,
-            labels: {
-              ...options?.plugins?.legend?.labels,
-              color: colors.textColor
-            }
-          }
-        },
-        scales: {
-          ...options?.scales,
-          x: {
-            ...options?.scales?.x,
-            grid: {
-              ...options?.scales?.x?.grid,
-              color: colors.gridColor
-            },
-            ticks: {
-              ...options?.scales?.x?.ticks,
-              color: colors.textColor
+    let chartInstance: any = null;
+
+    // Dynamically import Chart.js
+    import('chart.js').then(({ Chart, registerables }) => {
+      // Register Chart.js components
+      Chart.register(...registerables);
+      
+      // Create new chart instance
+      chartInstance = new Chart(canvas, {
+        type,
+        data,
+        options: {
+          ...options,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            ...options?.plugins,
+            legend: {
+              ...options?.plugins?.legend,
+              labels: {
+                ...options?.plugins?.legend?.labels,
+                color: colors.textColor
+              }
             }
           },
-          y: {
-            ...options?.scales?.y,
-            grid: {
-              ...options?.scales?.y?.grid,
-              color: colors.gridColor
+          scales: {
+            ...options?.scales,
+            x: {
+              ...options?.scales?.x,
+              grid: {
+                ...options?.scales?.x?.grid,
+                color: colors.gridColor
+              },
+              ticks: {
+                ...options?.scales?.x?.ticks,
+                color: colors.textColor
+              }
             },
-            ticks: {
-              ...options?.scales?.y?.ticks,
-              color: colors.textColor
+            y: {
+              ...options?.scales?.y,
+              grid: {
+                ...options?.scales?.y?.grid,
+                color: colors.gridColor
+              },
+              ticks: {
+                ...options?.scales?.y?.ticks,
+                color: colors.textColor
+              }
             }
           }
         }
-      }
+      });
+    }).catch(error => {
+      console.error('Failed to load Chart.js:', error);
     });
 
     // Cleanup function to destroy chart instance
     return () => {
-      chart.destroy();
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
     };
   }, [type, data, options, theme]);
 
