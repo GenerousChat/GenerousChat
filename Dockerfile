@@ -2,17 +2,23 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json* ./
+
+# Install dependencies including dev dependencies needed for build
 RUN npm install
 
-# Copy only the worker directory
-COPY worker /app/worker
+# Copy the main tsconfig.json
+COPY tsconfig.json ./
 
-# Create a simple JavaScript version of the worker
-RUN mkdir -p /app/worker/dist
+# Copy the worker directory with its tsconfig.json
+COPY worker/ ./worker/
 
-RUN cd /app/worker && tsc
+# Create the dist directory if it doesn't exist
+RUN mkdir -p ./worker/dist
+
+# Build the worker using the npm script
+RUN npm run worker:build
 
 # Create a .env file if it doesn't exist (will be overridden by secrets in production)
 RUN touch .env
@@ -21,4 +27,4 @@ RUN touch .env
 EXPOSE 3001
 
 # Start the worker
-CMD ["node", "worker/dist/index.js"]
+CMD ["npm", "run", "worker:start"]
