@@ -311,7 +311,6 @@ export default function Canvas({
 
   return (
     <div className="flex flex-col h-full">
-      asdasd
       {/* Generation history at the top */}
       {generations.length > 0 && (
         <div className="p-2 border-b border-border bg-card dark:bg-card">
@@ -401,6 +400,7 @@ export default function Canvas({
         {/* HTML-based visualization (iframe) */}
         {renderMethod === 'fallback_iframe' && htmlContent && (
           <CanvasVisualization 
+            generationId={activeGeneration?.id}
             htmlContent={htmlContent}
             onClose={() => setHtmlContent(null)}
           />

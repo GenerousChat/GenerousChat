@@ -20,7 +20,7 @@ export async function GET(
     
     // Query the generation from Supabase
     const { data, error } = await supabase
-      .from('chat_room_generations')
+      .from('canvas_generations')
       .select('*')
       .eq('id', generationId)
       .single();
