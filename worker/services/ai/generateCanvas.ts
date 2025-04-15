@@ -55,8 +55,7 @@ export async function applyUpdates(target: any, updates: any) {
   return result;
 }
 
-// Main function to generate canvas visualization
-async function generateCanvasVisualization(canvasId: string, messages: CanvasMessage[], prompt: string, roomId?: string) {
+async function generateCanvas(canvasId: string, messages: CanvasMessage[], prompt: string, roomId?: string) {
   if (!canvasId || !prompt) {
     logSection('ERROR', 'Missing required fields (canvasId or prompt)');
     throw new Error('Missing required fields (canvasId or prompt)');
@@ -453,4 +452,4 @@ IMPORTANT INSTRUCTIONS:
   }
 }
 
-export default generateCanvas
+export default generateCanvas;
