@@ -1,8 +1,8 @@
 /**
  * Logic for determining when an AI agent should respond to messages
  */
-import logger from "./logger.js";
-import supabaseService from "../services/supabase.js";
+import logger from "../../utils/logger.js";
+import supabaseService from "../supabase.js";
 
 // Define interfaces for messages and configuration
 interface Message {
