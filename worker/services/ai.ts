@@ -8,6 +8,9 @@ import pusherService from "./pusher.js";
 import shouldAgentRespond from "../utils/shouldAgentRespond.js";
 import { generateCanvasVisualization as generateCanvas } from "./ai/generateCanvas";
 import selectBestAgent from "./ai/selectBestAgent";
+import analyzeMessageForVisualizationIntent from "./ai/analyzeMessageForVisualizationIntent";
+import generateAITextResponse from "./ai/generateAITextResponse";
+
 interface Agent {
   id: string;
   name: string;
@@ -17,88 +20,15 @@ interface Agent {
 }
 
 
-/**
- * Function to generate canvas visualizations - imported from external module
- * This is a placeholder as the actual function is imported from a different location
- */
-// Import directly in the places where it's used or define a mock function if needed
 async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<any> {
   // This is a simplified implementation that doesn't depend on external modules
   logger.info(`Generating canvas visualization for canvas ${canvasId}`);
   return await generateCanvas(canvasId, messages, prompt, roomId);
-  // Return a mock canvas visualization result
-  return {
-    id: `canvas-${Date.now()}`,
-    created_at: new Date().toISOString(),
-    content: "<div>Canvas visualization placeholder</div>",
-    type: "visualization"
-  };
 }
 
 
 
-/**
- * Generate an AI text response
- * @param prompt - Prompt for the AI
- * @returns Generated text
- */
-async function generateAITextResponse(prompt: string): Promise<string> {
-  try {
-    const { text } = await generateText({
-      model: openai("gpt-4o"),
-      prompt,
-      temperature: 0.8,
-      maxTokens: 300, // Adjust as needed for response length
-    });
 
-
-    return text;
-  } catch (error) {
-    logger.error("Error generating AI text response:", error instanceof Error ? error.message : String(error));
-    return "I'm having trouble generating a response right now. Please try again.";
-  }
-}
-
-/**
- * Generate HTML content
- * @param prompt - Prompt for the AI
- * @returns Generated HTML
- */
-async function generateHTMLContent(prompt: string): Promise<string> {
-  try {
-    // First attempt - use AI to generate HTML content
-    const { text: htmlResponse } = await generateText({
-      model: openai("o3-mini"),
-      prompt,
-      temperature: 0.7,
-    });
-
-    // Check if the response is valid HTML
-    if (htmlResponse.includes("<html") || htmlResponse.includes("<body") || htmlResponse.includes("<div")) {
-      return htmlResponse;
-    }
-
-    // If we got a response but it's not valid HTML, try to extract HTML from it
-    const htmlMatch = htmlResponse.match(/<html[\s\S]*<\/html>|<body[\s\S]*<\/body>|<div[\s\S]*<\/div>/i);
-    if (htmlMatch && htmlMatch[0]) {
-      return htmlMatch[0];
-    }
-
-    // If no HTML found, make a second attempt with more specific instructions
-    const secondAttemptPrompt = `${prompt}\n\nVERY IMPORTANT: Respond ONLY with the raw HTML. Do not include any explanations, markdown formatting, or code block markers. Start your response with '<' and end with '>' for a proper HTML document or fragment.`;
-    
-    const { text: secondResponse } = await generateText({
-      model: openai("gpt-4o"),
-      prompt: secondAttemptPrompt,
-      temperature: 0.5,
-    });
-
-    return secondResponse;
-  } catch (error) {
-    logger.error("Error generating HTML content:", error instanceof Error ? error.message : String(error));
-    return `<div class="error-message">Sorry, I was unable to generate the visualization you requested.</div>`;
-  }
-}
 
 /**
  * Generate AI response based on recent messages
