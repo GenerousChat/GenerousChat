@@ -12,7 +12,7 @@ export function CanvasVisualization({
 }: {
   htmlContent: string | null;
   onClose: () => void;
-  generationId: string | null;
+  generationId: string | null |undefined;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 

@@ -388,7 +388,7 @@ export default function Canvas({
         {/* HTML-based visualization (iframe) */}
         {renderMethod === 'fallback_iframe' && htmlContent && (
           <CanvasVisualization 
-            generationId={activeGeneration?.id}
+            generationId={activeGeneration?.id || null}
             htmlContent={htmlContent}
             onClose={() => setHtmlContent(null)}
           />
