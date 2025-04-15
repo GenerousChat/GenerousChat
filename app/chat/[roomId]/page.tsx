@@ -110,9 +110,8 @@ export default async function ChatRoomPage(props: any) {
   })) : [];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)]">
+    <div className="flex flex-col w-full h-[calc(100vh-120px)]">
       <div className="flex justify-between items-center mb-4">
-        <div>
           <Button variant="outline" size="sm" asChild className="mb-2">
             <Link href="/chat">← Back to Rooms</Link>
           </Button>
@@ -120,7 +119,6 @@ export default async function ChatRoomPage(props: any) {
           {room.description && (
             <p className="text-muted-foreground">{room.description}</p>
           )}
-        </div>
         <div className="text-sm text-muted-foreground">
           {participants?.length || 0} participant(s)
         </div>

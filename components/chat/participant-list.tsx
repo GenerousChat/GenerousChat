@@ -93,7 +93,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
   }, [participants.map(p => p.user_id).join(',')]); // Only reload if participant IDs change
   
   return (
-    <div className="w-64 border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
+    <div className="w-full border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
       <div className="p-4 border-b">
         <h3 className="text-sm font-medium">Room Participants</h3>
       </div>

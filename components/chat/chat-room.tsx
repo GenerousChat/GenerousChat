@@ -58,31 +58,35 @@ export default function ChatRoom({
   } = useVisualizations(roomId);
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex w-full h-full">
 
-{<CanvasPanel
-        latestHtmlContent={latestHtmlContent}
-        defaultHtmlContent={defaultHtmlContent}
-        generations={generations}
-        selectedGenerationId={selectedGenerationId}
-        setSelectedGenerationId={setSelectedGenerationId}
-        setLatestHtmlContent={setLatestHtmlContent}
-        user={currentUser}
-        messages={messages}
-        roomId={roomId}
-      />}
-      {/* Left Sidebar */}
-      {<div className="w-1/8 flex flex-col">
+      {/* Canvas Panel - Grows to fill remaining space */}
+      <div className="flex-grow bg-red">
+        <CanvasPanel
+          latestHtmlContent={latestHtmlContent}
+          defaultHtmlContent={defaultHtmlContent}
+          generations={generations}
+          selectedGenerationId={selectedGenerationId}
+          setSelectedGenerationId={setSelectedGenerationId}
+          setLatestHtmlContent={setLatestHtmlContent}
+          user={currentUser}
+          messages={messages}
+          roomId={roomId}
+        />
+      </div>
+
+      {/* Left Sidebar - Max width 150px */}
+      <div className="flex bg-yellow flex-col max-w-[150px] min-w-[150px]">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}
           showAudioRoom={showAudioRoom}
         />
         {false && <Transcription onTranscript={handleSendMessage} />}
-      </div>}
+      </div>
 
-      {/* Main Chat Column */}
-      <div className="flex flex-col h-full border rounded-lg overflow-hidden relative flex-1">
+      {/* Main Chat Column - Max width 300px */}
+      <div className="flex bg-green flex-col h-full border rounded-lg overflow-hidden relative max-w-[300px] min-w-[300px]">
         {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
             <AudioRoom

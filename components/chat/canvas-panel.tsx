@@ -26,7 +26,7 @@ export function CanvasPanel({
 }: CanvasPanelProps) {
 
   return (
-    <div className={`w-1/3 ml-4 border rounded-lg overflow-hidden bg-gray-50`}>
+    <div className={`w-full`}>
       <Canvas 
         currentUser={user}
         messages={messages}

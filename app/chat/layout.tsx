@@ -8,7 +8,7 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 container py-4">
+    <div className="flex w-full">
       {children}
     </div>
   );
