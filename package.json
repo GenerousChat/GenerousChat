@@ -6,7 +6,7 @@
     "start": "next start",
     "worker:dev": "tsx watch worker/index.ts",
     "worker:build": "cd worker && tsc && tsc-alias",
-    "worker:start": "node worker/dist/index.js"
+    "worker:start": "node worker/dist/worker/index.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.10",
