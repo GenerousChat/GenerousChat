@@ -308,39 +308,42 @@ export default function Canvas({
       </div>
     );
   }
-
+  const canvasGenButton = (generation: CanvasGeneration) => {
+    return <span>Gen</span>
+//   <button
+//   key={generation.id}
+//   onClick={() => handleSelectGeneration(generation)}
+//   className={`px-3 py-1 rounded text-sm transition-colors ${
+//     activeGeneration?.id === generation.id 
+//       ? "bg-primary text-primary-foreground font-medium" 
+//       : "bg-muted hover:bg-muted/80 text-muted-foreground"
+//   }`}
+//   title={generation.summary || new Date(generation.created_at).toLocaleString()}
+// >
+//   {generation.summary 
+//     ? (generation.summary.length > 20 
+//         ? `${generation.summary.substring(0, 20)}...` 
+//         : generation.summary)
+//     : new Date(generation.created_at).toLocaleTimeString()}
+// </button>
+}
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       {/* Generation history at the top */}
       {generations.length > 0 && (
         <div className="p-2 border-b border-border bg-card dark:bg-card">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-2 p-1">
+          <div className="overflow-x-auto" style={{ width: '100%', maxWidth: '100%' }}>
+            <div className="flex flex-nowrap space-x-2 p-1">
               {generations.map(generation => (
-                <button
-                  key={generation.id}
-                  onClick={() => handleSelectGeneration(generation)}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                    activeGeneration?.id === generation.id 
-                      ? "bg-primary text-primary-foreground font-medium" 
-                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                  }`}
-                  title={generation.summary || new Date(generation.created_at).toLocaleString()}
-                >
-                  {generation.summary 
-                    ? (generation.summary.length > 20 
-                        ? `${generation.summary.substring(0, 20)}...` 
-                        : generation.summary)
-                    : new Date(generation.created_at).toLocaleTimeString()}
-                </button>
+                canvasGenButton(generation)
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       )}
       
       {/* Main content area with visualization */}
-      <div className="flex-1 relative overflow-hidden bg-background dark:bg-background">
+      <div className="flex-1 relative overflow-hidden bg-background dark:bg-background w-full">
         {/* Visualization container */}
         <div 
           ref={containerRef}
