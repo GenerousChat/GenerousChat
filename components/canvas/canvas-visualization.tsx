@@ -93,7 +93,7 @@ export function CanvasVisualization({
               size="icon"
               className="h-8 w-8 bg-card/90 dark:bg-card/80 backdrop-blur-sm shadow-sm"
             >
-              <Link href={`/generations/${generationId}`} target="_blank">
+              <Link href={`/api/generation/${generationId}`} target="_blank">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -150,10 +150,13 @@ export function CanvasVisualization({
       >
         <iframe
           ref={iframeRef}
+          // srcDoc={latestHtmlContent || defaultHtmlContent}
           className="w-full h-full border-0"
-          title="Canvas Visualization"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
+          allow="camera; microphone; geolocation; fullscreen"
+          title="Conversation Visualization"
         />
+        
       </motion.div>
     </div>
   );
