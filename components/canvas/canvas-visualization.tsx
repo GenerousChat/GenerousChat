@@ -51,7 +51,7 @@ export function CanvasVisualization({
       className="absolute inset-0 bg-background dark:bg-background z-10 transition-all duration-300"
     >
       {/* Toolbar */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-2 flex items-center justify-between bg-gradient-to-b from-background to-transparent">
+      <div className="absolute top-0 left-0 right-0 z-30 p-2 flex items-center justify-between">
         <div></div> {/* Empty div to maintain justify-between */}
         
         <div className="flex gap-2">
