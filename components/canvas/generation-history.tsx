@@ -262,9 +262,15 @@ export function GenerationHistory({
 
 
   return (
-    <div className="p-2 ">
-      <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
-        <div className="flex flex-nowrap space-x-2 p-1">
+    <div className="p-2">
+      <div className="w-full overflow-x-auto scrollbar-hide" style={{ maxWidth: '100%', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex flex-nowrap space-x-2 p-1" onWheel={(e) => {
+          const container = e.currentTarget.parentElement;
+          if (container) {
+            container.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }
+        }}>
           {uniqueGenerations.map(generation => (
             <span
               key={generation.id}
