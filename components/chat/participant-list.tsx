@@ -335,7 +335,11 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
 
   return (
     <div className="w-full  overflow-hidden  flex flex-col">
-      <Tooltip id="agent-tooltip" className="max-w-[300px]" />
+      <Tooltip 
+        id="agent-tooltip" 
+        className="max-w-[350px] max-h-[80vh] overflow-y-auto z-50" 
+        clickable={true} 
+      />
       <div className="text-sm text-muted-foreground">
         <p>Participants ({participants.length + agents.length})</p>
       </div>
