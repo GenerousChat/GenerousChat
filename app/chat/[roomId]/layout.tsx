@@ -1,12 +1,14 @@
 import { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
+import React from "react";
 
-type Props = {
-  params: { roomId: string };
-};
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const roomId = params.roomId;
+// In Next.js 15, params is passed as a Promise
+export async function generateMetadata({ 
+  params,
+}: { 
+  params: Promise<{ roomId: string }>
+}): Promise<Metadata> {
+  const { roomId } = await params;
   
   // You can fetch room name if you have a database table for it
   // This is a placeholder for demonstration
