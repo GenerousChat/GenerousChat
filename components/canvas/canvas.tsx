@@ -25,7 +25,7 @@ function log(...args: any[]) {
 }
 
 // Type for canvas generations
-type CanvasGeneration = {
+export type CanvasGeneration = {
   id: string;
   canvas_id: string;
   created_by: string;

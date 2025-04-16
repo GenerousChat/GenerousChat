@@ -2,12 +2,11 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-export interface Generation {
-  id: string;
-  summary?: string | null;
-  created_at: string;
-  [key: string]: any; // Allow for additional properties
-}
+// Import the CanvasGeneration type from canvas.tsx
+import { CanvasGeneration } from './canvas';
+
+// Use the CanvasGeneration type for our component
+export type Generation = CanvasGeneration;
 
 interface GenerationHistoryProps {
   generations: Generation[];
