@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
-import Pusher from 'pusher-js';
 
 import { 
   CanvasVisualization,
@@ -39,6 +38,7 @@ export type CanvasGeneration = {
   type: string | null;
   metadata: any;
   created_at: string;
+  slug: string;
   room_id: string;
 };
 
@@ -51,8 +51,7 @@ export default function Canvas({
 }) {
   log('Canvas component rendering, user:', currentUser.id, 'room:', roomId);
   
-  // State for generations
-  const [generations, setGenerations] = useState<CanvasGeneration[]>([]);
+  // State for active generation
   const [activeGeneration, setActiveGeneration] = useState<CanvasGeneration | null>(null);
   
   // State for visualization content
@@ -67,168 +66,7 @@ export default function Canvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
-  // Setup Supabase listener for generations
-  useEffect(() => {
-    if (!roomId) return;
- 
-
-
-    log('Setting up generations listener for room:', roomId);
-    setIsLoading(true);
-
-    const pusher = new Pusher('96f9360f34a831ca1901', {
-      cluster: 'us3',
-    });
-
-    const channel = pusher.subscribe(`room-${roomId}`);
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-
-    // Listen for new generation notifications
-    channel.bind('new-generation', async (data: any) => {
-      console.log("New generati222on received:", data);
-      console.log("New generat2222ion received:", data);
-      console.log("New gener222ation received:", data);
-
-      try {
-        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
-        
-        // Fetch the generation from the database
-        const { data: generation, error } = await supabase
-          .from('canvas_generations')
-          .select('*')
-          .eq('id', notificationData.generation_id)
-          .single();
-
-        console.log("ASDASDASDSA22S");
-        console.log("ASDASDASDSAS");
-        console.log("ASDASDASDS22AS");
-        console.log("ASDASDASDS333AS" , {generation, error});
-        console.log("11111");
-        console.log("11111");
-        console.log("11111");
-        console.log("11111");
-        console.log("11111");
-        if (error) {
-          throw new Error(`Error fetching generation: ${error.message}`);
-        }
-        console.log('22222222222')
-        if (generation?.html) {
-          // Add the new generation to the list and select it
-          setGenerations(prev => [generation, ...prev].slice(0, 20));
-          // Set the most recent generation as active
-          setActiveGeneration(generation.id);
-          // Load the visualization content
-          loadGenerationContent(generation.html);
-        } else {
-          console.warn('Generation found but no html field:', generation);
-        }
-      } catch (error) {
-        console.error('Error handling new generation notification:', error);
-      }
-    });
-    
-    
-    // Initial fetch to get existing generations
-    const fetchInitialGenerations = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("canvas_generations")
-          .select("*")
-          .eq("room_id", roomId)
-          .order("created_at", { ascending: false });
-          
-        if (error) {
-          log('Error fetching initial generations:', error);
-          setVisualizationError(`Error loading visualizations: ${error.message}`);
-          return;
-        }
-        
-        log(`Fetched ${data?.length || 0} generations for room ${roomId}`);
-        
-        if (data && data.length > 0) {
-          setGenerations(data);
-          // Set the most recent generation as active
-          setActiveGeneration(data[0]);
-          // Load the visualization content
-          loadGenerationContent(data[0]);
-        }
-      } catch (err) {
-        log('Error in fetchInitialGenerations:', err);
-        // Handle the unknown error type properly
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        setVisualizationError(`Failed to load visualizations: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Call initial fetch
-    fetchInitialGenerations();
-
-    // Set up real-time listener for new generations
-    const subscription = supabase
-      .channel(`room-${roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'canvas_generations',
-          filter: `room_id=eq.${roomId}`
-        },
-        (payload) => {
-          log('Received generation update:', payload);
-          
-          // Update the generations state based on the change type
-          if (payload.eventType === 'INSERT') {
-            const newGeneration = payload.new as CanvasGeneration;
-            setGenerations(prev => [newGeneration, ...prev]);
-            
-            // Set as active if it's the first one or if we don't have an active one
-            if (!activeGeneration || generations.length === 0) {
-              setActiveGeneration(newGeneration);
-              loadGenerationContent(newGeneration);
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedGeneration = payload.new as CanvasGeneration;
-            setGenerations(prev => 
-              prev.map(gen => gen.id === updatedGeneration.id ? updatedGeneration : gen)
-            );
-            
-            // If this is the active generation, update the displayed content
-            if (activeGeneration && activeGeneration.id === updatedGeneration.id) {
-              setActiveGeneration(updatedGeneration);
-              loadGenerationContent(updatedGeneration);
-            }
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id;
-            setGenerations(prev => {
-              const filtered = prev.filter(gen => gen.id !== deletedId);
-              
-              // If the active generation was deleted, set a new active one
-              if (activeGeneration && activeGeneration.id === deletedId && filtered.length > 0) {
-                setActiveGeneration(filtered[0]);
-                loadGenerationContent(filtered[0]);
-              }
-              
-              return filtered;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Return cleanup function
-    return () => {
-      log('Cleaning up generations listener');
-      subscription.unsubscribe();
-    };
-  }, [roomId]); // Don't include activeGeneration in dependencies
+  // We don't need the generations listener setup anymore as it's moved to GenerationHistory
   
   // Function to load content from a generation
   const loadGenerationContent = (generation: CanvasGeneration) => {
@@ -290,13 +128,12 @@ export default function Canvas({
   log('Loading status:', isLoading);
   log('Error status:', visualizationError ? 'error' : 'no error');
   log('Active generation:', activeGeneration?.id);
-  log('Total generations:', generations.length);
 
   return (
     <div className="flex flex-col h-full">
       {/* Generation history at the top */}
       <GenerationHistory 
-        generations={generations}
+        roomId={roomId}
         activeGenerationId={activeGeneration?.id}
         onSelectGeneration={handleSelectGeneration}
       />
@@ -336,7 +173,7 @@ export default function Canvas({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    {generations.length === 0 
+                    {!activeGeneration 
                       ? "No visualizations available for this room yet." 
                       : "Click on a visualization in the history above to view it."}
                   </motion.p>

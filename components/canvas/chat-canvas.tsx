@@ -8,7 +8,8 @@ import {
   CanvasVisualization,
   ErrorMessage,
   CanvasMessage,
-  ClientTemplateRenderer
+  ClientTemplateRenderer,
+  GenerationHistory
 } from "./index";
 import { Card, CardContent } from "@/components/ui/card";
 import Pusher from 'pusher-js';
@@ -50,8 +51,7 @@ export default function Canvas({
 }) {
   log('Canvas component rendering, user:', currentUser.id, 'room:', roomId);
   
-  // State for generations
-  const [generations, setGenerations] = useState<CanvasGeneration[]>([]);
+  // State for active generation only
   const [activeGeneration, setActiveGeneration] = useState<CanvasGeneration | null>(null);
   
   // State for visualization content
@@ -65,159 +65,6 @@ export default function Canvas({
   
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
-  
-  // Setup Supabase listener for generations
-  useEffect(() => {
-    if (!roomId) {
-      log('No room ID provided');
-      setIsLoading(false);
-      return;
-    }
-    
-    log('Setting up generations listener for room:', roomId);
-    setIsLoading(true);
-    
-    // Initial fetch to get existing generations
-    const fetchInitialGenerations = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("canvas_generations")
-          .select("*")
-          .eq("room_id", roomId)
-          .order("created_at", { ascending: false });
-          
-        if (error) {
-          log('Error fetching initial generations:', error);
-          setVisualizationError(`Error loading visualizations: ${error.message}`);
-          return;
-        }
-        
-        log(`Fetched ${data?.length || 0} generations for room ${roomId}`);
-        
-        if (data && data.length > 0) {
-          setGenerations(data);
-          // Set the most recent generation as active
-          setActiveGeneration(data[0]);
-          // Load the visualization content
-          loadGenerationContent(data[0]);
-        }
-      } catch (err) {
-        log('Error in fetchInitialGenerations:', err);
-        // Handle the unknown error type properly
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        setVisualizationError(`Failed to load visualizations: ${errorMessage}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Call initial fetch
-    fetchInitialGenerations();
-    
-    // Setup Pusher for real-time updates
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY || 'asdasd', {
-      cluster: 'us3',
-    });
-
-    const channel = pusher.subscribe(`room-${roomId}`);
-
-    // Listen for new generation notifications
-    channel.bind('new-generation', async (data: any) => {
-      log("New generation received:", data);
-      try {
-        const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
-        
-        // Fetch the generation from the database
-        const { data: generation, error } = await supabase
-          .from('canvas_generations')
-          .select('*')
-          .eq('id', notificationData.generation_id)
-          .single();
-
-        if (error) {
-          throw new Error(`Error fetching generation: ${error.message}`);
-        }
-        
-        if (generation) {
-          // Add the new generation to the list and select it
-          setGenerations(prev => [generation, ...prev].slice(0, 20));
-          setActiveGeneration(generation);
-          loadGenerationContent(generation);
-        } else {
-          console.warn('Generation found but no html field:', generation);
-        }
-      } catch (error) {
-        console.error('Error handling new generation notification:', error);
-      }
-    });
-    
-    // Return cleanup function
-    return () => {
-      log('Cleaning up Pusher connection');
-      channel.unbind_all();
-      pusher.unsubscribe(`room-${roomId}`);
-    };
-    // Set up real-time listener for new generations using Supabase
-    const subscription = supabase
-      .channel(`room-${roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'canvas_generations',
-          filter: `room_id=eq.${roomId}`
-        },
-        (payload) => {
-          log('Received generation update:', payload);
-          
-          // Update the generations state based on the change type
-          if (payload.eventType === 'INSERT') {
-            const newGeneration = payload.new as CanvasGeneration;
-            setGenerations(prev => [newGeneration, ...prev]);
-            
-            // Set as active if it's the first one or if we don't have an active one
-            if (!activeGeneration) {
-              setActiveGeneration(newGeneration);
-              loadGenerationContent(newGeneration);
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedGeneration = payload.new as CanvasGeneration;
-            setGenerations(prev => 
-              prev.map(gen => gen.id === updatedGeneration.id ? updatedGeneration : gen)
-            );
-            
-            // If this is the active generation, update the displayed content
-            if (activeGeneration && activeGeneration.id === updatedGeneration.id) {
-              setActiveGeneration(updatedGeneration);
-              loadGenerationContent(updatedGeneration);
-            }
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id;
-            setGenerations(prev => {
-              const filtered = prev.filter(gen => gen.id !== deletedId);
-              
-              // If the active generation was deleted, set a new active one
-              if (activeGeneration && activeGeneration.id === deletedId && filtered.length > 0) {
-                setActiveGeneration(filtered[0]);
-                loadGenerationContent(filtered[0]);
-              }
-              
-              return filtered;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Return cleanup function for both Pusher and Supabase subscriptions
-    return () => {
-      log('Cleaning up listeners');
-      channel.unbind_all();
-      pusher.unsubscribe(`room-${roomId}`);
-      subscription.unsubscribe();
-    };
-  }, [roomId]); // Remove activeGeneration from dependencies to prevent re-render loops
   
   // Function to load content from a generation
   const loadGenerationContent = (generation: CanvasGeneration) => {
@@ -260,14 +107,13 @@ export default function Canvas({
     log('Component state:', {
       roomId,
       activeGenerationId: activeGeneration?.id,
-      generationsCount: generations.length,
       templateId,
       renderMethod,
       hasHtmlContent: !!htmlContent,
       isLoading,
       hasError: !!visualizationError
     });
-  }, [roomId, activeGeneration?.id, generations.length, templateId, renderMethod, htmlContent, isLoading, visualizationError]);
+  }, [roomId, activeGeneration?.id, templateId, renderMethod, htmlContent, isLoading, visualizationError]);
 
   // If no roomId is provided, show a message
   if (!roomId) {
@@ -305,39 +151,15 @@ export default function Canvas({
       </div>
     );
   }
-  const canvasGenButton = (generation: CanvasGeneration) => {
-    return <span
-    key={generation.id}
-    onClick={() => handleSelectGeneration(generation)}
-    className={`px-3 py-1 rounded text-sm transition-colors ${
-      activeGeneration?.id === generation.id 
-        ? "bg-primary text-primary-foreground font-medium" 
-        : "bg-muted hover:bg-muted/80 text-muted-foreground"
-    }`}
-    title={generation.summary || new Date(generation.created_at).toLocaleString()}
-  >
-    Gen
-    {/* {generation.summary 
-      ? (generation.summary.length > 20 
-          ? `${generation.summary.substring(0, 20)}...` 
-          : generation.summary)
-      : new Date(generation.created_at).toLocaleTimeString()} */}
-  </span>
-  }
+  // No longer needed as GenerationHistory handles this
   return (
     <div className="flex flex-col h-full w-full">
       {/* Generation history at the top */}
-      {generations.length > 0 && (
-        <div className="p-2 border-b border-border bg-card dark:bg-card">
-          <div className="overflow-x-auto" style={{ width: '100%', maxWidth: '100%' }}>
-            <div className="flex flex-nowrap space-x-2 p-1">
-              {generations.reverse().slice(0, 8).map(generation => (
-                canvasGenButton(generation)
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          <GenerationHistory 
+        roomId={roomId || ''}
+        activeGenerationId={activeGeneration?.id}
+        onSelectGeneration={handleSelectGeneration}
+      />
       
       {/* Main content area with visualization */}
       <div className="flex-1 h-full relative bg-background dark:bg-background w-full bg-red-500">
