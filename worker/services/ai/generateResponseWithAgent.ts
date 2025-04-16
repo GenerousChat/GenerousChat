@@ -140,16 +140,10 @@ Your response should be short and pithy, one to two sentences at most. You may u
         // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
         const agentExpertPrompt = `
         You are ${agent.name}, an AI with the following personality: ${agent.personality_prompt}. 
-        Use your expertise to create better visualizations and interactive elements for an online chat room. The current canvas is ${lastGenerationHtml}. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} If you need more context, refer to the conversation history: ${messageHistory}. 
+        Use your expertise to create better visualizations and interactive elements for the shared canvas in online chat room. The current canvas is ${lastGenerationHtml}. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} If you need more context, refer to the conversation history: ${messageHistory}. 
 
         Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate visualization. Your response should be a complete HTML document that includes the following:
-        - A title for the visualization
         - A description of the visualization
-        - The necessary HTML structure
-        - Any required CSS styles
-        - JavaScript for interactivity
-        - Any external libraries or resources needed for the visualization
-        -Make sure the design is responsive and works well in the sidebar panel
         `;
         
         const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
@@ -202,6 +196,110 @@ Language: Friendly, encouraging, and creative. Example: “Let’s build somethi
 Example Application
 Home Screen: Sky Blue (#00AEEF) background with a robotic hand graphic passing an orange cube, welcoming users to “Start Creating.” Buttons in Warm Orange (#FF6200) with Space Grotesk Bold text.
 Collaborative Canvas: Sky Blue workspace with Off-White gridlines, orange-highlighted tools, and user cursors with glowing Warm Orange outlines. Tooltips in Space Grotesk Italic.`
+
+const toolList =
+`Prompt for an AI Agent to Utilize Visualization Tools
+
+As an AI agent, you are tasked with creating engaging and effective visualizations to convey information, concepts, or simulations based on user requests. Below is a guide on how to use each available visualization tool to produce the most suitable output for different types of content. Select the appropriate tool based on the nature of the data or concept, and implement the visualization with clarity, accuracy, and user engagement in mind.
+
+Charts/Graphs (D3.js or Chart.js)
+Use D3.js or Chart.js to create interactive or static charts and graphs for displaying quantitative data.
+When to use: For visualizing datasets (e.g., bar charts, line graphs, pie charts, scatter plots) such as sales trends, survey results, or statistical comparisons.
+How to use:
+Choose Chart.js for simpler, pre-built chart types with minimal setup (e.g., bar or line charts).
+Use D3.js for highly customizable, complex visualizations (e.g., interactive network graphs or animated transitions).
+Ensure data is clean and formatted (e.g., JSON or CSV) before rendering.
+Add labels, tooltips, and legends for clarity, and optimize for responsiveness across devices.
+Example: Visualize monthly website traffic with a line chart in Chart.js, or create an interactive force-directed graph in D3.js for social network analysis.
+Diagrams/Flowcharts (Mermaid.js)
+Use Mermaid.js to generate diagrams and flowcharts from text-based syntax.
+When to use: For illustrating processes, workflows, or relationships (e.g., organizational charts, software architecture, or decision trees).
+How to use:
+Write Mermaid syntax to define nodes and connections (e.g., graph TD; A-->B;).
+Render the diagram in a web canvas or embed it in markdown-compatible environments.
+Keep diagrams concise to avoid clutter, and use clear labels for nodes and edges.
+Example: Create a flowchart showing a user authentication process, with nodes for login, verification, and error handling.
+Math Concepts (MathJax or KaTeX, or Custom SVG)
+Use MathJax or KaTeX to render mathematical expressions, or custom SVG for geometric visualizations.
+When to use: For displaying equations, formulas, or geometric concepts (e.g., calculus, linear algebra, or trigonometry).
+How to use:
+Use KaTeX for faster rendering of LaTeX-based equations in web environments.
+Use MathJax for broader compatibility and advanced formatting options.
+For geometric or visual math (e.g., graphs of functions), create custom SVGs with precise coordinates and annotations.
+Ensure equations are formatted clearly and accompanied by explanations if needed.
+Example: Render the quadratic formula using KaTeX, or draw a sine wave with labeled axes using SVG.
+Games/Simulations (Phaser or p5.js)
+Use Phaser or p5.js to build interactive games or simulations.
+When to use: For educational games, interactive demos, or simulations (e.g., cellular automata, maze solvers, or physics-based games).
+How to use:
+Use Phaser for structured, game-like experiences with sprites, physics, and user input (e.g., a 2D platformer).
+Use p5.js for creative coding and simpler, canvas-based simulations (e.g., particle systems or generative art).
+Keep performance in mind by optimizing assets and limiting computational complexity.
+Provide clear instructions for user interaction.
+Example: Build a p5.js simulation of a bouncing ball with adjustable gravity, or a Phaser-based quiz game for learning vocabulary.
+Maps/Locations (Leaflet.js or Mapbox GL JS)
+Use Leaflet.js or Mapbox GL JS to display geographic data or interactive maps.
+When to use: For visualizing location-based data (e.g., store locations, travel routes, or demographic data).
+How to use:
+Use Leaflet.js for lightweight, open-source maps with simple markers and popups.
+Use Mapbox GL JS for advanced styling, 3D maps, or custom map designs.
+Integrate GeoJSON or API data for dynamic content (e.g., real-time weather or traffic).
+Ensure maps are zoomable and include clear legends or tooltips.
+Example: Plot earthquake locations on a Leaflet.js map with popups showing magnitude and date.
+Physics Simulations (Matter.js or Another Physics Engine)
+Use Matter.js or similar physics engines to simulate physical systems.
+When to use: For demonstrating physics concepts (e.g., collisions, gravity, or pendulum motion).
+How to use:
+Set up a Matter.js canvas with bodies, constraints, and forces.
+Define realistic parameters (e.g., friction, restitution) for accurate simulations.
+Allow user interaction (e.g., dragging objects or adjusting variables) to enhance engagement.
+Visualize with clear rendering and optional annotations for key parameters.
+Example: Simulate a chain of pendulums in Matter.js, with controls to adjust mass and length.
+Simple Animations (CSS Animations or GSAP)
+Use CSS animations or GSAP for lightweight, engaging motion graphics.
+When to use: For visual effects or transitions (e.g., fading text, moving icons, or animated infographics).
+How to use:
+Use CSS animations for simple effects (e.g., keyframes for opacity or transforms).
+Use GSAP for complex, timeline-based animations with precise control (e.g., staggered element animations).
+Optimize for performance by minimizing reflows and using GPU-accelerated properties (e.g., transform, opacity).
+Ensure animations enhance, rather than distract from, the content.
+Example: Animate a progress bar filling up with CSS, or create a GSAP sequence for a landing page hero section.
+Scientific Visualizations (Plotly.js or Vega-Lite)
+Use Plotly.js or Vega-Lite for advanced scientific or data-driven visualizations.
+When to use: For complex datasets or domain-specific visuals (e.g., heatmaps, 3D surface plots, or genomic data).
+How to use:
+Use Plotly.js for interactive, web-based plots with built-in support for scientific formats.
+Use Vega-Lite for declarative, JSON-based visualizations with high customizability.
+Ensure data is preprocessed and validated for accuracy.
+Include interactive features (e.g., zoom, hover details) and clear axis labels.
+Example: Create a Plotly.js heatmap of temperature data, or a Vega-Lite scatter plot of exoplanet properties.
+YouTube Videos (Lite YouTube Embed)
+Use Lite YouTube Embed to embed YouTube videos efficiently.
+When to use: For supplementing explanations with video content (e.g., tutorials, demonstrations, or lectures).
+How to use:
+Embed videos using the Lite YouTube Embed library to reduce page load times.
+Ensure the video is relevant and sourced from a credible channel.
+Provide a brief description or context for the video’s purpose.
+Test embeds for compatibility across devices.
+Example: Embed a YouTube tutorial on machine learning basics to complement a text explanation.
+Simple Text/Concepts (Elegant Typography)
+Use elegant typography to present text-based information clearly and aesthetically.
+When to use: For explaining concepts, definitions, or narratives without graphical elements (e.g., quotes, summaries, or instructions).
+How to use:
+Choose readable, web-safe fonts (e.g., Roboto, Open Sans) or modern typography libraries (e.g., Google Fonts).
+Optimize font size, line spacing, and contrast for readability.
+Use hierarchy (e.g., headings, bold text) to organize content.
+Avoid excessive styling that could distract from the message.
+Example: Present a definition of “artificial intelligence” with a clean, serif font and subtle emphasis on key terms.
+General Guidelines:
+
+Always assess the user’s request to determine the most appropriate tool for the task.
+Prioritize clarity, accessibility, and performance in all visualizations.
+Test outputs in a web environment to ensure compatibility and responsiveness.
+If unsure about the best tool, consider combining methods (e.g., a chart with typography for labels) or ask the user for clarification.
+For any visualization requiring external data, validate and preprocess the data to ensure accuracy.
+By leveraging these tools effectively, you can create compelling, informative, and interactive visualizations tailored to the user’s needs.`
+
 
       // Create a prompt specifically for HTML visualization
       const htmlPrompt = `
