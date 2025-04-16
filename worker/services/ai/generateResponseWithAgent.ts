@@ -1706,52 +1706,18 @@ Home Screen (Dark Mode): Deep Black (#1A1A1A) top bar, Dark Gray (#2A2A2A) canva
 const recommendedLibraries =
 `Recommended Canvas Visualization Libraries for Generous
 
-Below is a curated list of JavaScript libraries for HTML5 Canvas visualizations, tailored for Generous, a generative AI app with a collaborative, real-time canvas for simulations, games, and visualizations. These libraries are served via CDNJS, compatible with HTML and React, and optimized for mobile-first performance, real-time collaboration, and minimal dependencies to align with Generous’ retro-inspired, responsive design and dynamic rendering needs.
+Below is a curated list of JavaScript libraries for HTML5 Canvas visualizations, tailored for Generous, a generative AI app with a collaborative, real-time canvas for simulations, games, and visualizations. These libraries are served via CDNJS, compatible with HTML and React, and optimized for mobile-first performance, real-time collaboration, and minimal dependencies to align with Generous retro-inspired, responsive design and dynamic rendering needs.
 
 1. Konva
-
-
-
-
-
 Purpose: A 2D canvas library for creating interactive shapes, animations, and visualizations with a scene graph.
-
-
-
-Why for Generous: Konva is lightweight (no external dependencies), supports real-time updates for collaborative features, and offers drag-and-drop, animations, and event handling, ideal for Generous’ dynamic canvas where users collaboratively create simulations or games. Its scene graph simplifies managing complex visuals, and it performs well on mobile devices.
-
-
-
+Why for Generous: Konva is lightweight (no external dependencies), supports real-time updates for collaborative features, and offers drag-and-drop, animations, and event handling, ideal for Generous dynamic canvas where users collaboratively create simulations or games. Its scene graph simplifies managing complex visuals, and it performs well on mobile devices.
 CDNJS Link (Konva 9.3.6):
-
-
-
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/konva/9.3.6/konva.min.js"></script>
-
-
-
 Integration with Generous:
-
-
-
-
-
-Real-Time Collaboration: Use Konva’s stage.toJSON() and Konva.Node.create() to serialize and sync canvas state over WebSockets (e.g., via Socket.IO) for multiplayer updates.
-
-
-
+Real-Time Collaboration: Use Konvas stage.toJSON() and Konva.Node.create() to serialize and sync canvas state over WebSockets (e.g., via Socket.IO) for multiplayer updates.
 Mobile Performance: Enable pixelRatio adjustments for crisp rendering on high-DPI mobile screens.
-
-
-
-Retro Aesthetic: Style shapes with Generous’ color palette (e.g., Vibrant Sky Blue #00A3FF, Warm Orange #FF5733) and apply Space Grotesk for text via Konva’s Text nodes.
-
-
-
+Retro Aesthetic: Style shapes with Generous color palette (e.g., Vibrant Sky Blue #00A3FF, Warm Orange #FF5733) and apply Space Grotesk for text via Konvas Text nodes.
 Example Usage (React for Generous):
-
 import { useEffect, useRef } from 'react';
 function CollaborativeCanvas() {
   const containerRef = useRef(null);
@@ -1781,54 +1747,17 @@ function CollaborativeCanvas() {
   return <div ref={containerRef} style={{ background: '#F5F5F5' }} />; // Light Gray canvas background
 }
 
-
-
-Why Best Fit: Konva’s simplicity, performance, and event-driven API make it ideal for Generous’ real-time, interactive canvas. It was previously recommended (April 13, 2025) for its balance of ease and power, and it supports Generous’ collaborative and mobile-first goals.
+Why Best Fit: Konvas simplicity, performance, and event-driven API make it ideal for Generous real-time, interactive canvas. It was previously recommended (April 13, 2025) for its balance of ease and power, and it supports Generous collaborative and mobile-first goals.
 
 2. Fabric.js
-
-
-
-
-
 Purpose: A canvas library for interactive graphics, supporting shapes, text, images, and animations with an object-oriented model.
-
-
-
-Why for Generous: Fabric.js excels at creating editable, interactive visualizations (e.g., design tools or collaborative boards), supports real-time updates via canvas serialization, and is mobile-friendly. Its ability to handle text and images aligns with Generous’ retro aesthetic for styled visualizations.
-
-
-
-CDNJS Link (Fabric.js 5.3.1):
-
-
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-
-
-
+Why for Generous: Fabric.js excels at creating editable, interactive visualizations (e.g., design tools or collaborative boards), supports real-time updates via canvas serialization, and is mobile-friendly. Its ability to handle text and images aligns with Generous retro aesthetic for styled visualizations.
+CDNJS Link (Fabric.js 5.3.1): <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 Integration with Generous:
-
-
-
-
-
 Real-Time Collaboration: Use canvas.toJSON() and canvas.loadFromJSON() to sync canvas state across users in real time.
-
-
-
 Mobile Performance: Optimize by limiting object counts and using canvas.renderOnAddRemove = false for batch updates.
-
-
-
-Retro Aesthetic: Apply Space Grotesk for text objects and use Generous’ colors (e.g., Bright Green #00FF85 for interactive elements).
-
-
-
+Retro Aesthetic: Apply Space Grotesk for text objects and use Generous colors (e.g., Bright Green #00FF85 for interactive elements).
 Example Usage (React for Generous):
-
 import { useEffect, useRef } from 'react';
 function CanvasEditor() {
   const canvasRef = useRef(null);
@@ -1851,52 +1780,16 @@ function CanvasEditor() {
   return <canvas ref={canvasRef} width={400} height={400} style={{ background: '#2A2A2A' }} />; // Dark Gray for dark mode
 }
 
-
-
-Why Suitable: Fabric.js is powerful for Generous’ collaborative editing needs, offering flexibility for simulations and visualizations with minimal setup.
+Why Suitable: Fabric.js is powerful for Generous collaborative editing needs, offering flexibility for simulations and visualizations with minimal setup.
 
 3. ZIM
-
-
-
-
-
 Purpose: A creative coding framework for canvas-based animations, games, and interactive visualizations.
-
-
-
-Why for Generous: ZIM provides a high-level API for rapid development of interactive visuals, supports drag-and-drop and animations, and includes built-in accessibility features, aligning with Generous’ collaborative and inclusive goals. Its mobile-optimized rendering suits your mobile-first design.
-
-
-
-CDNJS Link (ZIM 10.8.0):
-
-
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/zimjs/10.8.0/zim.min.js"></script>
-
-
-
+Why for Generous: ZIM provides a high-level API for rapid development of interactive visuals, supports drag-and-drop and animations, and includes built-in accessibility features, aligning with Generous collaborative and inclusive goals. Its mobile-optimized rendering suits your mobile-first design.
+CDNJS Link (ZIM 10.8.0):<script src="https://cdnjs.cloudflare.com/ajax/libs/zimjs/10.8.0/zim.min.js"></script>
 Integration with Generous:
-
-
-
-
-
-Real-Time Collaboration: Use ZIM’s toString() and fromString() methods to serialize and share canvas states.
-
-
-
-Mobile Performance: Leverage ZIM’s Frame scaling for responsive canvas sizing on mobile devices.
-
-
-
-Retro Aesthetic: Customize components with Generous’ palette and Space Grotesk for labels.
-
-
-
+Real-Time Collaboration: Use ZIMs toString() and fromString() methods to serialize and share canvas states.
+Mobile Performance: Leverage ZIMs Frame scaling for responsive canvas sizing on mobile devices.
+Retro Aesthetic: Customize components with Generous palette and Space Grotesk for labels.
 Example Usage (React for Generous):
 
 import { useEffect } from 'react';
@@ -1922,32 +1815,13 @@ function InteractiveCanvas() {
   return <div id="canvas" />;
 }
 
-
-
-Why Suitable: ZIM’s beginner-friendly API and built-in interactivity make it a strong choice for Generous’ dynamic, game-like visualizations, though it’s slightly heavier due to CreateJS inclusion.
+Why Suitable: ZIMs beginner-friendly API and built-in interactivity make it a strong choice for Generous dynamic, game-like visualizations, though its slightly heavier due to CreateJS inclusion.
 
 Considerations for Generous
-
-
-
-
-
-Real-Time Collaboration: All libraries support serialization (e.g., toJSON or toString) for syncing canvas states via WebSockets, critical for Generous’ multiplayer features. Pair with a library like Socket.IO (available on CDNJS) for networking.
-
-
-
+Real-Time Collaboration: All libraries support serialization (e.g., toJSON or toString) for syncing canvas states via WebSockets, critical for Generous multiplayer features. Pair with a library like Socket.IO (available on CDNJS) for networking.
 Mobile-First: Konva and ZIM offer responsive scaling, while Fabric.js requires manual optimization. Test on mobile devices to ensure smooth performance.
-
-
-
-Retro Aesthetic: Apply Generous’ style guide (e.g., Vibrant Sky Blue, Warm Orange, Space Grotesk) to shapes, text, and backgrounds. Use dark mode colors (e.g., Dark Gray #2A2A2A) for accessibility.
-
-
-
+Retro Aesthetic: Apply Generous style guide (e.g., Vibrant Sky Blue, Warm Orange, Space Grotesk) to shapes, text, and backgrounds. Use dark mode colors (e.g., Dark Gray #2A2A2A) for accessibility.
 Performance: Konva is the lightest and fastest, followed by Fabric.js. ZIM is slightly heavier but offers more out-of-the-box features. Limit redraws and use debouncing for real-time updates.
-
-
-
 React Integration: Use useEffect and useRef to manage canvas lifecycle in React components, as shown. Avoid re-rendering the canvas unnecessarily by memoizing components.`;
 
       // Create a prompt specifically for HTML visualization
