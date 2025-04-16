@@ -114,7 +114,7 @@ export default async function ChatRoomPage({
   })) : [];
 
   return (
-    <div className="flex flex-col w-full h-[calc(100vh-120px)]">
+    <div className="flex flex-col w-full h-[calc(100vh-80px)]">
 
 
       <ChatRoom
