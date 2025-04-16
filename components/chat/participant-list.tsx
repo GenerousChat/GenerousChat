@@ -1,17 +1,19 @@
 "use client";
 
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useCallback } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
 import { Mic, Volume2 } from "lucide-react";
+import Pusher from 'pusher-js';
 
 interface Participant {
   user_id: string;
   users: {
     email: string;
   };
+  joined_at?: string;
 }
 
 interface ParticipantListProps {
@@ -24,12 +26,22 @@ interface ParticipantInfo {
   name: string;
   isAgent: boolean;
   id: string;
+  lastActive?: number; // Timestamp of last activity
 }
 
 const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {
   const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
   const [agents, setAgents] = useState<ParticipantInfo[]>([]);
+  const [lastActivityMap, setLastActivityMap] = useState<Record<string, number>>({});
   const { isParticipantSpeaking, getParticipantActivityType } = useSpeaking();
+  
+  // Check if user is active (activity in last 5 minutes)
+  const isActive = useCallback((userId: string) => {
+    const lastActive = lastActivityMap[userId] || 0;
+    const now = Date.now();
+    const fiveMinutesAgo = now - 5 * 60 * 1000; // 5 minutes in milliseconds
+    return lastActive > fiveMinutesAgo;
+  }, [lastActivityMap]);
   
   // Load agents from the database
   useEffect(() => {
@@ -44,7 +56,8 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           const agentInfo = data.map(agent => ({
             id: agent.id,
             name: agent.name,
-            isAgent: true
+            isAgent: true,
+            lastActive: Date.now() // Agents are always considered active
           }));
           setAgents(agentInfo);
           
@@ -78,10 +91,13 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         const newInfo = { ...userInfo };
         profiles.forEach(profile => {
           if (profile.name) {
+            // Preserve existing lastActive value if it exists
+            const existingInfo = newInfo[profile.id];
             newInfo[profile.id] = {
               id: profile.id,
               name: profile.name,
-              isAgent: false
+              isAgent: false,
+              lastActive: existingInfo?.lastActive
             };
           }
         });
@@ -92,6 +108,142 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
     loadProfiles();
   }, [participants.map(p => p.user_id).join(',')]); // Only reload if participant IDs change
   
+  // Setup Pusher to track user activity
+  useEffect(() => {
+    // Initialize Pusher
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY || '96f9360f34a831ca1901', {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'us3',
+    });
+    
+    // Assuming we're in a chat room, get roomId from URL or context
+    const pathParts = window.location.pathname.split('/');
+    const roomId = pathParts[pathParts.length - 1]; // Gets the last part of the URL path
+    
+    // Subscribe to the room channel
+    const channel = pusher.subscribe(`room-${roomId}`);
+    
+    // Update activity on various events
+    const handleActivity = (data: any) => {
+      if (data && data.user_id) {
+        updateUserActivity(data.user_id);
+      }
+    };
+    
+    channel.bind('new-message', handleActivity);
+    channel.bind('user-joined', handleActivity);
+    channel.bind('new-status', handleActivity);
+    channel.bind('heartbeat', handleActivity);
+    
+    // Clean up on unmount
+    return () => {
+      channel.unbind_all();
+      pusher.unsubscribe(`room-${roomId}`);
+    };
+  }, []);
+  
+  // Update user activity timestamp
+  const updateUserActivity = useCallback((userId: string) => {
+    const now = Date.now();
+    setLastActivityMap(prev => ({ ...prev, [userId]: now }));
+    
+    // Also update in userInfo if it exists
+    setUserInfo(prev => {
+      if (prev[userId]) {
+        return {
+          ...prev,
+          [userId]: {
+            ...prev[userId],
+            lastActive: now
+          }
+        };
+      }
+      return prev;
+    });
+  }, []);
+  
+  // Send heartbeat to indicate user is active
+  const sendHeartbeat = useCallback(async () => {
+    try {
+      // Get current user ID
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const currentUserId = data.user?.id;
+      
+      if (currentUserId) {
+        // Get roomId from URL
+        const pathParts = window.location.pathname.split('/');
+        const roomId = pathParts[pathParts.length - 1];
+        
+        // We can't directly trigger events from the client with standard Pusher
+        // Instead, we'll use a client-side trigger endpoint
+        const timestamp = new Date().toISOString();
+        
+        // Create a custom event to broadcast to other clients
+        const eventData = {
+          user_id: currentUserId,
+          timestamp: timestamp
+        };
+        
+        // Update local activity state
+        updateUserActivity(currentUserId);
+        
+        // Send the heartbeat through our API endpoint
+        await fetch('/api/heartbeat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            roomId,
+            userId: currentUserId,
+            timestamp: timestamp
+          }),
+        });
+      }
+    } catch (error) {
+      console.error('Error sending heartbeat:', error);
+    }
+  }, [updateUserActivity]);
+  
+  // Initialize activity on component mount from joined_at timestamps
+  useEffect(() => {
+    const activityMap: Record<string, number> = {};
+    
+    participants.forEach(participant => {
+      if (participant.joined_at) {
+        const joinedTime = new Date(participant.joined_at).getTime();
+        activityMap[participant.user_id] = joinedTime;
+      }
+    });
+    
+    // Only update if we have new data
+    if (Object.keys(activityMap).length > 0) {
+      setLastActivityMap(prev => ({ ...prev, ...activityMap }));
+    }
+  }, [participants]);
+  
+  // Set up heartbeat interval
+  useEffect(() => {
+    // Send initial heartbeat
+    sendHeartbeat();
+    
+    // Set up interval to send heartbeat every 30 seconds
+    const heartbeatInterval = setInterval(() => {
+      sendHeartbeat();
+    }, 30 * 1000); // 30 seconds
+    
+    return () => {
+      clearInterval(heartbeatInterval);
+    };
+  }, [sendHeartbeat]);
+  
+  // Sort participants by activity status
+  const sortedParticipants = [...participants].sort((a, b) => {
+    const aActive = isActive(a.user_id) ? 1 : 0;
+    const bActive = isActive(b.user_id) ? 1 : 0;
+    return bActive - aActive; // Active users first
+  });
+
   return (
     <div className="w-full border dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col">
     <div className="text-sm text-muted-foreground">
@@ -131,9 +283,9 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       
       <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
         {/* Human participants */}
-        {participants.map((participant) => {
+        {sortedParticipants.map((participant) => {
           const info = userInfo[participant.user_id] || { id: participant.user_id, name: 'Loading...', isAgent: false };
-          const isOnline = true; // TODO: Add online status tracking
+          const isOnline = isActive(participant.user_id);
           return (
             <div 
               key={participant.user_id} 
