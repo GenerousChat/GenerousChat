@@ -18,7 +18,7 @@ export default async function AuthButton() {
         {user.email}
       </span>
       <Link href="/profile">
-        <div className="flex">
+        <div className="flex  items-center gap-3">
           <UserCircle className="h-4 w-4" />
           <span>Profile</span>
         </div>
@@ -26,12 +26,10 @@ export default async function AuthButton() {
       <form action={signOutAction}>
         <Button 
           type="submit" 
-          variant="outline" 
           size="sm"
           className="flex items-center gap-2 border-muted-foreground/20 hover:border-primary/30 hover:bg-primary/5"
         >
           <LogOut className="h-4 w-4" />
-          <span>Sign out</span>
         </Button>
       </form>
     </div>

@@ -111,15 +111,14 @@ export default async function ChatRoomPage(props: any) {
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-120px)]">
-      <div className="flex justify-between items-center mb-4">
-          <Button size="sm" asChild className="mb-2">
-            <Link href="/chat">← Back to Rooms</Link>
+      <div className="flex flex-col items-center justify-center mb-4 space-y-2">
+        <nav className="flex items-center space-x-2 text-sm">
+          <Button size="sm" variant="ghost" asChild>
+            <Link href="/chat">Lobby</Link>
           </Button>
-          <h1 className="text-2xl font-bold">{room.name}</h1>
-          {room.description && (
-            <p className="text-muted-foreground">{room.description}</p>
-          )}
-       
+          <span className="text-muted-foreground">/</span>
+          <span className="font-medium text-foreground">{room.name}</span>
+        </nav>
       </div>
 
       <ChatRoom

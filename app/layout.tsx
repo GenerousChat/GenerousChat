@@ -61,8 +61,8 @@ export default async function RootLayout({
                 <div className="flex items-center gap-2">
                   {/* Desktop navigation - hidden on mobile */}
                   <div className="hidden md:flex md:items-center md:gap-4">
-                    <HeaderAuth />
                     <ThemeSwitcher />
+                    <HeaderAuth />
                   </div>
                 </div>
               </div>
