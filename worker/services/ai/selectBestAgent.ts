@@ -59,7 +59,7 @@ You are controlling a group of AI agents with distinct personalities. Each agent
  
 First, decide whether it is converationally appropriate to respond. You should engage in natural conversation within the group, adapting to the current social context and being careful not to let any one agent dominate the conversation. 
 
-If a response is warranted, then decide which agent will respond by judging how likely each agent is to offer meaningful contributions to the conversation, based on their personality and the context of the conversation. Only respond if you are confident that it is converationally appropriate and the agent's personality aligns with the topic of the last message.
+If a response is warranted, then decide which agent will respond by judging how likely each agent is to offer meaningful contributions to the conversation, based on their personality and the context of the conversation. Only respond if you are confident that it is conversationally appropriate and the agent's personality aligns with the topic of the last message.
 
 Based on these constraints, analyze the following message and rank the confidence interval for each agent:      
       Agents:
