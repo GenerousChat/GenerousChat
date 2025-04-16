@@ -7,6 +7,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
 import { Mic, Volume2 } from "lucide-react";
 import Pusher from 'pusher-js';
+import { Tooltip } from 'react-tooltip';
 
 interface Participant {
   user_id: string;
@@ -29,9 +30,16 @@ interface ParticipantInfo {
   lastActive?: number; // Timestamp of last activity
 }
 
+interface AgentInfo {
+  id: string;
+  name: string;
+  isAgent: boolean;
+  description: string;
+}
+
 const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {
   const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
-  const [agents, setAgents] = useState<ParticipantInfo[]>([]);
+  const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [lastActivityMap, setLastActivityMap] = useState<Record<string, number>>({});
   const { isParticipantSpeaking, getParticipantActivityType } = useSpeaking();
   
@@ -48,28 +56,41 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
     const loadAgents = async () => {
       try {
         const supabase = createClient();
+        // Explicitly select id, name, and personality_prompt
         const { data, error } = await supabase
           .from('agents')
-          .select('id, name');
-        
-        if (!error && data) {
-          const agentInfo = data.map(agent => ({
+          .select('id, name, personality_prompt');
+
+        if (error) {
+           return; // Stop if there's an error
+        }
+
+        if (data) {
+          // Ensure mapping includes description from personality_prompt
+          const agentInfo: AgentInfo[] = data.map(agent => ({
             id: agent.id,
             name: agent.name,
             isAgent: true,
-            lastActive: Date.now() // Agents are always considered active
+            // Correctly map personality_prompt to description
+            description: agent.personality_prompt || 'No description available.'
           }));
-          setAgents(agentInfo);
           
-          // Add agents to userInfo
+          setAgents(agentInfo); // Update state with AgentInfo array
+
+          // Add agents to userInfo (This part only adds basic info for presence, not the description)
           const newInfo = { ...userInfo };
           agentInfo.forEach(agent => {
-            newInfo[agent.id] = agent;
+            newInfo[agent.id] = {
+              id: agent.id,
+              name: agent.name,
+              isAgent: true,
+              lastActive: Date.now() // Agents are always considered active
+              // Note: We are NOT adding agent.description to the general userInfo here
+            };
           });
           setUserInfo(newInfo);
         }
       } catch (error) {
-        console.error('Error loading agents:', error);
       }
     };
     
@@ -89,7 +110,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       }
 
       const supabase = createClient();
-      console.log("[ParticipantList] Fetching profiles for IDs:", idsToFetch); // Add logging
 
       try { // Add try-catch block
         const { data: profiles, error } = await supabase
@@ -98,7 +118,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           .in('id', idsToFetch); // Only fetch missing profiles
 
         if (error) {
-          console.error("[ParticipantList] Error fetching profiles:", error); // Log errors
           // Set default names for IDs that failed to fetch
           setUserInfo(prevInfo => {
             const newInfo = { ...prevInfo };
@@ -118,7 +137,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         }
 
         if (profiles) {
-          console.log("[ParticipantList] Fetched profiles:", profiles); // Log fetched data
           setUserInfo(prevInfo => {
             const newInfo = { ...prevInfo };
             // Keep track of IDs that were successfully updated
@@ -150,12 +168,10 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
                 }
             });
 
-            console.log("[ParticipantList] Updated userInfo:", newInfo); // Log updated state
             return newInfo;
           });
         }
       } catch (fetchError) {
-         console.error('[ParticipantList] Exception during profile fetch:', fetchError);
          // Set default names for IDs that failed to fetch due to exception
          setUserInfo(prevInfo => {
             const newInfo = { ...prevInfo };
@@ -275,7 +291,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         });
       }
     } catch (error) {
-      console.error('Error sending heartbeat:', error);
     }
   }, [updateUserActivity]);
   
@@ -320,9 +335,10 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
 
   return (
     <div className="w-full  overflow-hidden  flex flex-col">
-    <div className="text-sm text-muted-foreground">
-          {participants?.length || 0} participant(s)
-        </div>
+      <Tooltip id="agent-tooltip" className="max-w-[300px]" />
+      <div className="text-sm text-muted-foreground">
+        <p>Participants ({participants.length + agents.length})</p>
+      </div>
       
       {/* Audio Room Join Button */}
       {false && onJoinAudio && !showAudioRoom && (
@@ -392,7 +408,11 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           return (
             <div 
               key={agent.id} 
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
+              // Add data attributes for react-tooltip
+              data-tooltip-id="agent-tooltip" 
+              data-tooltip-content={agent.description} 
+              data-tooltip-place="right" // Optional: position preference
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70 cursor-default"
             >
               <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-blue-500 dark:bg-blue-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
               <span className="text-sm truncate text-gray-900 dark:text-gray-100">{agent.name}</span>
