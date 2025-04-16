@@ -333,6 +333,11 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
     return bActive - aActive; // Active users first
   });
 
+  // Calculate active count for HUMAN participants only
+  const activeParticipantsCount = participants.filter(p => isActive(p.user_id)).length;
+  const totalActiveHumans = activeParticipantsCount;
+  const totalHumanParticipants = participants.length;
+
   return (
     <div className="w-full  overflow-hidden  flex flex-col">
       <Tooltip 
@@ -341,7 +346,8 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         clickable={true} 
       />
       <div className="text-sm text-muted-foreground">
-        <p>Participants ({participants.length + agents.length})</p>
+        {/* Show Active Humans / Total Humans */}
+        <p>Participants ({totalActiveHumans} / {totalHumanParticipants})</p>
       </div>
       
       {/* Audio Room Join Button */}
