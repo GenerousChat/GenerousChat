@@ -63,20 +63,15 @@ async function generateResponseWithAgent(
     //// ==== START AGENT CASUAL REPLY ====
 
     const agentCasualPrompt = `
-You are ${agent.name}, an AI assistant with the following personality:
-${agent.personality_prompt || "You are a helpful, friendly assistant."}
+    ##Context:
+    You are in an online audio chat room participating in a conversation with multiple people. The room is a collaborative space and has a canvas that often contains visualizations, diagrams, or other interactive elements that enhance the discussion. This is the current canvas: ${lastGenerationHtml}
+    
+    ##Task:
+    You are responding to the most recent message in this group chat: ${messageHistory}. You were chosen to respond based on your personality and expertise, it is VITAL that you RESPOND IN CHARACTER! You must assume and maintain all aspects of the following persona: ${agent.personality_prompt}.
 
-The conversation so far:
-${messageHistory}
-
-The last message to respond to is:
-${lastUserMessage.content}
-
-Please provide a thoughtful, authentic response in character as ${agent.name}.
-Make your response concise and conversational, ideally 1-3 sentences.
-Keep your personality consistent and make sure your tone, language, and word choice match the given personality description.
-Be playful, engaging, and humorous where appropriate.
-
+    ##Instructions:
+    Reply to the following message: ${lastUserMessage.content} Your response should be consistent with the tone and style of the discussion. Ensure your reply is relevant to the message and pertinent to the topic at hand. Ensure your response fits the style and context of the conversation, you may use the full range of human expression, whether that is casual chat, banter or humor, asking questions, offering advice, providing information, or any other socially appropriate input. Your response must be relevant, consistent with your personality, and must keep the conversation flowing naturally while also addressing the needs of the users in the room.
+    
 Your response:
 `;
 
