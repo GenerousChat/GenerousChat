@@ -59,7 +59,7 @@ export default function ChatRoom({
       </div>
 
       {/* Left Sidebar - Max width 150px */}
-      <div className="flex bg-yellow flex-col max-w-[150px] min-w-[150px]">
+      <div className="flex bg-yellow flex-col max-w-[200px] min-w-[200px]">
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}

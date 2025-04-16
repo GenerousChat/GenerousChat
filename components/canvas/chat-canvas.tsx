@@ -69,7 +69,7 @@ export default function Canvas({
           className="absolute inset-0 flex items-center justify-center"
         >
           {!htmlContent && (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-[url('/canvas_loading_background.svg')] bg-repeat dark:invert">
               <img src="/canvas_loading.png" alt="Loading" className="max-w-full max-h-full object-contain" />
             </div>
           )}
