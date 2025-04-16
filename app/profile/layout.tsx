@@ -11,9 +11,7 @@ export const viewport: Viewport = {
   colorScheme: "dark light"
 };
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const defaultUrl = "https://generous.rocks";
 
 export const metadata: Metadata = {
   title: "Profile",

@@ -1,7 +1,8 @@
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import React from "react";
 import { Viewport } from "next";
+import { notFound } from "next/navigation";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -13,9 +14,7 @@ export const viewport: Viewport = {
   colorScheme: "dark light"
 };
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const defaultUrl = "https://generous.rocks";
 
 // In Next.js, params is passed as a Promise
 export async function generateMetadata({ 

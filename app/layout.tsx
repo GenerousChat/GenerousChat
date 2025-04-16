@@ -17,9 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 
 import "./globals.css";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const defaultUrl = "https://generous.rocks";
 
 export const viewport: Viewport = {
   width: "device-width",
