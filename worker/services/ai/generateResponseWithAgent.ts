@@ -257,7 +257,7 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
     
 
          const { text: htmlContent } = await generateText({
-          model: openai('gpt-4o'),
+          model: openai(process.env.DEBUG_MODEL || 'o3-mini'),
           temperature: 0.9,
           prompt: htmlPrompt,
           maxTokens: 10000,

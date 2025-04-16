@@ -5,7 +5,7 @@ import logger from "../../utils/logger.js";
 async function generateAITextResponse(prompt: string, options: any): Promise<string> {
   try {
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model: openai(process.env.DEBUG_MODEL || 'gpt-4o'),
       prompt,
       temperature: 0.8,
       maxTokens: options?.tokens || 150, // Adjust as needed for response length
