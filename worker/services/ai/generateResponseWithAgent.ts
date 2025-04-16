@@ -1958,7 +1958,7 @@ React Integration: Use useEffect and useRef to manage canvas lifecycle in React 
 
 ## Canvas Rules
 - **IMPORTANT: Only render the html and do not include any comments or markdown or code blocks**
-- Everything you generate will be rendered diractly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
+- Everything you generate will be rendered directly in the sidebar, only render the html and do not include any comments or markdown or code blocks. 
 - Everything must be rendered in html in the sidebar and must be responsive.
 - Keep every visualization centered in the viewport
 - Use responsive design principles to create the best possible user experience
@@ -1988,10 +1988,10 @@ React Integration: Use useEffect and useRef to manage canvas lifecycle in React 
 - Create a visualization that directly fulfills the most recent build/create/update request, ${lastUserMessage.content}
 - Optimize performance (lazy load libraries, efficient code) 
 - Balance aesthetics with functionality - beautiful but purposeful
-- Use libraries and technologies that fit the conversation needs
+- For interactive elements, use clear and intuitive controls
+- Provide clear visual cues for how to interact with your creation
 - Add thoughtful interactivity that improves understanding
 - Make sure to INCLUDE EVENT LISTENERS for user interactions
-- Provide clear visual cues for how to interact with your creation
 - Include helpful annotations where appropriate
 - Handle edge cases gracefully with fallbacks
 
