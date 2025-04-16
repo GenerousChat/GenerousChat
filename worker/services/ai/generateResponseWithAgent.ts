@@ -87,6 +87,53 @@ Your response should be short and pithy, one to two sentences at most. You may u
 
     // If the confidence for a visualization is high, generate HTML content
     if (shouldGenerateHtml) {
+        // Generate a unique slug for the generation
+        const slug = uniqueNamesGenerator({
+          dictionaries: [adjectives, animals],
+          separator: '_',
+          style: 'lowerCase',
+        });
+        
+        // Create an empty generation row first
+        const { data: emptyGeneration, error: emptyInsertError } = await supabaseService.supabase
+          .from("canvas_generations")
+          .insert({
+            canvas_id: roomId,
+            html: null,
+            render_method: 'fallback_iframe',
+            summary: `Visualization in progress...`,
+            created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a',
+            type: "visualization",
+            slug,
+            room_id: roomId,
+            metadata: {
+              status: 'generating',
+              fallback: true
+            },
+          })
+          .select()
+          .single();
+          
+        if (emptyInsertError) {
+          logger.error("Error creating empty generation row:", emptyInsertError);
+          return false;
+        }
+        
+        // Send a notification to clients about the new generation (in progress)
+        if (emptyGeneration && emptyGeneration.id) {
+          await pusherService.sendNewGeneration(
+            roomId,
+            emptyGeneration.id,
+            "new-generation",
+            emptyGeneration.created_at || new Date().toISOString(),
+            slug
+          );
+
+          logger.info(
+            "Notification sent to clients about new generation (in progress):",
+            emptyGeneration.id
+          );
+        }
 
         //// ==== START AGENT EXPERT REPLY ====
         // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
@@ -210,35 +257,25 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
     
 
          const { text: htmlContent } = await generateText({
-          model: openai('o3-mini'),
+          model: openai('gpt-4o'),
           temperature: 0.9,
           prompt: htmlPrompt,
           maxTokens: 10000,
         });
 
-        const slug = uniqueNamesGenerator({
-          dictionaries: [adjectives, animals],
-          separator: '_',
-          style: 'lowerCase',
-        });
-
-        // Store the generated HTML in the database
-        const { data: generation, error: insertError } = await supabaseService.supabase
+        // Update the existing generation with the completed content
+        const { data: updatedGeneration, error: updateError } = await supabaseService.supabase
           .from("canvas_generations")
-          .insert({
-            canvas_id: roomId,
+          .update({
             html: htmlContent,
-            render_method: 'fallback_iframe',
-            summary: `Visualization for:...`, // @todo - make a summary
-            created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a', // @todo - figure that out
-            type: "visualization",
-            slug,
             agent_expert_response: agentExpertResponse,
-            room_id: roomId,
+            summary: `Visualization for: ${lastUserMessage.content.substring(0, 50)}${lastUserMessage.content.length > 50 ? '...' : ''}`,
             metadata: {
+              status: 'completed',
               fallback: true
             },
           })
+          .eq('id', emptyGeneration.id)
           .select()
           .single();
 
@@ -251,25 +288,25 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
          console.log("DREAM");
          console.log("DREAM");
 
-         console.log({ generation });
-          console.log("Attempting to push notification about new generation");
+         console.log({ updatedGeneration });
+         console.log("Attempting to push notification about completed generation");
 
-        // Send a notification to clients about the new generation
-        if (generation && generation.id) {
+        // Send a notification to clients about the completed generation
+        if (updatedGeneration && updatedGeneration.id) {
           await pusherService.sendNewGeneration(
             roomId,
-            generation.id,
-            "new-generation",
-            generation.created_at || new Date().toISOString(),
+            updatedGeneration.id,
+            "generation-completed",
+            updatedGeneration.created_at || new Date().toISOString(),
             slug
           );
 
           logger.info(
-            "Notification sent to clients about new generation:",
-            generation.id
+            "Notification sent to clients about completed generation:",
+            updatedGeneration.id
           );
         } else {
-          logger.warn("Cannot send notification: generation ID is undefined");
+          logger.warn("Cannot send notification: updated generation ID is undefined");
         }
         return true;
       } catch (e) {

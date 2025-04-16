@@ -75,7 +75,19 @@ export function GenerationHistory({
           // Update the generations state based on the change type
           if (payload.eventType === 'INSERT') {
             const newGeneration = payload.new as Generation;
-            setGenerations(prev => [newGeneration, ...prev]);
+            
+            // Check if this generation already exists in our list
+            setGenerations(prev => {
+              // Check if we already have this generation
+              const exists = prev.some(g => g.id === newGeneration.id);
+              if (exists) {
+                // If it exists, update it
+                return prev.map(g => g.id === newGeneration.id ? newGeneration : g);
+              } else {
+                // If it's new, add it to the top
+                return [newGeneration, ...prev];
+              }
+            });
             
             // Set as active if it's the first one or if we don't have an active one
             if (generations.length === 0) {
@@ -130,8 +142,18 @@ export function GenerationHistory({
           }
           
           if (generation) {
-            // Add the new generation to the list
-            setGenerations(prev => [generation, ...prev].slice(0, 20));
+            // Check if this generation already exists in our list
+            setGenerations(prev => {
+              // Check if we already have this generation
+              const exists = prev.some(g => g.id === generation.id);
+              if (exists) {
+                // If it exists, update it
+                return prev.map(g => g.id === generation.id ? generation : g);
+              } else {
+                // If it's new, add it to the top
+                return [generation, ...prev].slice(0, 20);
+              }
+            });
             
             // Only set as active on first load
             if (generations.length === 0) {
@@ -142,6 +164,42 @@ export function GenerationHistory({
           }
         } catch (error) {
           console.error('Error handling new generation notification:', error);
+        }
+      });
+
+      // Listen for generation completed notifications
+      channel.bind('generation-completed', async (data: any) => {
+        console.log("Generation completed received:", data);
+
+        try {
+          const notificationData = typeof data === 'string' ? JSON.parse(data) : data;
+          
+          // Fetch the updated generation from the database
+          const { data: updatedGeneration, error } = await supabase
+            .from('canvas_generations')
+            .select('*')
+            .eq('id', notificationData.generation_id)
+            .single();
+
+          if (error) {
+            throw new Error(`Error fetching updated generation: ${error.message}`);
+          }
+          
+          if (updatedGeneration) {
+            // Update the existing generation in the list
+            setGenerations(prev => 
+              prev.map(gen => gen.id === updatedGeneration.id ? updatedGeneration : gen)
+            );
+            
+            // If this is the active generation, update it
+            if (activeGenerationId === updatedGeneration.id) {
+              onSelectGeneration(updatedGeneration);
+            }
+          } else {
+            console.warn('Updated generation not found:', notificationData.generation_id);
+          }
+        } catch (error) {
+          console.error('Error handling generation completed notification:', error);
         }
       });
 
@@ -166,11 +224,21 @@ export function GenerationHistory({
   if (generations.length === 0 && !isLoading) return null;
   if (isLoading) return <div className="p-2 border-b border-border bg-card dark:bg-card">Loading generations...</div>;
 
+  // Filter out any duplicate generations by ID
+  const uniqueGenerations = generations.reduce((acc, current) => {
+    const x = acc.find(item => item.id === current.id);
+    if (!x) {
+      return acc.concat([current]);
+    } else {
+      return acc;
+    }
+  }, [] as Generation[]);
+
   return (
     <div className="p-2 border-b border-border bg-card dark:bg-card">
       <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
         <div className="flex flex-nowrap space-x-2 p-1">
-          {generations.map(generation => (
+          {uniqueGenerations.map(generation => (
             <span
               key={generation.id}
               onClick={() => onSelectGeneration(generation)}
@@ -182,6 +250,7 @@ export function GenerationHistory({
               title={generation.summary || new Date(generation.created_at).toLocaleString()}
             >
               {generation.slug || 'Gen'}
+              {generation.metadata?.status === 'generating' && ' ⏳'}
             </span>
           ))}
         </div>
