@@ -106,13 +106,6 @@ export function CanvasVisualization({
       </div>
       
 
-      {/* Iframe container with animation */}
-      <motion.div
-        className="w-full h-full"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      >
         <iframe
           srcDoc={htmlContent}
           className="w-full h-full border-0"
@@ -121,7 +114,6 @@ export function CanvasVisualization({
           title="Conversation Visualization"
         />
         
-      </motion.div>
     </div>
   );
 }
