@@ -48,7 +48,7 @@ export function CanvasVisualization({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 bg-background dark:bg-background z-10 transition-all duration-300"
+      className="absolute inset-0 bg-background dark:bg-background z-10 transition-all duration-300 flex flex-col"
     >
       {/* Toolbar */}
       <div className="absolute top-0 left-0 right-0 z-30 p-2 flex items-center justify-between">
@@ -106,13 +106,16 @@ export function CanvasVisualization({
       </div>
       
 
+      {/* Wrapper for iframe with padding and background */}
+      <div className="flex-grow p-5 bg-[url('/canvas_loading.png')] bg-cover bg-center rounded-lg">
         <iframe
           srcDoc={htmlContent}
-          className="w-full h-full border-0"
+          // Iframe fills the padded wrapper, with rounded corners
+          className="w-full h-full border-0 rounded-md opacity-95"
           allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; display-capture; encrypted-media; fullscreen; gamepad; geolocation; gyroscope; hid; identity-credentials-get; idle-detection; interest-cohort; keyboard-map; magnetometer; microphone; midi; payment; picture-in-picture; publickey-credentials-get; screen-wake-lock; serial; storage-access; usb; web-share; xr-spatial-tracking"
           title="Conversation Visualization"
         />
-        
+      </div>
     </div>
   );
 }
