@@ -15,18 +15,42 @@ export function CanvasVisualization({
   generationId: string | null |undefined;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Update isFullscreen state when fullscreen changes from browser controls
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      // Enter fullscreen
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      // Exit fullscreen
+      document.exitFullscreen().catch(err => {
+        console.error(`Error attempting to exit fullscreen: ${err.message}`);
+      });
+    }
   };
 
   if (!htmlContent) return null;
 
   return (
     <div 
-      className={`absolute inset-0 bg-background dark:bg-background z-10 transition-all duration-300 ${
-        isFullscreen ? 'fixed top-0 left-0 right-0 bottom-0 z-50' : ''
-      }`}
+      ref={containerRef}
+      className="absolute inset-0 bg-background dark:bg-background z-10 transition-all duration-300"
     >
       {/* Toolbar */}
       <div className="absolute top-0 left-0 right-0 z-30 p-2 flex items-center justify-between bg-gradient-to-b from-background to-transparent">
@@ -34,18 +58,33 @@ export function CanvasVisualization({
         
         <div className="flex gap-2">
           {generationId && (
-            <Button
-              asChild
-              variant="outline" 
-              size="icon"
-              className="h-8 w-8 bg-white dark:bg-white shadow-sm"
-            >
-              <Link href={`/api/generation/${generationId}`} target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </Link>
-            </Button>
+            <>
+              <Button
+                asChild
+                variant="outline" 
+                size="icon"
+                className="h-8 w-8 bg-white dark:bg-white shadow-sm"
+              >
+                <Link href={`/api/generation/${generationId}`} target="_blank">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </Link>
+              </Button>
+              
+              <Button
+                asChild
+                variant="outline" 
+                size="icon"
+                className="h-8 w-8 bg-white dark:bg-white shadow-sm"
+              >
+                <Link href={`/api/generation/${generationId}/code`} target="_blank">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                  </svg>
+                </Link>
+              </Button>
+            </>
           )}
           
           <Button
