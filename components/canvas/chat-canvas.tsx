@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { 
   CanvasVisualization,
   GenerationHistory
@@ -27,11 +27,15 @@ type CanvasGeneration = {
 
 export default function Canvas({
   roomId,
+  activeGeneration,
+  onSelectGeneration
 }: {
   roomId?: string;
+  activeGeneration?: CanvasGeneration | null;
+  onSelectGeneration?: (generation: CanvasGeneration) => void;
 }) {
   
-  const [activeGeneration, setActiveGeneration] = useState<CanvasGeneration | null>(null);
+  // Generation state is now managed by parent component
   
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
  
@@ -49,19 +53,17 @@ export default function Canvas({
     }
   };
   
-  const handleSelectGeneration = (generation: CanvasGeneration) => {
-    setActiveGeneration(generation);
-    loadGenerationContent(generation); 
-  };
+  // Load content when activeGeneration changes
+  useEffect(() => {
+    if (activeGeneration) {
+      loadGenerationContent(activeGeneration);
+    }
+  }, [activeGeneration]);
 
 
   return (
     <div className="flex flex-col h-full w-full">
-          <GenerationHistory 
-        roomId={roomId || ''}
-        activeGenerationId={activeGeneration?.id}
-        onSelectGeneration={handleSelectGeneration}
-      />
+      {/* GenerationHistory moved to chat-room.tsx */}
       
       <div className="flex-1 h-full relative bg-background dark:bg-background w-full bg-red-500">
         <div 

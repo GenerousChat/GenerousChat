@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { DyteProvider } from '@dytesdk/react-web-core';
 import AudioRoom from '@/components/audio/audio-room';
@@ -10,6 +10,7 @@ import { Transcription } from './transcription';
 import { OptimizedInput } from './optimized-input';
 import { MessageList } from './message-list';
 import Canvas from "@/components/canvas/chat-canvas";
+import { GenerationHistory } from "@/components/canvas/index";
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
 import { useAudioRoom } from './hooks/useAudioRoom';
 
@@ -45,15 +46,32 @@ export default function ChatRoom({
     showAudioRoom,
     handleJoinAudioRoom
   } = useAudioRoom(roomId, currentUser.id, currentUser.email || '');
+  
+  // Canvas generation state
+  const [activeGeneration, setActiveGeneration] = useState<any>(null);
+  
+  // Handle generation selection
+  const handleSelectGeneration = (generation: any) => {
+    setActiveGeneration(generation);
+  };
 
   return (
+    <div className="w-full h-full">
+      <GenerationHistory 
+        roomId={roomId || ''}
+        activeGenerationId={activeGeneration?.id}
+        onSelectGeneration={handleSelectGeneration}
+      />
     <div className="flex w-full h-full">
 
       {/* Canvas Panel - Grows to fill remaining space */}
       <div className="flex-grow h-full overflow-hidden min-w-0">
         <div className={`w-full h-full`}>
+          
           <Canvas 
             roomId={roomId}
+            activeGeneration={activeGeneration}
+            onSelectGeneration={handleSelectGeneration}
           />
         </div>
       </div>
@@ -104,7 +122,7 @@ export default function ChatRoom({
         />
       </div>
 
-     
+      </div>
     </div>
   );
 }
