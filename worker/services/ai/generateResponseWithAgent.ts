@@ -243,7 +243,7 @@ Home Screen (Dark Mode): Deep Black (#1A1A1A) top bar, Dark Gray (#2A2A2A) canva
 # Visualization Generator
 
 You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content}
-The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. Utilize the following expert response to inform your creation: ${agentExpertResponse} but make sure to follow the guidelines below.
+The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. Utilize the following expert response as a design spec for your creation: ${agentExpertResponse}, but make sure to follow the guidelines below.
 
 #HTML/CSS/JS Generation Guidelines:
 - Use semantic HTML5 elements and refer to ${styleGuide} for styling
