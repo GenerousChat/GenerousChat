@@ -8,7 +8,6 @@ import Link from "next/link";
 import { signOutAction } from "@/app/actions";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { motion, AnimatePresence } from "framer-motion";
-import { BlurFade } from "@/components/ui/magicui/blur-fade";
 
 interface MobileNavProps {
   user: any | null;
@@ -95,7 +94,7 @@ export function MobileNav({ user }: MobileNavProps) {
               <div className="flex-1 overflow-y-auto">
                 <div className="max-w-md mx-auto p-4 space-y-4">
                   {/* Theme toggle */}
-                  <BlurFade delay={0.1} className="w-full">
+                  <div className="w-full">
                     <BackgroundGradient 
                       className="p-[1px] rounded-xl overflow-hidden"
                       gradientClassName="bg-gradient-to-br from-primary/30 via-primary/20 to-primary/5 dark:from-primary/20 dark:via-primary/15 dark:to-primary/5"
@@ -136,12 +135,12 @@ export function MobileNav({ user }: MobileNavProps) {
                         </div>
                       </div>
                     </BackgroundGradient>
-                  </BlurFade>
+                  </div>
                   
                   {user ? (
                     <>
                       {/* User email */}
-                      <BlurFade delay={0.2} className="w-full">
+                      <div className="w-full">
                         <BackgroundGradient 
                           className="p-[1px] rounded-xl overflow-hidden"
                           gradientClassName="bg-gradient-to-br from-primary/30 via-primary/20 to-primary/5 dark:from-primary/20 dark:via-primary/15 dark:to-primary/5"
@@ -157,10 +156,10 @@ export function MobileNav({ user }: MobileNavProps) {
                             </div>
                           </div>
                         </BackgroundGradient>
-                      </BlurFade>
+                      </div>
                       
                       {/* Actions */}
-                      <BlurFade delay={0.3} className="w-full">
+                      <div className="w-full">
                         <BackgroundGradient 
                           className="p-[1px] rounded-xl overflow-hidden"
                           gradientClassName="bg-gradient-to-br from-primary/30 via-primary/20 to-primary/5 dark:from-primary/20 dark:via-primary/15 dark:to-primary/5"
@@ -183,10 +182,10 @@ export function MobileNav({ user }: MobileNavProps) {
                             </Link>
                           </div>
                         </BackgroundGradient>
-                      </BlurFade>
+                      </div>
                     </>
                   ) : (
-                    <BlurFade delay={0.2} className="w-full">
+                    <div className="w-full">
                       <BackgroundGradient 
                         className="p-[1px] rounded-xl overflow-hidden"
                         gradientClassName="bg-gradient-to-br from-primary/30 via-primary/20 to-primary/5 dark:from-primary/20 dark:via-primary/15 dark:to-primary/5"
@@ -225,7 +224,7 @@ export function MobileNav({ user }: MobileNavProps) {
                           </Link>
                         </div>
                       </BackgroundGradient>
-                    </BlurFade>
+                    </div>
                   )}
                 </div>
               </div>
@@ -233,7 +232,7 @@ export function MobileNav({ user }: MobileNavProps) {
               {/* Footer with Sign Out (only shown when user is logged in) */}
               {user && (
                 <div className="border-t border-border p-4 bg-muted/40 backdrop-blur-sm">
-                  <BlurFade delay={0.4}>
+                  <div>
                     <form action={signOutAction}>
                       <Button 
                         type="submit" 
@@ -252,7 +251,7 @@ export function MobileNav({ user }: MobileNavProps) {
                         <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-destructive group-hover:translate-x-0.5 transition-transform" />
                       </Button>
                     </form>
-                  </BlurFade>
+                  </div>
                 </div>
               )}
             </motion.div>
