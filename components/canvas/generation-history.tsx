@@ -172,13 +172,13 @@ export function GenerationHistory({
 
   return (
     <div className="p-2 border-b border-border bg-card dark:bg-card">
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex space-x-2 p-1">
+      <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
+        <div className="flex flex-nowrap space-x-2 p-1">
           {generations.map(generation => (
             <span
               key={generation.id}
               onClick={() => onSelectGeneration(generation)}
-              className={`px-3 py-1 rounded text-sm transition-colors ${
+              className={`px-3 py-1 rounded text-sm transition-colors cursor-pointer inline-block flex-shrink-0 ${
                 activeGenerationId === generation.id 
                   ? "bg-primary text-primary-foreground font-medium" 
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
@@ -189,7 +189,7 @@ export function GenerationHistory({
             </span>
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
