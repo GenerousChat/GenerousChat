@@ -3,7 +3,6 @@
 import { memo, useEffect, useState, useCallback } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
 import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
 import { Mic, Volume2 } from "lucide-react";
 import Pusher from 'pusher-js';
@@ -201,7 +200,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
   // Setup Pusher to track user activity
   useEffect(() => {
     // Initialize Pusher
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY || '96f9360f34a831ca1901', {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'us3',
     });
     

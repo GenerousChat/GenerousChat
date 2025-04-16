@@ -3,13 +3,8 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Pusher from 'pusher-js';
 
-// Get messages table name from environment variable or use default
 const MESSAGES_TABLE = process.env.NEXT_PUBLIC_MESSAGES_TABLE || 'messages';
 
-// Deprecated status types - keeping for reference but no longer using
-// export type StatusType = 'join' | 'leave' | 'generation';
-
-// Simplified Message type - no longer using StatusMessage
 export type Message = {
   id: string;
   content: string;
@@ -233,13 +228,9 @@ export function useChatMessages(
       // Remove from participants list
       setParticipants(prev => prev.filter(p => p.user_id !== data.user_id));
       
-      // No longer adding status messages
     });
     
-    // No longer listening for status events
-    // channel.bind('new-status', (data: { user_id: string, status_type: string, message?: string }) => {
-    //   // Status messages have been deprecated
-    // });
+
 
     // Clean up on unmount
     return () => {
