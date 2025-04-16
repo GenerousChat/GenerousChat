@@ -79,34 +79,108 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
   // Load profile names once when participants change
   useEffect(() => {
     const loadProfiles = async () => {
+      // Filter out participants whose info we already have or are agents
+      const idsToFetch = participants
+        .map(p => p.user_id)
+        .filter(id => !userInfo[id]?.name && !agents.some(agent => agent.id === id));
+
+      if (idsToFetch.length === 0) {
+        return; // No new profiles to fetch
+      }
+
       const supabase = createClient();
-      const participantIds = participants.map(p => p.user_id);
-      
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .in('id', participantIds);
-      
-      if (!error && profiles) {
-        const newInfo = { ...userInfo };
-        profiles.forEach(profile => {
-          if (profile.name) {
-            // Preserve existing lastActive value if it exists
-            const existingInfo = newInfo[profile.id];
-            newInfo[profile.id] = {
-              id: profile.id,
-              name: profile.name,
-              isAgent: false,
-              lastActive: existingInfo?.lastActive
-            };
-          }
+      console.log("[ParticipantList] Fetching profiles for IDs:", idsToFetch); // Add logging
+
+      try { // Add try-catch block
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', idsToFetch); // Only fetch missing profiles
+
+        if (error) {
+          console.error("[ParticipantList] Error fetching profiles:", error); // Log errors
+          // Set default names for IDs that failed to fetch
+          setUserInfo(prevInfo => {
+            const newInfo = { ...prevInfo };
+            idsToFetch.forEach(id => {
+              if (!newInfo[id]) { // Only add if not present
+                 newInfo[id] = {
+                    id: id,
+                    name: `User (${id.substring(0, 4)})`, // Default placeholder
+                    isAgent: false,
+                    lastActive: undefined
+                };
+              }
+            });
+            return newInfo;
+          });
+          return;
+        }
+
+        if (profiles) {
+          console.log("[ParticipantList] Fetched profiles:", profiles); // Log fetched data
+          setUserInfo(prevInfo => {
+            const newInfo = { ...prevInfo };
+            // Keep track of IDs that were successfully updated
+            const updatedIds = new Set<string>();
+
+            profiles.forEach(profile => {
+              const profileName = profile.name?.trim(); // Use trimmed name
+              // Preserve existing lastActive value if it exists
+              const existingInfo = newInfo[profile.id];
+              newInfo[profile.id] = {
+                id: profile.id,
+                // Use fetched name or a default if empty/null
+                name: profileName || `User (${profile.id.substring(0, 4)})`,
+                isAgent: false,
+                lastActive: existingInfo?.lastActive // Keep existing activity
+              };
+              updatedIds.add(profile.id);
+            });
+
+            // Set default names for any IDs that were requested but not returned
+            idsToFetch.forEach(id => {
+                if (!updatedIds.has(id) && !newInfo[id]) { // Only add if not present and not updated
+                     newInfo[id] = {
+                        id: id,
+                        name: `User (${id.substring(0, 4)})`, // Default placeholder
+                        isAgent: false,
+                        lastActive: undefined
+                    };
+                }
+            });
+
+            console.log("[ParticipantList] Updated userInfo:", newInfo); // Log updated state
+            return newInfo;
+          });
+        }
+      } catch (fetchError) {
+         console.error('[ParticipantList] Exception during profile fetch:', fetchError);
+         // Set default names for IDs that failed to fetch due to exception
+         setUserInfo(prevInfo => {
+            const newInfo = { ...prevInfo };
+            idsToFetch.forEach(id => {
+                if (!newInfo[id]) { // Only add if not present
+                     newInfo[id] = {
+                        id: id,
+                        name: `User (${id.substring(0, 4)})`, // Default placeholder
+                        isAgent: false,
+                        lastActive: undefined
+                    };
+                }
+            });
+            return newInfo;
         });
-        setUserInfo(newInfo);
       }
     };
-    
-    loadProfiles();
-  }, [participants.map(p => p.user_id).join(',')]); // Only reload if participant IDs change
+
+    // Check if participants array is populated before loading
+    if (participants && participants.length > 0 && agents.length > 0) { // Ensure agents are loaded too
+       loadProfiles();
+    }
+
+  // Use a more stable dependency: sorted, stringified list of participant IDs + agents
+  }, [JSON.stringify(participants.map(p => p.user_id).sort()), agents, userInfo]); // Re-run if userInfo changes to catch updates
   
   // Setup Pusher to track user activity
   useEffect(() => {
@@ -284,7 +358,10 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
         {/* Human participants */}
         {sortedParticipants.map((participant) => {
-          const info = userInfo[participant.user_id] || { id: participant.user_id, name: 'Loading...', isAgent: false };
+          // Default to a basic object if info isn't loaded yet
+          const info = userInfo[participant.user_id] || { id: participant.user_id, name: null, isAgent: false };
+          // Use a placeholder name if the fetched name is null/empty/still loading
+          const displayName = info.name || `User (${participant.user_id.substring(0, 6)}...)`; // Show partial ID if name is missing
           const isOnline = isActive(participant.user_id);
           return (
             <div 
@@ -292,7 +369,8 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
               className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
             >
               <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
-              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{info.name}</span>
+              {/* Use displayName */}
+              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{displayName}</span>
               {info.isAgent && (
                 <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
               )}
