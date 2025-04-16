@@ -84,16 +84,11 @@ Your response:
       const htmlPrompt = `
 # Visualization Generator
 
-You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on the latest request. 
+You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content}
+The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}, otherwise focus on fast responses and utilize the following guidelines.
 
-## Last Generation
-${lastGenerationHtml}
-
-Only use this as inspiration if appropriate
-
-## Conversation Information:
-Most recent user message: ${lastUserMessage.content}
-Chat history: ${messageHistory}
+#HTML/CSS/JS Generation Guidelines:
+- Use semantic HTML5 elements and CSS for styling
 
 ## Available Visualization Types:
 - Charts/Graphs → Use D3.js or Chart.js
@@ -117,7 +112,6 @@ Chat history: ${messageHistory}
 - Provide clear visual cues for how to interact with your creation
 - Include helpful annotations where appropriate
 - Handle edge cases gracefully with fallbacks
-
 
 ## Implementation Details:
 - IF YOU LOAD JAVASCRIPT OR CSS FROM A CDN, NEVER USE THE INTEGRITY ATTRIBUTE
