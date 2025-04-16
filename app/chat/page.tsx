@@ -15,7 +15,8 @@ interface RoomWithCount {
   updated_at: string;
   name: string | null;
   description: string | null;
-  messages: [{ count: number }];
+  // Change messages from a tuple to an array to match Supabase return type
+  messages: { count: number; }[];
   canvas_generations: { id: string; created_at: string }[];
 }
 
@@ -102,18 +103,17 @@ export default async function ChatPage() {
                     />
                     <div className="flex-grow min-w-0"> {/* Ensure text div can shrink/grow */}
                       <CardTitle className="flex items-center justify-between text-base mb-1"> {/* Adjusted text size/margin */}
-                        <span className="truncate flex-1 mr-2">{room.name || 'Untitled Room'}</span> {/* Adjusted margin */}
-                        <TimeAgoDisplay date={room.updated_at} className="text-xs text-muted-foreground font-normal whitespace-nowrap" />
+                        <span className="truncate font-semibold group-hover:text-primary transition-colors">
+                          {room.name || 'Untitled Room'}
+                        </span>
+                        {/* Access count safely, assuming messages array might be empty */}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {room.messages?.[0]?.count ?? 0} msgs
+                        </span>
                       </CardTitle>
-                      <CardDescription className="flex items-center justify-between text-sm"> {/* Adjusted text size */}
-                        <span className="truncate flex-1 mr-2"> {/* Adjusted margin */}
-                          {room.description || 'No description.'} {/* Shortened default */} 
-                        </span>
-                        <span className="text-xs text-muted-foreground flex items-center whitespace-nowrap"> {/* Adjusted text size */}
-                          <MessageSquare className="h-3 w-3 mr-1" /> {/* Adjusted icon size */}
-                          {room.messages[0]?.count ?? 0} {room.messages[0]?.count === 1 ? 'msg' : 'msgs'} {/* Shortened text */}
-                        </span>
-                      </CardDescription>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {room.description || 'No description.'} {/* Shortened default */}
+                      </p>
                     </div>
                   </CardHeader>
                 </Card>
