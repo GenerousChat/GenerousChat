@@ -101,6 +101,7 @@ Your response:
         - Any required CSS styles
         - JavaScript for interactivity
         - Any external libraries or resources needed for the visualization
+        -Make sure the design is responsive and works well in the sidebar panel
         `;
         
         const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
@@ -132,6 +133,8 @@ ${agentExpertResponse}
 
 #HTML/CSS/JS Generation Guidelines:
 - Use semantic HTML5 elements and CSS for styling
+- Make sure the design is responsive and works well in the sidebar panel
+
 
 ## Available Visualization Types:
 - Charts/Graphs → Use D3.js or Chart.js
