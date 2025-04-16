@@ -9,11 +9,9 @@ import ParticipantList from "@/components/chat/participant-list";
 import { Transcription } from './transcription';
 import { OptimizedInput } from './optimized-input';
 import { MessageList } from './message-list';
-import { VisualizationPanel } from './visualization-panel';
-import { CanvasPanel } from './canvas-panel';
+import Canvas from "@/components/canvas/chat-canvas";
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
 import { useAudioRoom } from './hooks/useAudioRoom';
-import { useVisualizations } from './hooks/useVisualizations';
 
 interface ChatRoomProps {
   roomId: string;
@@ -48,31 +46,16 @@ export default function ChatRoom({
     handleJoinAudioRoom
   } = useAudioRoom(roomId, currentUser.id, currentUser.email || '');
 
-  const {
-    latestHtmlContent,
-    defaultHtmlContent,
-    generations,
-    selectedGenerationId,
-    setSelectedGenerationId,
-    setLatestHtmlContent
-  } = useVisualizations(roomId);
-
   return (
     <div className="flex w-full h-full">
 
       {/* Canvas Panel - Grows to fill remaining space */}
       <div className="flex-grow h-full overflow-hidden min-w-0">
-        <CanvasPanel
-          latestHtmlContent={latestHtmlContent}
-          defaultHtmlContent={defaultHtmlContent}
-          generations={generations}
-          selectedGenerationId={selectedGenerationId}
-          setSelectedGenerationId={setSelectedGenerationId}
-          setLatestHtmlContent={setLatestHtmlContent}
-          user={currentUser}
-          messages={messages}
-          roomId={roomId}
-        />
+        <div className={`w-full h-full`}>
+          <Canvas 
+            roomId={roomId}
+          />
+        </div>
       </div>
 
       {/* Left Sidebar - Max width 150px */}
