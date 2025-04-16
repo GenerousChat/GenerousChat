@@ -1990,6 +1990,7 @@ React Integration: Use useEffect and useRef to manage canvas lifecycle in React 
 - Balance aesthetics with functionality - beautiful but purposeful
 - Use libraries and technologies that fit the conversation needs
 - Add thoughtful interactivity that improves understanding
+- Make sure to include event listeners for user interactions
 - Provide clear visual cues for how to interact with your creation
 - Include helpful annotations where appropriate
 - Handle edge cases gracefully with fallbacks
