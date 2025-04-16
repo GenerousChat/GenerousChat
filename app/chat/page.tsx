@@ -83,20 +83,22 @@ export default async function ChatPage() {
             const generationId = latestGeneration?.id;
 
             // Construct the thumbnail URL using the generation ID or fallback
-            const thumbnailUrl = generationId
-              ? `https://screenshot-peach-beta.vercel.app/api?v=1&url=https://generous.rocks/api/generation/${generationId}`
-              : null; // Handle cases with no generations (or set a default image URL)
+            let thumbnailUrl = null;
+            if (generationId) {
+              const cacheBuster = new Date(room.updated_at).getTime(); // Use room's updated_at for cache busting
+              thumbnailUrl = `https://screenshot-peach-beta.vercel.app/api?v=1&url=https://generous.rocks/api/generation/${generationId}&cacheBust=${cacheBuster}`;
+            }
 
             return (
               <Link href={`/chat/${room.id}`} key={room.id} className="block group">
                 <Card className="hover:bg-muted/50 transition-colors">
                   {/* Use Flexbox for layout: Image | Text Content */}
                   <CardHeader className="flex flex-row items-start p-4"> {/* Adjust padding/items as needed */}
-                    {/* Use the RoomThumbnail client component, conditionally render or pass null/placeholder src */}
+                    {/* Use the RoomThumbnail client component, pass larger size */}
                     <RoomThumbnail
                       src={thumbnailUrl || '/placeholder.png'} // Provide a fallback image source or handle null in component
                       alt={`${room.name || 'Room'} thumbnail`}
-                      className="w-12 h-12 rounded-md mr-4 object-cover flex-shrink-0"
+                      className="w-24 h-24 rounded-md mr-4 object-cover flex-shrink-0" // <-- Increased size
                     />
                     <div className="flex-grow min-w-0"> {/* Ensure text div can shrink/grow */}
                       <CardTitle className="flex items-center justify-between text-base mb-1"> {/* Adjusted text size/margin */}
