@@ -93,10 +93,10 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
   }, [participants.map(p => p.user_id).join(',')]); // Only reload if participant IDs change
   
   return (
-    <div className="w-full border rounded-lg overflow-hidden bg-gray-50 flex flex-col">
-      <div className="p-4 border-b">
-        <h3 className="text-sm font-medium">Room Participants</h3>
-      </div>
+    <div className="w-full border dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col">
+    <div className="text-sm text-muted-foreground">
+          {participants?.length || 0} participant(s)
+        </div>
       
       {/* Audio Room Join Button */}
       {false && onJoinAudio && !showAudioRoom && (
@@ -119,17 +119,17 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       
       {/* Audio Room Status */}
       {showAudioRoom && (
-        <div className="p-3 border-b bg-green-50">
-          <div className="flex items-center justify-center gap-2 text-xs text-green-700">
+        <div className="p-3 border-b dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
+          <div className="flex items-center justify-center gap-2 text-xs text-green-700 dark:text-green-400">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></span>
               Audio Connected
             </span>
           </div>
         </div>
       )}
       
-      <div className="flex-1 p-2 space-y-1 overflow-auto">
+      <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
         {/* Human participants */}
         {participants.map((participant) => {
           const info = userInfo[participant.user_id] || { id: participant.user_id, name: 'Loading...', isAgent: false };
@@ -137,12 +137,12 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           return (
             <div 
               key={participant.user_id} 
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100"
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
             >
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span className="text-sm truncate">{info.name}</span>
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{info.name}</span>
               {info.isAgent && (
-                <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">AI</span>
+                <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
               )}
               
               {/* Speaking indicator */}
@@ -162,11 +162,11 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           return (
             <div 
               key={agent.id} 
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100"
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
             >
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-blue-500' : 'bg-gray-300'}`} />
-              <span className="text-sm truncate">{agent.name}</span>
-              <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">AI</span>
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-blue-500 dark:bg-blue-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{agent.name}</span>
+              <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
               
               {/* Speaking indicator */}
               {false && isParticipantSpeaking(agent.id) && (
@@ -201,11 +201,11 @@ const SpeakingIndicator = ({ activityType, isAgent }: SpeakingIndicatorProps) =>
   const getColorClass = () => {
     switch (activityType) {
       case 'transcribing':
-        return 'text-green-500';
+        return 'text-green-500 dark:text-green-400';
       case 'tts':
-        return 'text-blue-500';
+        return 'text-blue-500 dark:text-blue-400';
       default:
-        return 'text-gray-400';
+        return 'text-gray-400 dark:text-gray-500';
     }
   };
   

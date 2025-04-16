@@ -119,9 +119,7 @@ export default async function ChatRoomPage(props: any) {
           {room.description && (
             <p className="text-muted-foreground">{room.description}</p>
           )}
-        <div className="text-sm text-muted-foreground">
-          {participants?.length || 0} participant(s)
-        </div>
+       
       </div>
 
       <ChatRoom
