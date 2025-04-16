@@ -191,7 +191,7 @@ export default function ChatRoom({
         </div>
       ) : (
         /* Desktop view with flex layout */
-        <div className="flex w-full h-full gap-5">
+        <div className="flex w-full h-full gap-5 px-5">
 
       {/* Canvas Panel - Grows to fill remaining space */}
       <div className="flex-grow h-full overflow-hidden min-w-0">

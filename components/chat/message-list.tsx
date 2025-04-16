@@ -3,6 +3,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message, UserInfo } from './hooks/useChatMessages';
 import ReactMarkdown from 'react-markdown';
 
+interface Message {
+  id: string;
+  content: string;
+  inserted_at: string;
+  user_id: string;
+  name?: string; 
+  users?: { email: string | null } | null; 
+  profile?: { name: string | null } | null; 
+}
+
 interface MessageListProps {
   messages: Message[];
   userCache: Record<string, UserInfo>;
@@ -10,31 +20,53 @@ interface MessageListProps {
   getUserEmail: (userId: string) => string;
   getMessageTimestamp: (message: Message) => string;
   formatTime: (timestamp: string) => string;
+  loading: boolean;
 }
 
 export function MessageList({
   messages,
   userCache,
+  formatTime,
   isCurrentUser,
   getUserEmail,
-  getMessageTimestamp,
-  formatTime
-}: MessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  loading
+}: MessageListProps) { 
 
-  // Scroll to bottom when messages change
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (!viewport) return;
+
+    const scrollBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    const isNearBottom = scrollBottom < 150;
+
+    if (messagesEndRef.current && isNearBottom) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    }
   }, [messages]);
 
-  console.log({messages});
+  const getMessageTimestamp = (message: Message): number => {
+    return new Date(message.inserted_at).getTime();
+  };
 
   return (
-    <ScrollArea className="flex-1 p-4">
-      <div className="space-y-4">
-        {messages.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No messages yet. Be the first to send a message!
+    <ScrollArea className="flex-1 w-full h-full" ref={scrollAreaRef}>
+      <div className="p-4 space-y-4">
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+              </div>
+            ))}
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <p className="text-muted-foreground">No messages yet.</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -49,26 +81,26 @@ export function MessageList({
                 }
               >
                 <>
-                    <div className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <img 
-                        src={message.users?.email === "Unknown" ? "/chat_message_agent_avatar.svg" : "/chat_message_user_avatar.svg"}
-                        alt={message.users?.email === "Unknown" ? "Agent" : "User"}
-                        className="w-5 h-5 invert dark:invert-0"
-                      />
-                      {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
-                    </div>
-                    <div className="break-words prose prose-sm max-w-none dark:prose-invert text-xs">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
-                    <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-black/70" : "text-muted-foreground"}`}>
-                      {formatTime(getMessageTimestamp(message))}
-                    </div>
-                  </>
+                  <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                    <img 
+                      src={userCache[message.user_id]?.name?.toLowerCase().includes('agent') ? "/chat_message_agent_avatar.svg" : "/chat_message_user_avatar.svg"} 
+                      alt={userCache[message.user_id]?.name?.toLowerCase().includes('agent') ? "Agent" : "User"}
+                      className="w-5 h-5 invert dark:invert-0"
+                    />
+                    {message.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
+                  </div>
+                  <div className="break-words prose prose-sm max-w-none dark:prose-invert text-xs">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                  <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-black/70" : "text-muted-foreground"}`}>
+                    {formatTime(getMessageTimestamp(message))}
+                  </div>
+                </>
               </div>
             </div>
           ))
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} /> 
       </div>
     </ScrollArea>
   );
