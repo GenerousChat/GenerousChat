@@ -44,14 +44,17 @@ export function MessageList({
             >
               <div
                 className={`max-w-[80%] p-3 ${isCurrentUser(message.user_id) 
-                  ? "bg-[#FFBD9C] text-black rounded-2xl rounded-br-sm" 
+                  ? "bg-[#205cd2] text-black rounded-2xl rounded-br-sm" 
                   : "bg-muted dark:bg-gray-800 rounded-lg"}`
                 }
               >
                 <>
-                    <div className="font-medium text-sm mb-2">
-                      {isCurrentUser(message.user_id) ? '👤 ' : 
-                       message.users?.email === "Unknown" ? '🤖 ' : '👤 '}
+                    <div className="font-medium text-sm mb-2 flex items-center gap-2">
+                      <img 
+                        src={message.users?.email === "Unknown" ? "/chat_message_agent_avatar.svg" : "/chat_message_user_avatar.svg"}
+                        alt={message.users?.email === "Unknown" ? "Agent" : "User"}
+                        className="w-5 h-5 invert dark:invert-0"
+                      />
                       {message.name || message.profile?.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                     </div>
                     <div className="break-words prose prose-sm max-w-none dark:prose-invert text-xs">
