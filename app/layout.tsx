@@ -1,8 +1,8 @@
 import HeaderAuth from "@/components/ui/header-auth";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
@@ -118,18 +118,19 @@ export default async function RootLayout({
           <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
             {/* Header */}
             <nav className="sticky top-0 z-50 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="h-full flex items-center justify-between">
-                <Link 
-                  href="/" 
-                  className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
-                >
-                    <div className="rounded-lg bg-background p-2">
-                      <MessageSquare className="h-6 w-6 text-primary" />
-                    </div>
-                    Generous
-                </Link>
-                
-                <div className="flex items-center gap-2">
+              <div className="h-full grid grid-cols-3 items-center">
+                <div className="flex justify-start">
+                  <Link 
+                    href="/" 
+                    className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
+                  >
+                      <img src="/logo.svg" alt="Logo" className="h-26 dark:invert dark:brightness-200" />
+                  </Link>
+                </div>
+                <div className="flex justify-center items-center">
+                  <Breadcrumbs />
+                </div>
+                <div className="flex justify-end items-center gap-2">
                   {/* Desktop navigation - hidden on mobile */}
                   <div className="hidden md:flex md:items-center md:gap-4">
                     <HeaderAuth />

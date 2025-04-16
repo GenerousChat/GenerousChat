@@ -14,7 +14,7 @@ import {
 } from "./index";
 import { Card, CardContent } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/magicui";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { GenerationHistory } from "./generation-history";
 
 // Add debugging flag
 const DEBUG = true;
@@ -295,32 +295,11 @@ export default function Canvas({
   return (
     <div className="flex flex-col h-full">
       {/* Generation history at the top */}
-      {generations.length > 0 && (
-        <div className="p-2 border-b border-border bg-card dark:bg-card">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-2 p-1">
-              {generations.map(generation => (
-                <button
-                  key={generation.id}
-                  onClick={() => handleSelectGeneration(generation)}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                    activeGeneration?.id === generation.id 
-                      ? "bg-primary text-primary-foreground font-medium" 
-                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                  }`}
-                  title={generation.summary || new Date(generation.created_at).toLocaleString()}
-                >
-                  {generation.summary 
-                    ? (generation.summary.length > 20 
-                        ? `${generation.summary.substring(0, 20)}...` 
-                        : generation.summary)
-                    : new Date(generation.created_at).toLocaleTimeString()}
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-      )}
+      <GenerationHistory 
+        generations={generations}
+        activeGenerationId={activeGeneration?.id}
+        onSelectGeneration={handleSelectGeneration}
+      />
       
       {/* Main content area with visualization */}
       <div className="flex-1 relative overflow-hidden bg-background dark:bg-background">

@@ -4,6 +4,7 @@ export { CanvasVisualization } from './canvas-visualization';
 export { CanvasInput } from './canvas-input';
 export { LoadingOverlay } from './loading-overlay';
 export { ErrorMessage } from './error-message';
+export { GenerationHistory } from './generation-history';
 
 // Export hooks
 export { useCanvasData } from './use-canvas-data';
