@@ -8,6 +8,7 @@ import generateAITextResponse from "../ai/generateAITextResponse";
 // import generateHTMLContent from "../ai/generateHTMLContent.js";
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
 
 interface Agent {
   id: string;
@@ -193,6 +194,12 @@ ${agentExpertResponse}
           maxTokens: 10000,
         });
 
+        const slug = uniqueNamesGenerator({
+          dictionaries: [adjectives, animals],
+          separator: '_',
+          style: 'lowerCase',
+        });
+
         // Store the generated HTML in the database
         const { data: generation, error: insertError } = await supabaseService.supabase
           .from("canvas_generations")
@@ -203,6 +210,7 @@ ${agentExpertResponse}
             summary: `Visualization for:...`, // @todo - make a summary
             created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a', // @todo - figure that out
             type: "visualization",
+            slug,
             agent_expert_response: agentExpertResponse,
             room_id: roomId,
             metadata: {
@@ -230,7 +238,8 @@ ${agentExpertResponse}
             roomId,
             generation.id,
             "new-generation",
-            generation.created_at || new Date().toISOString()
+            generation.created_at || new Date().toISOString(),
+            slug
           );
 
           logger.info(

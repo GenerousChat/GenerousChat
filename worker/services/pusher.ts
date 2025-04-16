@@ -186,12 +186,14 @@ async function sendNewGeneration(
   roomId: string, 
   generationId: string, 
   type: string, 
-  createdAt: string
+  createdAt: string,
+  slug: string
 ): Promise<PusherResponse> {
   return sendToPusher(`room-${roomId}`, 'new-generation', {
     generation_id: generationId,
     type: type,
     created_at: createdAt,
+    slug: slug
   });
 }
 
