@@ -18,7 +18,12 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
 
-export default function CreateRoomForm({ userId }: { userId: string }) {
+interface CreateRoomFormProps {
+  userId: string;
+  trigger?: React.ReactNode;
+}
+
+export default function CreateRoomForm({ userId, trigger }: CreateRoomFormProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -78,14 +83,18 @@ export default function CreateRoomForm({ userId }: { userId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button 
-          className="flex items-center gap-3 px-6 py-2.5 rounded-xl"
-        >
-          <div className="p-1.5 rounded-full flex items-center justify-center">
-            <Plus size={16} />
-          </div>
-          <span>New Room</span>
-        </button>
+        {trigger ? (
+          trigger
+        ) : (
+          <button 
+            className="flex items-center gap-3 px-6 py-2.5 rounded-xl"
+          >
+            <div className="p-1.5 rounded-full flex items-center justify-center">
+              <Plus size={16} />
+            </div>
+            <span>New Room</span>
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="bg-white dark:bg-black sm:max-w-[425px] border-0 overflow-hidden p-0">
           <div className="rounded-xl p-6">
