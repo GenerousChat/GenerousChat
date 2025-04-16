@@ -262,14 +262,14 @@ export function GenerationHistory({
 
 
   return (
-    <div className="p-2 bg-card dark:bg-card">
+    <div className="p-2 ">
       <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
         <div className="flex flex-nowrap space-x-2 p-1">
           {uniqueGenerations.map(generation => (
             <span
               key={generation.id}
               onClick={() => onSelectGeneration(generation)}
-              className={`px-3 py-1 rounded text-sm transition-colors cursor-pointer inline-block flex-shrink-0 ${
+              className={`px-3 py-1 rounded-xl border dark:border-[#444] text-sm transition-colors cursor-pointer inline-block flex-shrink-0 ${
                 activeGenerationId === generation.id 
                   ? "bg-primary text-primary-foreground font-medium" 
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
