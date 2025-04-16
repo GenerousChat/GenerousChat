@@ -164,39 +164,67 @@ Your response should be short and pithy, one to two sentences at most. You may u
 const styleGuide =
 `Style Guide for Generous App
 Overview
-Generous is a generative AI app with a collaborative canvas, blending a retro-inspired aesthetic with modern functionality. The style reflects a nostalgic, analog vibe while maintaining a clean, user-friendly interface for seamless collaboration.
+Generous is a generative AI app with a collaborative canvas, featuring a retro-inspired design with modern functionality. This updated style guide includes both light and dark modes, reflecting the Figma homepage revisions, while maintaining a clean, grid-based canvas and intuitive collaborative workspace.
 
 Color Palette
-Primary Background: Vibrant Sky Blue (#00AEEF)
-Inspired by the bold blue background in the image, this color evokes a sense of openness and creativity, perfect for a collaborative canvas.
-Accent Color: Warm Orange (#FF6200)
-Drawn from the orange cube, this retro-inspired hue adds warmth and energy, highlighting interactive elements like buttons or collaborative tools.
+Light Mode (Unchanged from Previous Guide):
+Primary Background (Canvas): Light Gray (#E5E5E5) with a dot grid pattern (#D5D5D5).
+Accent Color: Warm Orange (#FF6200) for highlights (e.g., chat messages).
+Secondary Accent: Bright Green (#00FF00) for interactive elements (e.g., "Join Audio Chat").
 Neutral Tones:
-Off-White (#F5F5F5) for the robotic arm’s tone, used in UI elements like cards or backgrounds.
-Soft Black (#1A1A1A) for joints and outlines, used for text and subtle borders.
+Off-White (#F5F5F5) for UI panels (user list, chat).
+Soft Black (#1A1A1A) for text and icons.
+Background (Non-Canvas): Dark Gray (#333333) for the top bar and side panels.
+Dark Mode (New):
+Primary Background (Canvas): Dark Gray (#2A2A2A) with a lighter dot grid pattern (#3F3F3F).
+Accent Color: Warm Orange (#FF6200), retained for continuity, used for highlights (e.g., chat messages).
+Secondary Accent: Bright Green (#00FF00), retained for interactive elements (e.g., "Join Audio Chat").
+Neutral Tones:
+Dark Off-White (#D5D5D5) for UI panels (user list, chat), ensuring readability.
+Light Gray (#B0B0B0) for text and icons, replacing Soft Black for better contrast on dark backgrounds.
+Background (Non-Canvas): Deep Black (#1A1A1A) for the top bar and side panels, as seen in the dark mode Figma screenshot.
 Typography
-Primary Font: Space Grotesk
-A modern, geometric sans-serif font with a retro twist, aligning with the app’s aesthetic.
-Headings: Space Grotesk Bold, 24-36pt, for titles and section headers.
-Body Text: Space Grotesk Regular, 14-16pt, for descriptions and canvas labels.
-Accents: Space Grotesk Italic for emphasis or tooltips.
-Text Color: Soft Black (#1A1A1A) for readability, with Warm Orange (#FF6200) for CTAs or highlights.
+Primary Font: Space Grotesk, consistent across both modes.
+Headings: Space Grotesk Bold, 18-24pt (e.g., "SAMPLE ROOM TITLE").
+Body Text: Space Grotesk Regular, 12-14pt (e.g., user list, chat messages).
+Accents: Space Grotesk Italic for secondary info (e.g., timestamps).
+Text Color:
+Light Mode: Soft Black (#1A1A1A) for primary text, Warm Orange (#FF6200) for highlighted chat messages, Bright Green (#00FF00) for interactive text.
+Dark Mode: Light Gray (#B0B0B0) for primary text, Warm Orange (#FF6200) for highlighted chat messages, Bright Green (#00FF00) for interactive text.
 Imagery & Iconography
-Imagery Style: Retro-futuristic with a warm, analog filter (like the image’s soft glow). Use visuals of robotic hands, vintage tech (e.g., cassettes, dials), or abstract shapes to symbolize collaboration and creation.
-Icons: Minimal, line-based icons with rounded edges, reflecting the robotic arm’s smooth joints. Use Off-White (#F5F5F5) for icon fills with Warm Orange (#FF6200) accents on hover or active states.
+Imagery Style: Retain the retro-futuristic vibe with a watermark "Generous" logo on the canvas in both modes.
+Light Mode: Translucent Off-White (#F5F5F580).
+Dark Mode: Translucent Dark Off-White (#D5D5D580).
+Icons: Minimal icons with a retro feel.
+Light Mode: Soft Black (#1A1A1A), Bright Green (#00FF00) on hover/active.
+Dark Mode: Light Gray (#B0B0B0), Bright Green (#00FF00) on hover/active.
+Canvas Pattern:
+Light Mode: Dot grid in #D5D5D5 on Light Gray (#E5E5E5).
+Dark Mode: Dot grid in #3F3F3F on Dark Gray (#2A2A2A).
 UI Elements
-Buttons: Rounded rectangles with Warm Orange (#FF6200) backgrounds, Off-White (#F5F5F5) text, and a subtle glow effect on hover to mimic the image’s lighting.
-Canvas Background: Sky Blue (#00AEEF) to create a cohesive workspace, with a faint grid pattern in Off-White (#F5F5F5) for a retro tech vibe.
-Collaborative Elements: Highlight active users or shared tools with glowing Warm Orange (#FF6200) outlines, inspired by the cube’s prominence.
-Borders & Shadows: Soft Black (#1A1A1A) for borders, with a light drop shadow to give a floating, analog feel.
+Top Bar:
+Light Mode: Dark Gray (#333333) background, Soft Black (#1A1A1A) text, Bright Green (#00FF00) hover states.
+Dark Mode: Deep Black (#1A1A1A) background, Light Gray (#B0B0B0) text, Bright Green (#00FF00) hover states.
+Canvas:
+Light Mode: Light Gray (#E5E5E5) with dot grid (#D5D5D5), faded "Generous" watermark.
+Dark Mode: Dark Gray (#2A2A2A) with dot grid (#3F3F3F), faded "Generous" watermark.
+Side Panel (User List):
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text, colored user dots.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text, colored user dots.
+Chat Section:
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text, Warm Orange (#FF6200) highlight.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text, Warm Orange (#FF6200) highlight.
+Timestamps in Space Grotesk Italic: #666666 (Light Mode), #999999 (Dark Mode).
+Buttons:
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text/icons, Bright Green (#00FF00) active/hover.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text/icons, Bright Green (#00FF00) active/hover.
+Loading Indicator: Yellow dot (#FFFF00) in both modes.
 Tone & Voice
-Visual Tone: Playful yet functional, blending retro nostalgia with modern collaboration.
-Language: Friendly, encouraging, and creative. Example: “Let’s build something amazing together!” Use Space Grotesk for all in-app text to maintain consistency.
+Visual Tone: Clean, collaborative, and retro-inspired, with a seamless transition between light and dark modes.
+Language: Casual and community-driven. Example: “Let’s create something awesome together!” Use Space Grotesk for all text.
 Example Application
-Home Screen: Sky Blue (#00AEEF) background with a robotic hand graphic passing an orange cube, welcoming users to “Start Creating.” Buttons in Warm Orange (#FF6200) with Space Grotesk Bold text.
-Collaborative Canvas: Sky Blue workspace with Off-White gridlines, orange-highlighted tools, and user cursors with glowing Warm Orange outlines. Tooltips in Space Grotesk Italic.`
-
-
+Home Screen (Light Mode): Dark Gray (#333333) top bar, Light Gray (#E5E5E5) canvas with dot grid, Off-White (#F5F5F5) side panels, Warm Orange (#FF6200) chat highlights.
+Home Screen (Dark Mode): Deep Black (#1A1A1A) top bar, Dark Gray (#2A2A2A) canvas with dot grid, Dark Off-White (#D5D5D5) side panels, Warm Orange (#FF6200) chat highlights.
 
       // Create a prompt specifically for HTML visualization
       const htmlPrompt = `
