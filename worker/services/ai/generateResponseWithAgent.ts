@@ -1972,7 +1972,7 @@ React Integration: Use useEffect and useRef to manage canvas lifecycle in React 
 - Interactive tools → Use the javascript framework best fitted for the specific tool
 - Data/statistics → Use D3.js or Chart.js 
 - Timelines/processes → Use TimelineJS or vis.js
-- 3D objects/spaces → Use Three.js or babylon js
+- 3D objects/spaces → Use babylon js
 - Creative explanations → Use SVG/Canvas/p5.js or paper js for illustrations
 - Math concepts → use MathJax or KaTeX for math, or custom SVG
 - Games/simulations → Use Phaser or p5.js, 
