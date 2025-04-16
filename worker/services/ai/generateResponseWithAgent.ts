@@ -449,7 +449,952 @@ Your response should be short and pithy, one to two sentences at most. You may u
         This guide demonstrated how to create a Three.js scene with a rotating cube, lighting, and interactive OrbitControls. You can expand this foundation by experimenting with different objects, materials, or animations. For more details, refer to the Three.js documentation.
         For further customization (e.g., shadows, model loading), consult additional Three.js resources or ask for specific extensions.
        
-       #Example Code 
+#Example Code 
+## Example Camera Array
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - arraycamera</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			let camera, scene, renderer;
+			let mesh;
+			const AMOUNT = 6;
+
+			init();
+
+			function init() {
+
+				const ASPECT_RATIO = window.innerWidth / window.innerHeight;
+
+				const WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
+				const HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
+
+				const cameras = [];
+
+				for ( let y = 0; y < AMOUNT; y ++ ) {
+
+					for ( let x = 0; x < AMOUNT; x ++ ) {
+
+						const subcamera = new THREE.PerspectiveCamera( 40, ASPECT_RATIO, 0.1, 10 );
+						subcamera.viewport = new THREE.Vector4( Math.floor( x * WIDTH ), Math.floor( y * HEIGHT ), Math.ceil( WIDTH ), Math.ceil( HEIGHT ) );
+						subcamera.position.x = ( x / AMOUNT ) - 0.5;
+						subcamera.position.y = 0.5 - ( y / AMOUNT );
+						subcamera.position.z = 1.5;
+						subcamera.position.multiplyScalar( 2 );
+						subcamera.lookAt( 0, 0, 0 );
+						subcamera.updateMatrixWorld();
+						cameras.push( subcamera );
+
+					}
+
+				}
+
+				camera = new THREE.ArrayCamera( cameras );
+				camera.position.z = 3;
+
+				scene = new THREE.Scene();
+
+				scene.add( new THREE.AmbientLight( 0x999999 ) );
+
+				const light = new THREE.DirectionalLight( 0xffffff, 3 );
+				light.position.set( 0.5, 0.5, 1 );
+				light.castShadow = true;
+				light.shadow.camera.zoom = 4; // tighter shadow map
+				scene.add( light );
+
+				const geometryBackground = new THREE.PlaneGeometry( 100, 100 );
+				const materialBackground = new THREE.MeshPhongMaterial( { color: 0x000066 } );
+
+				const background = new THREE.Mesh( geometryBackground, materialBackground );
+				background.receiveShadow = true;
+				background.position.set( 0, 0, - 1 );
+				scene.add( background );
+
+				const geometryCylinder = new THREE.CylinderGeometry( 0.5, 0.5, 1, 32 );
+				const materialCylinder = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+
+				mesh = new THREE.Mesh( geometryCylinder, materialCylinder );
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
+				renderer.shadowMap.enabled = true;
+				document.body.appendChild( renderer.domElement );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				const ASPECT_RATIO = window.innerWidth / window.innerHeight;
+				const WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
+				const HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
+
+				camera.aspect = ASPECT_RATIO;
+				camera.updateProjectionMatrix();
+
+				for ( let y = 0; y < AMOUNT; y ++ ) {
+
+					for ( let x = 0; x < AMOUNT; x ++ ) {
+
+						const subcamera = camera.cameras[ AMOUNT * y + x ];
+
+						subcamera.viewport.set(
+							Math.floor( x * WIDTH ),
+							Math.floor( y * HEIGHT ),
+							Math.ceil( WIDTH ),
+							Math.ceil( HEIGHT ) );
+
+						subcamera.aspect = ASPECT_RATIO;
+						subcamera.updateProjectionMatrix();
+
+					}
+
+				}
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				mesh.rotation.x += 0.005;
+				mesh.rotation.z += 0.01;
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
+
+##Example Camera
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - cameras</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			b {
+				color: lightgreen;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - cameras<br/>
+		<b>O</b> orthographic <b>P</b> perspective
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+
+			let SCREEN_WIDTH = window.innerWidth;
+			let SCREEN_HEIGHT = window.innerHeight;
+			let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+
+			let container, stats;
+			let camera, scene, renderer, mesh;
+			let cameraRig, activeCamera, activeHelper;
+			let cameraPerspective, cameraOrtho;
+			let cameraPerspectiveHelper, cameraOrthoHelper;
+			const frustumSize = 600;
+
+			init();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				scene = new THREE.Scene();
+
+				//
+
+				camera = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 1, 10000 );
+				camera.position.z = 2500;
+
+				cameraPerspective = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 150, 1000 );
+
+				cameraPerspectiveHelper = new THREE.CameraHelper( cameraPerspective );
+				scene.add( cameraPerspectiveHelper );
+
+				//
+				cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
+
+				cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
+				scene.add( cameraOrthoHelper );
+
+				//
+
+				activeCamera = cameraPerspective;
+				activeHelper = cameraPerspectiveHelper;
+
+
+				// counteract different front orientation of cameras vs rig
+
+				cameraOrtho.rotation.y = Math.PI;
+				cameraPerspective.rotation.y = Math.PI;
+
+				cameraRig = new THREE.Group();
+
+				cameraRig.add( cameraPerspective );
+				cameraRig.add( cameraOrtho );
+
+				scene.add( cameraRig );
+
+				//
+
+				mesh = new THREE.Mesh(
+					new THREE.SphereGeometry( 100, 16, 8 ),
+					new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
+				);
+				scene.add( mesh );
+
+				const mesh2 = new THREE.Mesh(
+					new THREE.SphereGeometry( 50, 16, 8 ),
+					new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } )
+				);
+				mesh2.position.y = 150;
+				mesh.add( mesh2 );
+
+				const mesh3 = new THREE.Mesh(
+					new THREE.SphereGeometry( 5, 16, 8 ),
+					new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } )
+				);
+				mesh3.position.z = 150;
+				cameraRig.add( mesh3 );
+
+				//
+
+				const geometry = new THREE.BufferGeometry();
+				const vertices = [];
+
+				for ( let i = 0; i < 10000; i ++ ) {
+
+					vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // x
+					vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // y
+					vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // z
+
+				}
+
+				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+
+				const particles = new THREE.Points( geometry, new THREE.PointsMaterial( { color: 0x888888 } ) );
+				scene.add( particles );
+
+				//
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+				renderer.setAnimationLoop( animate );
+				container.appendChild( renderer.domElement );
+
+				renderer.setScissorTest( true );
+
+				//
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize );
+				document.addEventListener( 'keydown', onKeyDown );
+
+			}
+
+			//
+
+			function onKeyDown( event ) {
+
+				switch ( event.keyCode ) {
+
+					case 79: /*O*/
+
+						activeCamera = cameraOrtho;
+						activeHelper = cameraOrthoHelper;
+
+						break;
+
+					case 80: /*P*/
+
+						activeCamera = cameraPerspective;
+						activeHelper = cameraPerspectiveHelper;
+
+						break;
+
+				}
+
+			}
+
+			//
+
+			function onWindowResize() {
+
+				SCREEN_WIDTH = window.innerWidth;
+				SCREEN_HEIGHT = window.innerHeight;
+				aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+
+				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+
+				camera.aspect = 0.5 * aspect;
+				camera.updateProjectionMatrix();
+
+				cameraPerspective.aspect = 0.5 * aspect;
+				cameraPerspective.updateProjectionMatrix();
+
+				cameraOrtho.left = - 0.5 * frustumSize * aspect / 2;
+				cameraOrtho.right = 0.5 * frustumSize * aspect / 2;
+				cameraOrtho.top = frustumSize / 2;
+				cameraOrtho.bottom = - frustumSize / 2;
+				cameraOrtho.updateProjectionMatrix();
+
+			}
+
+			//
+
+			function animate() {
+
+				render();
+				stats.update();
+
+			}
+
+
+			function render() {
+
+				const r = Date.now() * 0.0005;
+
+				mesh.position.x = 700 * Math.cos( r );
+				mesh.position.z = 700 * Math.sin( r );
+				mesh.position.y = 700 * Math.sin( r );
+
+				mesh.children[ 0 ].position.x = 70 * Math.cos( 2 * r );
+				mesh.children[ 0 ].position.z = 70 * Math.sin( r );
+
+				if ( activeCamera === cameraPerspective ) {
+
+					cameraPerspective.fov = 35 + 30 * Math.sin( 0.5 * r );
+					cameraPerspective.far = mesh.position.length();
+					cameraPerspective.updateProjectionMatrix();
+
+					cameraPerspectiveHelper.update();
+					cameraPerspectiveHelper.visible = true;
+
+					cameraOrthoHelper.visible = false;
+
+				} else {
+
+					cameraOrtho.far = mesh.position.length();
+					cameraOrtho.updateProjectionMatrix();
+
+					cameraOrthoHelper.update();
+					cameraOrthoHelper.visible = true;
+
+					cameraPerspectiveHelper.visible = false;
+
+				}
+
+				cameraRig.lookAt( mesh.position );
+
+				//
+
+				activeHelper.visible = false;
+
+				renderer.setClearColor( 0x000000, 1 );
+				renderer.setScissor( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+				renderer.setViewport( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+				renderer.render( scene, activeCamera );
+
+				//
+
+				activeHelper.visible = true;
+
+				renderer.setClearColor( 0x111111, 1 );
+				renderer.setScissor( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+				renderer.setViewport( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
+
+##Example Logarithmic Buffer
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - cameras - logarithmic depth buffer</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			body{
+				touch-action: none;
+			}
+			.renderer_label {
+				position: absolute;
+				bottom: 1em;
+				width: 100%;
+				color: white;
+				z-index: 10;
+				display: block;
+				text-align: center;
+			}
+
+			#container {
+				display: flex;
+			}
+
+			#container_normal {
+				width: 50%;
+				display: inline-block;
+				position: relative;
+			}
+
+			#container_logzbuf {
+				width: 50%;
+				display: inline-block;
+				position: relative;
+			}
+
+			#renderer_border {
+				position: absolute;
+				top: 0;
+				left: 25%;
+				bottom: 0;
+				width: 2px;
+				z-index: 10;
+				opacity: .8;
+				background: #ccc;
+				border: 1px inset #ccc;
+				cursor: col-resize;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container">
+			<div id="container_normal"><h2 class="renderer_label">normal z-buffer</h2></div>
+			<div id="container_logzbuf"><h2 class="renderer_label">logarithmic z-buffer</h2></div>
+			<div id="renderer_border"></div>
+		</div>
+
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - cameras - logarithmic depth buffer<br/>
+			mousewheel to dolly out
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+			import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+
+			// 1 micrometer to 100 billion light years in one scene, with 1 unit = 1 meter?  preposterous!  and yet...
+			const NEAR = 1e-6, FAR = 1e27;
+			let SCREEN_WIDTH = window.innerWidth;
+			let SCREEN_HEIGHT = window.innerHeight;
+			let screensplit = .25, screensplit_right = 0;
+			const mouse = [ .5, .5 ];
+			let zoompos = - 100, minzoomspeed = .015;
+			let zoomspeed = minzoomspeed;
+
+			let container, border, stats;
+			const objects = {};
+
+			// Generate a number of text labels, from 1µm in size up to 100,000,000 light years
+			// Try to use some descriptive real-world examples of objects at each scale
+
+			const labeldata = [
+				{ size: .01, scale: 0.0001, label: 'microscopic (1µm)' }, // FIXME - triangulating text fails at this size, so we scale instead
+				{ size: .01, scale: 0.1, label: 'minuscule (1mm)' },
+				{ size: .01, scale: 1.0, label: 'tiny (1cm)' },
+				{ size: 1, scale: 1.0, label: 'child-sized (1m)' },
+				{ size: 10, scale: 1.0, label: 'tree-sized (10m)' },
+				{ size: 100, scale: 1.0, label: 'building-sized (100m)' },
+				{ size: 1000, scale: 1.0, label: 'medium (1km)' },
+				{ size: 10000, scale: 1.0, label: 'city-sized (10km)' },
+				{ size: 3400000, scale: 1.0, label: 'moon-sized (3,400 Km)' },
+				{ size: 12000000, scale: 1.0, label: 'planet-sized (12,000 km)' },
+				{ size: 1400000000, scale: 1.0, label: 'sun-sized (1,400,000 km)' },
+				{ size: 7.47e12, scale: 1.0, label: 'solar system-sized (50Au)' },
+				{ size: 9.4605284e15, scale: 1.0, label: 'gargantuan (1 light year)' },
+				{ size: 3.08567758e16, scale: 1.0, label: 'ludicrous (1 parsec)' },
+				{ size: 1e19, scale: 1.0, label: 'mind boggling (1000 light years)' }
+			];
+
+			init();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				const loader = new FontLoader();
+				loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+					const scene = initScene( font );
+
+					// Initialize two copies of the same scene, one with normal z-buffer and one with logarithmic z-buffer
+					objects.normal = initView( scene, 'normal', false );
+					objects.logzbuf = initView( scene, 'logzbuf', true );
+
+					animate();
+
+				} );
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				// Resize border allows the user to easily compare effects of logarithmic depth buffer over the whole scene
+				border = document.getElementById( 'renderer_border' );
+				border.addEventListener( 'pointerdown', onBorderPointerDown );
+
+				window.addEventListener( 'mousemove', onMouseMove );
+				window.addEventListener( 'resize', onWindowResize );
+				window.addEventListener( 'wheel', onMouseWheel );
+
+			}
+
+			function initView( scene, name, logDepthBuf ) {
+
+				const framecontainer = document.getElementById( 'container_' + name );
+
+				const camera = new THREE.PerspectiveCamera( 50, screensplit * SCREEN_WIDTH / SCREEN_HEIGHT, NEAR, FAR );
+				scene.add( camera );
+
+				const renderer = new THREE.WebGLRenderer( { antialias: true, logarithmicDepthBuffer: logDepthBuf } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+				renderer.domElement.style.position = 'relative';
+				renderer.domElement.id = 'renderer_' + name;
+				framecontainer.appendChild( renderer.domElement );
+
+				return { container: framecontainer, renderer: renderer, scene: scene, camera: camera };
+
+			}
+
+			function initScene( font ) {
+
+				const scene = new THREE.Scene();
+
+				scene.add( new THREE.AmbientLight( 0x777777 ) );
+
+				const light = new THREE.DirectionalLight( 0xffffff, 3 );
+				light.position.set( 100, 100, 100 );
+				scene.add( light );
+
+				const materialargs = {
+					color: 0xffffff,
+					specular: 0x050505,
+					shininess: 50,
+					emissive: 0x000000
+				};
+
+				const geometry = new THREE.SphereGeometry( 0.5, 24, 12 );
+
+				for ( let i = 0; i < labeldata.length; i ++ ) {
+
+					const scale = labeldata[ i ].scale || 1;
+
+					const labelgeo = new TextGeometry( labeldata[ i ].label, {
+						font: font,
+						size: labeldata[ i ].size,
+						depth: labeldata[ i ].size / 2
+					} );
+
+					labelgeo.computeBoundingSphere();
+
+					// center text
+					labelgeo.translate( - labelgeo.boundingSphere.radius, 0, 0 );
+
+					materialargs.color = new THREE.Color().setHSL( Math.random(), 0.5, 0.5 );
+
+					const material = new THREE.MeshPhongMaterial( materialargs );
+
+					const group = new THREE.Group();
+					group.position.z = - labeldata[ i ].size * scale;
+					scene.add( group );
+
+					const textmesh = new THREE.Mesh( labelgeo, material );
+					textmesh.scale.set( scale, scale, scale );
+					textmesh.position.z = - labeldata[ i ].size * scale;
+					textmesh.position.y = labeldata[ i ].size / 4 * scale;
+					group.add( textmesh );
+
+					const dotmesh = new THREE.Mesh( geometry, material );
+					dotmesh.position.y = - labeldata[ i ].size / 4 * scale;
+					dotmesh.scale.multiplyScalar( labeldata[ i ].size * scale );
+					group.add( dotmesh );
+
+				}
+
+				return scene;
+
+			}
+
+			function updateRendererSizes() {
+
+				// Recalculate size for both renderers when screen size or split location changes
+
+				SCREEN_WIDTH = window.innerWidth;
+				SCREEN_HEIGHT = window.innerHeight;
+
+				screensplit_right = 1 - screensplit;
+
+				objects.normal.renderer.setSize( screensplit * SCREEN_WIDTH, SCREEN_HEIGHT );
+				objects.normal.camera.aspect = screensplit * SCREEN_WIDTH / SCREEN_HEIGHT;
+				objects.normal.camera.updateProjectionMatrix();
+				objects.normal.camera.setViewOffset( SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH * screensplit, SCREEN_HEIGHT );
+				objects.normal.container.style.width = ( screensplit * 100 ) + '%';
+
+				objects.logzbuf.renderer.setSize( screensplit_right * SCREEN_WIDTH, SCREEN_HEIGHT );
+				objects.logzbuf.camera.aspect = screensplit_right * SCREEN_WIDTH / SCREEN_HEIGHT;
+				objects.logzbuf.camera.updateProjectionMatrix();
+				objects.logzbuf.camera.setViewOffset( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH * screensplit, 0, SCREEN_WIDTH * screensplit_right, SCREEN_HEIGHT );
+				objects.logzbuf.container.style.width = ( screensplit_right * 100 ) + '%';
+
+				border.style.left = ( screensplit * 100 ) + '%';
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+
+				// Put some limits on zooming
+				const minzoom = labeldata[ 0 ].size * labeldata[ 0 ].scale * 1;
+				const maxzoom = labeldata[ labeldata.length - 1 ].size * labeldata[ labeldata.length - 1 ].scale * 100;
+				let damping = ( Math.abs( zoomspeed ) > minzoomspeed ? .95 : 1.0 );
+
+				// Zoom out faster the further out you go
+				const zoom = THREE.MathUtils.clamp( Math.pow( Math.E, zoompos ), minzoom, maxzoom );
+				zoompos = Math.log( zoom );
+
+				// Slow down quickly at the zoom limits
+				if ( ( zoom == minzoom && zoomspeed < 0 ) || ( zoom == maxzoom && zoomspeed > 0 ) ) {
+
+					damping = .85;
+
+				}
+
+				zoompos += zoomspeed;
+				zoomspeed *= damping;
+
+				objects.normal.camera.position.x = Math.sin( .5 * Math.PI * ( mouse[ 0 ] - .5 ) ) * zoom;
+				objects.normal.camera.position.y = Math.sin( .25 * Math.PI * ( mouse[ 1 ] - .5 ) ) * zoom;
+				objects.normal.camera.position.z = Math.cos( .5 * Math.PI * ( mouse[ 0 ] - .5 ) ) * zoom;
+				objects.normal.camera.lookAt( objects.normal.scene.position );
+
+				// Clone camera settings across both scenes
+				objects.logzbuf.camera.position.copy( objects.normal.camera.position );
+				objects.logzbuf.camera.quaternion.copy( objects.normal.camera.quaternion );
+
+				// Update renderer sizes if the split has changed
+				if ( screensplit_right != 1 - screensplit ) {
+
+					updateRendererSizes();
+
+				}
+
+				objects.normal.renderer.render( objects.normal.scene, objects.normal.camera );
+				objects.logzbuf.renderer.render( objects.logzbuf.scene, objects.logzbuf.camera );
+
+				stats.update();
+
+			}
+
+			function onWindowResize() {
+
+				updateRendererSizes();
+
+			}
+
+			function onBorderPointerDown() {
+
+				// activate draggable window resizing bar
+				window.addEventListener( 'pointermove', onBorderPointerMove );
+				window.addEventListener( 'pointerup', onBorderPointerUp );
+
+			}
+
+			function onBorderPointerMove( ev ) {
+
+				screensplit = Math.max( 0, Math.min( 1, ev.clientX / window.innerWidth ) );
+
+			}
+
+			function onBorderPointerUp() {
+
+				window.removeEventListener( 'pointermove', onBorderPointerMove );
+				window.removeEventListener( 'pointerup', onBorderPointerUp );
+
+			}
+
+			function onMouseMove( ev ) {
+
+				mouse[ 0 ] = ev.clientX / window.innerWidth;
+				mouse[ 1 ] = ev.clientY / window.innerHeight;
+
+			}
+
+			function onMouseWheel( ev ) {
+
+				const amount = ev.deltaY;
+				if ( amount === 0 ) return;
+				const dir = amount / Math.abs( amount );
+				zoomspeed = dir / 10;
+
+				// Slow down default zoom speed after user starts zooming, to give them more control
+				minzoomspeed = 0.001;
+
+			}
+		</script>
+	</body>
+</html>
+
+##Example Geometries
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - geometries</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+
+		<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - geometries</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+
+			let camera, scene, renderer, stats;
+
+			init();
+
+			function init() {
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.y = 400;
+
+				scene = new THREE.Scene();
+
+				let object;
+
+				const ambientLight = new THREE.AmbientLight( 0xcccccc, 1.5 );
+				scene.add( ambientLight );
+
+				const pointLight = new THREE.PointLight( 0xffffff, 2.5, 0, 0 );
+				camera.add( pointLight );
+				scene.add( camera );
+
+				const map = new THREE.TextureLoader().load( 'textures/uv_grid_opengl.jpg' );
+				map.wrapS = map.wrapT = THREE.RepeatWrapping;
+				map.anisotropy = 16;
+				map.colorSpace = THREE.SRGBColorSpace;
+
+				const material = new THREE.MeshPhongMaterial( { map: map, side: THREE.DoubleSide } );
+
+				//
+
+				object = new THREE.Mesh( new THREE.SphereGeometry( 75, 20, 10 ), material );
+				object.position.set( - 300, 0, 200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.IcosahedronGeometry( 75, 1 ), material );
+				object.position.set( - 100, 0, 200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.OctahedronGeometry( 75, 2 ), material );
+				object.position.set( 100, 0, 200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.TetrahedronGeometry( 75, 0 ), material );
+				object.position.set( 300, 0, 200 );
+				scene.add( object );
+
+				//
+
+				object = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100, 4, 4 ), material );
+				object.position.set( - 300, 0, 0 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100, 4, 4, 4 ), material );
+				object.position.set( - 100, 0, 0 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.CircleGeometry( 50, 20, 0, Math.PI * 2 ), material );
+				object.position.set( 100, 0, 0 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.RingGeometry( 10, 50, 20, 5, 0, Math.PI * 2 ), material );
+				object.position.set( 300, 0, 0 );
+				scene.add( object );
+
+				//
+
+				object = new THREE.Mesh( new THREE.CylinderGeometry( 25, 75, 100, 40, 5 ), material );
+				object.position.set( - 300, 0, - 200 );
+				scene.add( object );
+
+				const points = [];
+
+				for ( let i = 0; i < 50; i ++ ) {
+
+					points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50, ( i - 5 ) * 2 ) );
+
+				}
+
+				object = new THREE.Mesh( new THREE.LatheGeometry( points, 20 ), material );
+				object.position.set( - 100, 0, - 200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.TorusGeometry( 50, 20, 20, 20 ), material );
+				object.position.set( 100, 0, - 200 );
+				scene.add( object );
+
+				object = new THREE.Mesh( new THREE.TorusKnotGeometry( 50, 10, 50, 20 ), material );
+				object.position.set( 300, 0, - 200 );
+				scene.add( object );
+
+				//
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
+				document.body.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				document.body.appendChild( stats.dom );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+
+			function animate() {
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				const timer = Date.now() * 0.0001;
+
+				camera.position.x = Math.cos( timer ) * 800;
+				camera.position.z = Math.sin( timer ) * 800;
+
+				camera.lookAt( scene.position );
+
+				scene.traverse( function ( object ) {
+
+					if ( object.isMesh === true ) {
+
+						object.rotation.x = timer * 5;
+						object.rotation.y = timer * 2.5;
+
+					}
+
+				} );
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
+
+##Example Scene
        (function() {
     'use strict';
     // 'To actually be able to display anything with Three.js, we need three things:
