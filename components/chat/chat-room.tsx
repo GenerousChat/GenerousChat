@@ -86,7 +86,7 @@ export default function ChatRoom({
       </div>
 
       {/* Main Chat Column - Max width 300px */}
-      <div className="flex bg-green flex-col h-full border rounded-lg overflow-hidden relative max-w-[300px] min-w-[300px]">
+      <div className="flex bg-green flex-col h-full border rounded-lg overflow-hidden relative max-w-[400px] min-w-[400px]">
         {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
             <AudioRoom

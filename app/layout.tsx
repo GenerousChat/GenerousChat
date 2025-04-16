@@ -8,6 +8,14 @@ import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
+import { Space_Grotesk } from 'next/font/google'
+ 
+// If loading a variable font, you don't need to specify the font weight
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -20,11 +28,6 @@ export const metadata = {
   description: "Build applications visually with your team and AI assistance in real-time.",
 };
 
-const geistSans = Geist({
-  subsets: ['latin'],
-  display: 'swap',
-});
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -34,7 +37,7 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser();
   
   return (
-    <html lang="en" className={geistSans.className} suppressHydrationWarning>
+    <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"
@@ -45,11 +48,9 @@ export default async function RootLayout({
           <TTSProvider>
             <SpeakingProvider>
           <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
-        
-
             {/* Header */}
             <nav className="sticky top-0 z-50 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container h-full flex items-center justify-between">
+              <div className="h-full flex items-center justify-between">
                 <Link 
                   href="/" 
                   className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"

@@ -18,8 +18,10 @@ export default async function AuthButton() {
         {user.email}
       </span>
       <Link href="/profile">
+        <div className="flex">
           <UserCircle className="h-4 w-4" />
           <span>Profile</span>
+        </div>
       </Link>
       <form action={signOutAction}>
         <Button 
