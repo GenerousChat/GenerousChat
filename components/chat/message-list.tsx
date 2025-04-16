@@ -3,15 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message, UserInfo } from './hooks/useChatMessages';
 import ReactMarkdown from 'react-markdown';
 
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  name?: string; 
-  users?: { email: string | null } | null; 
-  profile?: { name: string | null } | null; 
-}
+
 
 interface MessageListProps {
   messages: Message[];
@@ -50,9 +42,6 @@ export function MessageList({
     }
   }, [messages]);
 
-  const getMessageTimestamp = (message: Message): number => {
-    return new Date(message.created_at).getTime();
-  };
 
   return (
     <ScrollArea className="flex-1 w-full h-full" ref={scrollAreaRef}>
@@ -93,7 +82,7 @@ export function MessageList({
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
                   <div className={`text-xs mt-1 ${isCurrentUser(message.user_id) ? "text-black/70" : "text-muted-foreground"}`}>
-                    {formatTime(getMessageTimestamp(message))}
+                    {formatTime(message.created_at)}
                   </div>
                 </>
               </div>

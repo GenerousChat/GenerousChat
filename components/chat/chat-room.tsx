@@ -153,6 +153,7 @@ export default function ChatRoom({
                     getUserEmail={getUserEmail}
                     getMessageTimestamp={getMessageTimestamp}
                     formatTime={formatTime}
+                    loading={isLoading}
                   />
                   
                   <OptimizedInput 
@@ -241,6 +242,7 @@ export default function ChatRoom({
           getUserEmail={getUserEmail}
           getMessageTimestamp={getMessageTimestamp}
           formatTime={formatTime}
+          loading={isLoading}
         />
 
        
