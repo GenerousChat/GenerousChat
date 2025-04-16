@@ -4,6 +4,26 @@ import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/utils/supabase/client";
 
+// Define the Generation type to match CanvasGeneration
+export interface Generation {
+  id: string;
+  canvas_id: string;
+  created_by: string;
+  template_id: string | null;
+  component_code: string | null;
+  component_data: any;
+  html: string | null;
+  confidence: number | null;
+  render_method: 'jsx' | 'fallback_iframe' | null;
+  summary: string | null;
+  type: string | null;
+  metadata: any;
+  created_at: string;
+  room_id: string;
+  slug?: string;
+  agent_expert_response?: string;
+}
+
 interface GenerationHistoryProps {
   roomId: string;
   activeGenerationId?: string | null;
