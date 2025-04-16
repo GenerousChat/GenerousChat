@@ -72,7 +72,7 @@ function ForgotPasswordForm() {
         </BlurFade>
 
         <BlurFade delay={0.2}>
-          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-white dark:bg-black shadow-lg">
+          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input

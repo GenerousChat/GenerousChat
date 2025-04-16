@@ -17,9 +17,9 @@ export default function ConditionalLogo() {
   return (
     <Link 
       href="/" 
-      className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
+      className="flex items-center gap-2 pt-3 pb-2 px-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
     >
-      <img src="/logo.svg" alt="Logo" className="h-26 dark:invert dark:brightness-200" />
+      <img src="/logo.svg" alt="Logo" className="h-12 dark:invert dark:brightness-200" />
     </Link>
   );
 } 

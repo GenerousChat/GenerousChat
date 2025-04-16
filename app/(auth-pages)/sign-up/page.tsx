@@ -74,8 +74,8 @@ function SignupForm() {
 
         {/* Form section - remove BackgroundGradient, apply styles directly */}
         <BlurFade delay={0.2}>
-          {/* Use gap-6 like sign-in, add bg, shadow, padding */}
-          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-white dark:bg-black shadow-lg">
+          {/* Use gap-6 like sign-in, apply standard background, shadow, padding */}
+          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
             {/* Email Input - Make label visible */}
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>

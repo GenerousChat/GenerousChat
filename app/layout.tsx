@@ -143,9 +143,9 @@ export default async function RootLayout({
                </div>
 
               <main className="relative min-h-screen flex flex-col overflow-hidden isolate pt-16">
-                <nav className="fixed top-0 z-40 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <nav className="fixed top-0 z-40 w-full h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   <div className="h-full grid grid-cols-3 items-center px-4">
-                    <div className="flex justify-start">
+                    <div className="flex justify-center md:justify-start">
                       <ConditionalLogo />
                     </div>
                     <div className="hidden md:flex items-center justify-center pl-10 md:justify-center md:pl-0">
@@ -153,8 +153,7 @@ export default async function RootLayout({
                     </div>
                     <div className="flex justify-end items-center gap-2">
                       <div className="hidden md:flex items-center gap-2">
-                        {!shouldHideDesktopAuth && <HeaderAuth />}
-                        <ThemeSwitcher />
+                        {!shouldHideDesktopAuth && <HeaderAuth user={user} />}
                       </div>
                     </div>
                   </div>

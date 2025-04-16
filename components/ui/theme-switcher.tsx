@@ -22,13 +22,13 @@ export const ThemeSwitcher = () => {
     <Button
       variant="ghost"
       size="icon"
-      className="flex items-center justify-center w-9 h-9 rounded-full"
+      className="flex items-center justify-center w-9 h-9 rounded-full border border-muted hover:border-muted-foreground/50"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
     >
       {theme === "light" ? (
-        <Sun className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+        <Sun className="h-4 w-4 text-foreground" />
       ) : (
-        <Moon className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+        <Moon className="h-4 w-4 text-foreground" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
