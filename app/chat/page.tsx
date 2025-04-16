@@ -4,8 +4,17 @@ import { redirect } from "next/navigation";
 import CreateRoomForm from "@/components/chat/create-room-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Plus, Users } from "lucide-react";
-import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
+import { Button } from "@/components/ui/button";
+
+// Define an interface for the room data including the message count
+interface RoomWithCount {
+  id: string;
+  created_at: string;
+  name: string | null;
+  description: string | null;
+  user_id: string;
+  messages: [{ count: number }]; // Supabase returns count in an array
+}
 
 export default async function ChatPage() {
   const supabase = await createClient();
@@ -18,80 +27,70 @@ export default async function ChatPage() {
     redirect("/sign-in");
   }
 
-  // Fetch chat rooms
-  const { data: rooms, error } = await supabase
+  // Fetch chat rooms AND their message counts in one query
+  const { data: roomsData, error } = await supabase
     .from("chat_rooms")
-    .select("*")
+    .select(`
+      *,
+      messages ( count )
+    `)
     .order("created_at", { ascending: false });
+
+  // Cast the data to our interface
+  const rooms: RoomWithCount[] | null = roomsData as any;
 
   if (error) {
     console.error("Error fetching chat rooms:", error);
+    // Optionally handle the error state in the UI
   }
 
   return (
-    <div className="flex flex-col gap-10 pb-12 pt-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold">Spaces</h2>
-        </div>
-        
-        <div>
-          <CreateRoomForm userId={user.id} />
+    <div className="flex flex-col gap-8 pb-12 pt-8 max-w-4xl mx-auto px-4 md:px-6">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Spaces</h2>
+            <p className="text-muted-foreground mt-1">
+              Collaborative environments for chat and co-creation.
+            </p>
+          </div>
+          <CreateRoomForm userId={user.id} trigger={ <Button> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-4">
         {rooms && rooms.length > 0 ? (
-          rooms.map((room, index) => (
-            <div key={room.id} className="h-full">
-              <div className="w-full h-full [perspective:1000px]">
-                <CardContainer className="w-full h-full [transform-style:preserve-3d]">
-                  <div className="w-full h-full rounded-xl p-[1px] [transform-style:preserve-3d] relative overflow-hidden shadow-md dark:shadow-primary/5 bg-gradient-to-br from-primary/40 via-primary/25 to-primary/5 dark:from-primary/30 dark:via-primary/20 dark:to-primary/10">
-                    <Card className="w-full h-full border-0 bg-background dark:bg-background/95 rounded-xl [transform-style:preserve-3d] hover:shadow-xl transition-all duration-300">
-                      <CardHeader className="pb-2 [transform-style:preserve-3d]">
-                        <CardItem translateZ={25} className="w-full [transform-style:preserve-3d]">
-                          <CardTitle className="text-xl">{room.name}</CardTitle>
-                        </CardItem>
-                        <CardItem translateZ={15} className="w-full [transform-style:preserve-3d]">
-                          <CardDescription className="line-clamp-2 mt-1">
-                            {room.description || "No description provided"}
-                          </CardDescription>
-                        </CardItem>
-                      </CardHeader>
-                      <CardContent className="[transform-style:preserve-3d]">
-                        <div className="flex justify-between items-center pt-3 [transform-style:preserve-3d]">
-                          <CardItem translateZ={10} className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Users size={14} />
-                            <span>Active</span>
-                          </CardItem>
-                          <CardItem translateZ={35} className="[transform-style:preserve-3d]">
-                            <Link href={`/chat/${room.id}`} className="block [transform-style:preserve-3d]">
-                              <button className="px-4 py-2 rounded-lg">
-                                Join Chat
-                              </button>
-                            </Link>
-                          </CardItem>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardContainer>
-              </div>
-            </div>
+          rooms.map((room) => (
+            <Link href={`/chat/${room.id}`} key={room.id} className="block group">
+              <Card className="hover:bg-muted/50 transition-colors">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="truncate flex-1 mr-4">{room.name || 'Untitled Room'}</span>
+                  </CardTitle>
+                  <CardDescription className="flex items-center justify-between pt-1">
+                    <span className="truncate flex-1 mr-4">
+                      {room.description || 'No description provided.'}
+                    </span>
+                    <span className="text-sm text-muted-foreground flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      {room.messages[0]?.count ?? 0} {room.messages[0]?.count === 1 ? 'message' : 'messages'}
+                    </span>
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
           ))
         ) : (
-          <div className="col-span-full rounded-xl border p-12 text-center">
+          <div className="rounded-lg border border-dashed border-border p-12 text-center mt-8">
             <div className="flex flex-col items-center gap-3">
-              <div className="h-16 w-16 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-inner">
-                <MessageSquare className="h-8 w-8 text-primary" />
+              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+                <MessageSquare className="h-7 w-7 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold mt-4">No chat rooms yet</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                Create your first chat room to start collaborating with others in real-time
+              <h3 className="text-lg font-medium mt-3">No Spaces Yet</h3>
+              <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-4">
+                Create your first space to start collaborating.
               </p>
-              <div className="scale-110">
-                <CreateRoomForm userId={user.id} />
-              </div>
+              <CreateRoomForm userId={user.id} trigger={ <Button> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
             </div>
           </div>
         )}
