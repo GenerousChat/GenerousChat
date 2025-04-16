@@ -44,8 +44,8 @@ export function MessageList({
             >
               <div
                 className={`w-[90%] p-3 rounded-xl ${isCurrentUser(message.user_id) 
-                  ? "bg-[#205cd2] text-black" 
-                  : "bg-muted dark:bg-gray-800"}`
+                  ? "bg-[#FFFF87] text-black" 
+                  : "bg-[#fbfbfb] dark:bg-[#383838]"}`
                 }
               >
                 <>
