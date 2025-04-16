@@ -118,7 +118,7 @@ export default function Canvas({
     fetchInitialGenerations();
     
     // Setup Pusher for real-time updates
-    const pusher = new Pusher('process.env.Pusher_Key', {
+    const pusher = new Pusher(process.env.Pusher_Key, {
       cluster: 'us3',
     });
 
