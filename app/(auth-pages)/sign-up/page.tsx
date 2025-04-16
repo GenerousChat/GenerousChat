@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
-import { BlurFade } from "@/components/ui/magicui/blur-fade";
 
 
 
@@ -59,17 +58,16 @@ function SignupForm() {
       {/* Use space-y-4 like sign-in */}
       <div className="flex flex-col space-y-4 w-full relative z-10">
         {/* Title section */}
-        <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
+        <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
             Create an <span className="text-primary">account</span>
           </h1>
           <p className="text-sm text-muted-foreground">
             Enter your email to get started
           </p>
-        </BlurFade>
+        </div>
 
         {/* Form section - remove BackgroundGradient, apply styles directly */}
-        <BlurFade delay={0.2}>
           {/* Use gap-6 like sign-in, apply standard background, shadow, padding */}
           <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
             {/* Email Input - Make label visible */}
@@ -124,20 +122,17 @@ function SignupForm() {
               </SubmitButton>
             </div>
           </form>
-        </BlurFade>
       
         {/* "Already have an account?" link */}
-        <BlurFade delay={0.3} className="text-center">
+        <div className="text-center">
           <Link href="/sign-in" className="text-sm font-medium text-primary hover:underline">
             Already have an account? Sign in
           </Link>
-        </BlurFade>
+        </div>
 
         {/* Message section */}
         {message && (
-            <BlurFade delay={0.4}>
               <FormMessage message={message} />
-            </BlurFade>
         )}
       </div>
     </>

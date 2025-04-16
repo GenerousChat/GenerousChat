@@ -9,8 +9,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
-import { BlurFade } from "@/components/ui/magicui/blur-fade";
-
 
 function LoginForm() {
   const [mounted, setMounted] = useState(false);
@@ -44,76 +42,72 @@ function LoginForm() {
 
   return (
     <div className="flex flex-col space-y-4 w-full relative z-10">
-      <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
+      <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
           Welcome <span className="text-primary">back</span>
         </h1>
         <p className="text-sm text-muted-foreground">
           Where conversations spark ideas
         </p>
-      </BlurFade>
+      </div>
 
-      <BlurFade delay={0.2}>
-        <form className="grid gap-6 relative z-10 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email" 
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              required
-              className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="/forgot-password"
-                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-              className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
-            />
-            <p className="text-xs text-transparent select-none">Must be at least 6 characters</p>
-          </div>
-          
-          <div>
-            <SubmitButton 
-              className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 border border-foreground/10"
-              pendingText="Signing In..." 
-              formAction={signInAction}
-            >
-              Sign in <ArrowRight className="ml-2 h-4 w-4" />
-            </SubmitButton>
-          </div>
-        </form>
-      </BlurFade>
+      <form className="grid gap-6 relative z-10 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email" 
+            placeholder="name@example.com"
+            type="email"
+            autoCapitalize="none"
+            autoComplete="email"
+            autoCorrect="off"
+            required
+            className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
+          />
+        </div>
         
-      <BlurFade delay={0.3} className="text-center"> 
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+            className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
+          />
+          <p className="text-xs text-transparent select-none">Must be at least 6 characters</p>
+        </div>
+        
+        <div>
+          <SubmitButton 
+            className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 border border-foreground/10"
+            pendingText="Signing In..." 
+            formAction={signInAction}
+          >
+            Sign in <ArrowRight className="ml-2 h-4 w-4" />
+          </SubmitButton>
+        </div>
+      </form>
+        
+      <div className="text-center"> 
         <Link href="/sign-up" className="text-sm font-medium text-primary hover:underline">
           New here? Sign up
         </Link>
-      </BlurFade>
+      </div>
 
       {message && (
-        <BlurFade delay={0.4}>
-          <FormMessage message={message} />
-        </BlurFade>
+        <FormMessage message={message} />
       )}
     </div>
   );

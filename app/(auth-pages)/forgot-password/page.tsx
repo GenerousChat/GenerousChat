@@ -8,12 +8,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { BlurFade } from "@/components/ui/magicui/blur-fade";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { ArrowRight, LogIn } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { Metadata } from "next";
-import { Button } from "@/components/ui/button";
 
 
 function ForgotPasswordForm() {
@@ -62,17 +58,16 @@ function ForgotPasswordForm() {
       </div>
       
       <div className="flex flex-col space-y-4 w-full relative z-10">
-        <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
+        <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
             Reset <span className="text-primary">Password</span>
           </h1>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Enter your email address and we'll send you a link to reset your password
           </p>
-        </BlurFade>
+        </div>
 
-        <BlurFade delay={0.2}>
-          <form className="grid gap-4 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
+        <form className="grid gap-4 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -111,20 +106,17 @@ function ForgotPasswordForm() {
               </SubmitButton>
             </div>
           </form>
-        </BlurFade>
+        </div>
 
-        <BlurFade delay={0.4} className="text-center">
+        <div className="text-center">
           <Link href="/sign-in" className="text-sm font-medium text-primary hover:underline">
             Remember your password? Sign in
           </Link>
-        </BlurFade>
+        </div>
 
         {message && (
-          <BlurFade delay={0.5}>
-            <FormMessage message={message} />
-          </BlurFade>
+          <FormMessage message={message} />
         )}
-      </div>
     </>
   );
 }
