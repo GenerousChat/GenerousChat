@@ -40,12 +40,12 @@ export function MessageList({
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${isCurrentUser(message.user_id) ? "justify-end" : "justify-start"}`}
+              className={`flex w-full ${isCurrentUser(message.user_id) ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] p-3 ${isCurrentUser(message.user_id) 
-                  ? "bg-[#205cd2] text-black rounded-2xl rounded-br-sm" 
-                  : "bg-muted dark:bg-gray-800 rounded-lg"}`
+                className={`w-[90%] p-3 rounded-xl ${isCurrentUser(message.user_id) 
+                  ? "bg-[#205cd2] text-black" 
+                  : "bg-muted dark:bg-gray-800"}`
                 }
               >
                 <>
