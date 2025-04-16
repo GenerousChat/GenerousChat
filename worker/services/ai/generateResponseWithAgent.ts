@@ -126,15 +126,11 @@ Your response should be short and pithy, one to two sentences at most. You may u
 # Visualization Generator
 
 You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content}
-The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}, otherwise focus on fast responses and utilize the following guidelines.
-
-Agent Expert Response: 
-${agentExpertResponse}
+The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. Utilize the following expert response to inform your creation: ${agentExpertResponse} but make sure to follow the guidelines below.
 
 #HTML/CSS/JS Generation Guidelines:
 - Use semantic HTML5 elements and CSS for styling
 - Make sure the design is responsive and works well in the sidebar panel
-
 
 ## Available Visualization Types:
 - Charts/Graphs → Use D3.js or Chart.js
