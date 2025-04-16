@@ -7,13 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, LogIn } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
-import Image from "next/image";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { Metadata } from "next";
-import { Button } from "@/components/ui/button";
 
 
 

@@ -5,11 +5,7 @@ import { useDyteMeeting, useDyteSelector } from '@dytesdk/react-web-core';
 import { 
   provideDyteDesignSystem, 
   DyteAudioVisualizer,
-  DyteButton,
-  DyteIcon,
-  defaultIconPack
 } from '@dytesdk/react-ui-kit';
-import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Users, Settings } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

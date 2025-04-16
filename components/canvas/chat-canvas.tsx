@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { 
   CanvasVisualization,
-  GenerationHistory
 } from "./index";
 
 
@@ -26,13 +25,9 @@ type CanvasGeneration = {
 };
 
 export default function Canvas({
-  roomId,
   activeGeneration,
-  onSelectGeneration
 }: {
-  roomId?: string;
   activeGeneration?: CanvasGeneration | null;
-  onSelectGeneration?: (generation: CanvasGeneration) => void;
 }) {
   
   // Generation state is now managed by parent component
@@ -63,8 +58,6 @@ export default function Canvas({
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* GenerationHistory moved to chat-room.tsx */}
-      
       <div className="flex-1 h-full relative bg-background dark:bg-background w-full bg-red-500">
         <div 
           ref={containerRef}
