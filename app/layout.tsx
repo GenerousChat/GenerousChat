@@ -36,7 +36,7 @@ export const viewport: Viewport = {
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
-    default: "Generous - Collaborative Development Canvas",
+    default: "Generous | Build Together",
     template: "%s | Generous"
   },
   description: "Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.",
@@ -51,24 +51,24 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     url: defaultUrl,
-    title: "Generous - Collaborative Development Canvas",
+    title: "Generous | Build Together",
     description: "Build applications visually with your team and AI assistance in real-time",
     siteName: "Generous",
     images: [
       {
-        url: "/OG.png",
+        url: `${defaultUrl}/Og_images/OG.png`,
         width: 1200,
         height: 630,
-        alt: "Generous - Collaborative Development Canvas",
+        alt: "Generous | Build Together",
       },
       {
-        url: "/OG_Whatsup.png", 
+        url: `${defaultUrl}/Og_images/OG_Whatsapp.png`, 
         width: 800,
         height: 800,
-        alt: "Generous - Collaborative Development Canvas"
+        alt: "Generous | Build Together"
       },
       {
-        url: "/Favicons/android-chrome-512x512.png",
+        url: `${defaultUrl}/Favicons/android-chrome-512x512.png`,
         width: 512,
         height: 512,
         alt: "Generous Logo",
@@ -77,9 +77,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Generous - Collaborative Development Canvas",
+    title: "Generous | Build Together",
     description: "Build applications visually with your team and AI assistance in real-time",
-    images: ["/OG.png"],
+    images: [`${defaultUrl}/Og_images/OG.png`],
     creator: "@generous",
     site: "@generous",
   },

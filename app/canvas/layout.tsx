@@ -11,6 +11,10 @@ export const viewport: Viewport = {
   colorScheme: "dark light"
 };
 
+const defaultUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: "Canvas",
   description: "Build applications visually with a collaborative development canvas and AI assistance.",
@@ -19,13 +23,18 @@ export const metadata: Metadata = {
     description: "Build applications visually with a collaborative development canvas and AI assistance.",
     type: "website",
     siteName: "Generous",
-    images: ["/OG.png"],
+    images: [{
+      url: `${defaultUrl}/Og_images/OG.png`,
+      width: 1200,
+      height: 630,
+      alt: "Canvas | Generous",
+    }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Canvas | Generous",
     description: "Build applications visually with a collaborative development canvas and AI assistance.",
-    images: ["/OG.png"],
+    images: [`${defaultUrl}/Og_images/OG.png`],
   },
   keywords: ["visual development", "canvas", "collaborative", "application builder", "AI assistance", "real-time collaboration"]
 };
