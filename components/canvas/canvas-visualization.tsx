@@ -7,11 +7,9 @@ import Link from 'next/link';
 
 export function CanvasVisualization({
   htmlContent,
-  onClose,
   generationId
 }: {
   htmlContent: string | null;
-  onClose: () => void;
   generationId: string | null |undefined;
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);

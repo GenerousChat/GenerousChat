@@ -241,7 +241,13 @@ export function GenerationHistory({
     }
   }, [roomId]); // Remove activeGenerationId and onSelectGeneration from dependencies
 
-  if (generations.length === 0 && !isLoading) return null;
+  if (generations.length === 0 && !isLoading) {
+    return (
+      <div className="p-2 border-b border-border bg-card dark:bg-card text-muted-foreground text-sm text-center">
+        You should generate something by chatting...
+      </div>
+    );
+  }
   if (isLoading) return <div className="p-2 border-b border-border bg-card dark:bg-card">Loading generations...</div>;
 
   // Filter out any duplicate generations by ID
@@ -253,6 +259,7 @@ export function GenerationHistory({
       return acc;
     }
   }, [] as Generation[]);
+
 
   return (
     <div className="p-2 border-b border-border bg-card dark:bg-card">
