@@ -9,7 +9,9 @@ import { SpeakingProvider } from "@/utils/speaking-context";
 import { Space_Grotesk } from 'next/font/google'
 import { Viewport } from 'next'
 import { headers } from 'next/headers';
- 
+import { signOutAction } from "@/app/actions";
+import { MobileMenu } from "@/components/ui/mobile-menu";
+
 // If loading a variable font, you don't need to specify the font weight
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -22,6 +24,8 @@ const defaultUrl = "https://generous.rocks";
 
 // Define paths where desktop HeaderAuth should be hidden
 const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
+// Define paths where breadcrumbs should be hidden
+const pathsToHideBreadcrumbs = ['/sign-in', '/sign-up', '/forgot-password', '/']; // Example, adjust as needed
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -118,6 +122,7 @@ export default async function RootLayout({
   const headersList = await headers(); 
   const pathname = headersList.get('next-url') || '';
   const shouldHideDesktopAuth = pathsToHideDesktopAuth.includes(pathname);
+  const shouldHideBreadcrumbs = pathsToHideBreadcrumbs.includes(pathname);
   
   return (
     <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
@@ -130,46 +135,35 @@ export default async function RootLayout({
         >
           <TTSProvider>
             <SpeakingProvider>
-          <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
-            {/* Header */}
-            <nav className="sticky top-0 z-40 w-full h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="h-full grid grid-cols-3 items-center px-4">
-                {/* Left Column */} 
-                <div className="flex justify-start">
-                  <ConditionalLogo />
-                </div>
-                {/* Center Column (Breadcrumbs hidden on mobile) */} 
-                <div className="hidden md:flex justify-center items-center">
-                  <Breadcrumbs />
-                </div>
-                {/* Right Column */} 
-                <div className="flex justify-end items-center gap-2">
-                  {/* HeaderAuth conditionally visible on desktop */}
-                  <div className="hidden md:block">
-                    {!shouldHideDesktopAuth && <HeaderAuth />} 
-                  </div>
-                  {/* HeaderAuth always visible on mobile */}
-                  <div className="block md:hidden">
-                     <HeaderAuth />
-                  </div>
-                  {/* ThemeSwitcher hidden on mobile (desktop version) */}
-                  <div className="hidden md:flex">
-                    <ThemeSwitcher />
-                  </div>
-                </div>
-              </div>
-            </nav>
+              <div className="fixed top-4 right-4 z-50 block md:hidden">
+                 <MobileMenu
+                   user={user}
+                   signOutAction={signOutAction}
+                 />
+               </div>
 
-            {/* Absolutely positioned ThemeSwitcher for Mobile Only */}
-            <div className="fixed top-4 right-4 z-50 block md:hidden">
-              <ThemeSwitcher />
-            </div>
+              <main className="relative min-h-screen flex flex-col overflow-hidden isolate pt-16">
+                <nav className="fixed top-0 z-40 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                  <div className="h-full grid grid-cols-3 items-center px-4">
+                    <div className="flex justify-start">
+                      <ConditionalLogo />
+                    </div>
+                    <div className="hidden md:flex items-center justify-center pl-10 md:justify-center md:pl-0">
+                      {!shouldHideBreadcrumbs && <Breadcrumbs />}
+                    </div>
+                    <div className="flex justify-end items-center gap-2">
+                      <div className="hidden md:flex items-center gap-2">
+                        {!shouldHideDesktopAuth && <HeaderAuth />}
+                        <ThemeSwitcher />
+                      </div>
+                    </div>
+                  </div>
+                </nav>
 
-            {/* Main content */}
-            <div className="flex-1 flex flex-col">
-              {children}
-            </div>
-          </main>
+                <div className="flex-1 flex flex-col">
+                  {children}
+                </div>
+              </main>
             </SpeakingProvider>
           </TTSProvider>
         </ThemeProvider>

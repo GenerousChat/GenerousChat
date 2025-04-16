@@ -102,17 +102,18 @@ export default async function ChatPage() {
                       className="w-24 h-24 rounded-md mr-4 object-cover flex-shrink-0" // <-- Increased size
                     />
                     <div className="flex-grow min-w-0"> {/* Ensure text div can shrink/grow */}
-                      <CardTitle className="flex items-center justify-between text-base mb-1"> {/* Adjusted text size/margin */}
-                        <span className="truncate font-semibold group-hover:text-primary transition-colors">
+                      <CardTitle className="flex items-center justify-between text-base mb-1"> 
+                        {/* Apply truncate only on sm screens and up */}
+                        <span className="sm:truncate font-semibold group-hover:text-primary transition-colors mr-2"> {/* Added mr-2 for spacing */}
                           {room.name || 'Untitled Room'}
                         </span>
-                        {/* Access count safely, assuming messages array might be empty */}
-                        <span className="text-xs font-normal text-muted-foreground">
+                        <span className="text-xs font-normal text-muted-foreground flex-shrink-0"> {/* Prevent msg count from shrinking */}
                           {room.messages?.[0]?.count ?? 0} msgs
                         </span>
                       </CardTitle>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {room.description || 'No description.'} {/* Shortened default */}
+                      {/* Apply truncate only on sm screens and up */}
+                      <p className="text-xs text-muted-foreground sm:truncate">
+                        {room.description || 'No description.'}
                       </p>
                     </div>
                   </CardHeader>

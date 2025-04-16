@@ -61,11 +61,8 @@ function ForgotPasswordForm() {
         />
       </div>
       
-      <div className="flex flex-col space-y-6 w-full relative z-10">
+      <div className="flex flex-col space-y-4 w-full relative z-10">
         <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
-          {/* Subtle glow behind the title */}
-          <div className="absolute -top-6 left-0 right-0 h-24 bg-primary/5 rounded-full blur-3xl"></div>
-          
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
             Reset <span className="text-primary">Password</span>
           </h1>
@@ -74,9 +71,9 @@ function ForgotPasswordForm() {
           </p>
         </BlurFade>
 
-        <BackgroundGradient className="p-[1px] rounded-xl overflow-hidden">
-          <form className="grid gap-4 p-4 sm:p-5 rounded-xl bg-background/95 backdrop-blur-sm">
-            <BlurFade delay={0.2} className="grid gap-2">
+        <BlurFade delay={0.2}>
+          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-white dark:bg-black shadow-lg">
+            <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -87,22 +84,35 @@ function ForgotPasswordForm() {
                 autoComplete="email"
                 autoCorrect="off"
                 required
-                className="rounded-xl backdrop-blur-sm bg-background/80 border-2 border-muted-foreground/20 dark:border-muted-foreground/30 focus:border-primary/70 dark:focus:border-primary/60 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/30 h-11 px-4 shadow-sm transition-all duration-200"
+                className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
               />
-            </BlurFade>
+            </div>
+
+            <div className="grid gap-2 invisible" aria-hidden="true">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="placeholder-password">Password</Label>
+                <span className="text-xs">&nbsp;</span>
+              </div>
+              <Input
+                id="placeholder-password"
+                type="password"
+                disabled
+                className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4" 
+              />
+              <p className="text-xs">Must be at least 6 characters</p>
+            </div>
             
-            <BlurFade delay={0.3}>
+            <div> 
               <SubmitButton 
-                className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white dark:text-primary-foreground"
+                className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 border border-foreground/10"
                 formAction={forgotPasswordAction}
               >
                 Send Reset Link <ArrowRight className="ml-2 h-4 w-4" />
               </SubmitButton>
-            </BlurFade>
+            </div>
           </form>
-        </BackgroundGradient>
+        </BlurFade>
 
-        {/* "Remember your password?" section - simplified to text link */}
         <BlurFade delay={0.4} className="text-center">
           <Link href="/sign-in" className="text-sm font-medium text-primary hover:underline">
             Remember your password? Sign in

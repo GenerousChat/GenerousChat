@@ -2,7 +2,6 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import Image from "next/image";
-import HeaderAuth from "@/components/ui/header-auth";
 
 export const metadata: Metadata = {
   title: "Generous | Build Together",
@@ -22,12 +21,6 @@ export default async function Home() {
 
   return (
     <div className="relative flex-1 w-full h-[calc(100vh-4rem)] overflow-hidden">
-      {/* HeaderAuth for Desktop Homepage Only */}
-      {/* Positioned absolutely, leaving space for ThemeSwitcher (right-4) */}
-      <div className="fixed top-4 right-16 z-50 hidden md:block">
-        <HeaderAuth />
-      </div>
-      
       {/* Background image - responsive and slightly extended left */}
       <div className="absolute inset-0 w-full h-full">
         <Image 

@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { ShinyButton } from "@/components/ui/magicui/shiny-button";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { User, RefreshCw, Save, Shield, Loader2, ArrowLeft } from "lucide-react";
 
 type Profile = {
@@ -210,7 +209,7 @@ export default function ProfilePage() {
   
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-4">
         <Loader2 className="h-10 w-10 text-primary animate-spin" />
         <BlurFade delay={0.2}>
           <p className="text-muted-foreground">Loading your profile...</p>
@@ -220,18 +219,15 @@ export default function ProfilePage() {
   }
   
   return (
-    <div className="container max-w-2xl py-10">
-      <BlurFade delay={0.1} className="mb-8">
-        <h1 className="text-3xl font-bold">Your Profile</h1>
-        <p className="text-muted-foreground mt-2">Manage your account settings and preferences</p>
-      </BlurFade>
-      
-      <BlurFade delay={0.2}>
-        <BackgroundGradient 
-          className="p-[1px] rounded-xl overflow-hidden shadow-md dark:shadow-primary/5"
-          gradientClassName="bg-gradient-to-br from-primary/40 via-primary/20 to-primary/5 dark:from-primary/30 dark:via-primary/20 dark:to-primary/10"
-        >
-          <Card className="border-0 bg-background/95 dark:bg-background/90 backdrop-blur-sm rounded-xl">
+    <div className="flex flex-1 items-center justify-center p-4">
+      <div className="container max-w-2xl">
+        <BlurFade delay={0.1} className="mb-8 text-center">
+          <h1 className="text-3xl font-bold">Your Profile</h1>
+          <p className="text-muted-foreground mt-2">Manage your account settings and preferences</p>
+        </BlurFade>
+        
+        <BlurFade delay={0.2}>
+          <Card className="rounded-xl shadow-xl border bg-card text-card-foreground">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10 text-primary">
@@ -314,8 +310,8 @@ export default function ProfilePage() {
               </Button>
             </CardFooter>
           </Card>
-        </BackgroundGradient>
-      </BlurFade>
+        </BlurFade>
+      </div>
     </div>
   );
 }

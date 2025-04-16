@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Viewport } from "next";
 import Image from "next/image";
+import { headers } from 'next/headers';
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -46,16 +47,31 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const pathname = headersList.get('next-url') || '';
+  
+  console.log('>>> Auth Layout Detected Pathname:', pathname);
+  
+  let imageSrc = "/Images/Walking.png";
+  let objectPosition = "object-center";
+
+  if (pathname === '/sign-up') {
+    imageSrc = "/Images/Hands.png";
+  } else if (pathname === '/forgot-password') {
+    imageSrc = "/Images/Robohand.png";
+    objectPosition = "object-[center_35%]";
+  }
+
   return (
     <div className="relative min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-8 overflow-hidden">
-      {/* Background image - Changed to Walking.png and centered */}
+      {/* Background image - conditional based on path */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/Images/Walking.png"
+          src={imageSrc}
           alt="Background"
           fill
           priority
-          className="object-cover object-center"
+          className={`object-cover ${objectPosition}`}
           sizes="100vw"
           quality={100}
         />
