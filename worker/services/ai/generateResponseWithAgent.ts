@@ -312,8 +312,11 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
 - Make sure the design is responsive and works well in the sidebar panel
 
 ## Available Visualization Types:
-- Charts/Graphs → Use D3.js or Chart.js
-- Diagrams/Flowcharts → Use Mermaid.js
+- Interactive tools → Use the javascript framework best fitted for the specific tool
+- Data/statistics → Use D3.js or Chart.js 
+- Timelines/processes → Use TimelineJS or vis.js
+- 3D objects/spaces → Use Three.js or babylon js
+- Creative explanations → Use SVG/Canvas/p5.js or paper js for illustrations
 - Math concepts → use MathJax or KaTeX for math, or custom SVG
 - Games/simulations → Use Phaser or p5.js, 
 - Maps/locations → Use Leaflet.js or Mapbox GL JS
