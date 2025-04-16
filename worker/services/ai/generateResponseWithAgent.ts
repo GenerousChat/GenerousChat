@@ -222,15 +222,7 @@ ${agentExpertResponse}
          console.log("DREAM");
 
          console.log({ generation });
-          await pusherService.sendNewGeneration(
-            roomId,
-            generation.id,
-            "new-generation",
-            generation.created_at || new Date().toISOString()
-          );
-  
-
-     
+          console.log("Attempting to push notification about new generation");
 
         // Send a notification to clients about the new generation
         if (generation && generation.id) {
