@@ -11,10 +11,7 @@ import { ArrowRight, LogIn } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Sign Up",
-  description: "Create a new Generous account to start collaborating with your team on visual development.",
-};
+
 
 function SignupForm() {
   const [mounted, setMounted] = useState(false);
