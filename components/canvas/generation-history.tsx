@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/utils/supabase/client";
-import { CanvasGeneration } from './canvas';
-
-// Use the CanvasGeneration type for our component
-export type Generation = CanvasGeneration;
 
 interface GenerationHistoryProps {
   roomId: string;

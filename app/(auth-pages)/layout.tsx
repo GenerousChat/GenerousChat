@@ -1,4 +1,15 @@
 import { Metadata } from "next";
+import { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" }
+  ],
+  colorScheme: "dark light"
+};
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -8,13 +19,13 @@ export const metadata: Metadata = {
     description: "Sign in, sign up, or reset your password for your Generous account.",
     type: "website",
     siteName: "Generous",
-    images: ["/Favicons/android-chrome-512x512.png"],
+    images: ["/OG.png"],
   },
   twitter: {
     card: "summary",
     title: "Authentication | Generous",
     description: "Sign in, sign up, or reset your password for your Generous account.",
-    images: ["/Favicons/android-chrome-512x512.png"],
+    images: ["/OG.png"],
   },
   robots: {
     index: false,

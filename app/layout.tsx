@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
 import { Space_Grotesk } from 'next/font/google'
+import { Viewport } from 'next'
  
 // If loading a variable font, you don't need to specify the font weight
 const spaceGrotesk = Space_Grotesk({
@@ -19,6 +20,18 @@ import "./globals.css";
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" }
+  ],
+  colorScheme: "dark light",
+}
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
@@ -34,11 +47,6 @@ export const metadata = {
   applicationName: "Generous",
   referrer: "origin-when-cross-origin",
   robots: "index, follow",
-  colorScheme: "dark light",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" }
-  ],
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -48,10 +56,16 @@ export const metadata = {
     siteName: "Generous",
     images: [
       {
-        url: "/logo.svg",
-        width: 139,
-        height: 63,
+        url: "/OG.png",
+        width: 1200,
+        height: 630,
         alt: "Generous - Collaborative Development Canvas",
+      },
+      {
+        url: "/OG_Whatsup.png", 
+        width: 800,
+        height: 800,
+        alt: "Generous - Collaborative Development Canvas"
       },
       {
         url: "/Favicons/android-chrome-512x512.png",
@@ -65,18 +79,12 @@ export const metadata = {
     card: "summary_large_image",
     title: "Generous - Collaborative Development Canvas",
     description: "Build applications visually with your team and AI assistance in real-time",
-    images: ["/Favicons/android-chrome-512x512.png"],
+    images: ["/OG.png"],
     creator: "@generous",
     site: "@generous",
   },
   alternates: {
     canonical: defaultUrl,
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
   },
   manifest: "/site.webmanifest",
   icons: {

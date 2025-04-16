@@ -1,8 +1,19 @@
-import { Metadata } from "next";
+import { Metadata, ResolvingMetadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import React from "react";
+import { Viewport } from "next";
 
-// In Next.js 15, params is passed as a Promise
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" }
+  ],
+  colorScheme: "dark light"
+};
+
+// In Next.js, params is passed as a Promise
 export async function generateMetadata({ 
   params,
 }: { 
@@ -10,34 +21,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { roomId } = await params;
   
-  // You can fetch room name if you have a database table for it
-  // This is a placeholder for demonstration
-  // Replace with actual data fetching logic
+  // Fetch room details from the correct table
   const supabase = await createClient();
   const { data: room } = await supabase
-    .from("rooms")
-    .select("name, description, created_at")
+    .from("chat_rooms")
+    .select("*")
     .eq("id", roomId)
     .single();
   
+  // Use the room.name if available, otherwise fallback to a generic name
   const roomName = room?.name || `Chat Room ${roomId}`;
   const roomDescription = room?.description || `Collaborate in the ${roomName} chat room with your team and AI assistance.`;
   
   return {
-    title: roomName,
+    title: `${roomName} - Generous`,
     description: roomDescription,
     openGraph: {
-      title: `${roomName} | Generous`,
+      title: `${roomName} - Generous`,
       description: roomDescription,
       type: "website",
       siteName: "Generous",
-      images: ["/Favicons/android-chrome-512x512.png"],
+      images: ["/OG.png"],
       url: `/chat/${roomId}`,
     },
     twitter: {
-      card: "summary",
-      title: `${roomName} | Generous`,
+      card: "summary_large_image",
+      title: `${roomName} - Generous`,
       description: roomDescription,
+      images: ["/OG.png"],
     },
   };
 }

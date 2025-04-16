@@ -7,8 +7,12 @@ import Link from "next/link";
 // Get messages table name from environment variable or use default
 const MESSAGES_TABLE = process.env.MESSAGES_TABLE || 'messages';
 
-export default async function ChatRoomPage(props: any) {
-  const roomId = props.params.roomId;
+export default async function ChatRoomPage({
+  params
+}: {
+  params: Promise<{ roomId: string }>
+}) {
+  const { roomId } = await params;
   const supabase = await createClient();
   
   const {
