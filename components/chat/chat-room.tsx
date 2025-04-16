@@ -191,7 +191,7 @@ export default function ChatRoom({
         </div>
       ) : (
         /* Desktop view with flex layout */
-        <div className="flex w-full h-full">
+        <div className="flex w-full h-full gap-5">
 
       {/* Canvas Panel - Grows to fill remaining space */}
       <div className="flex-grow h-full overflow-hidden min-w-0">
@@ -216,7 +216,7 @@ export default function ChatRoom({
       </div>
 
       {/* Main Chat Column - Max width 300px */}
-      <div className="flex bg-green flex-col h-full border rounded-lg overflow-hidden relative max-w-[400px] min-w-[400px]">
+      <div className="flex bg-green flex-col h-full overflow-hidden relative max-w-[400px] min-w-[400px]">
         {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
             <AudioRoom

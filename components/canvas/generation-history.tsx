@@ -243,7 +243,7 @@ export function GenerationHistory({
 
   if (generations.length === 0 && !isLoading) {
     return (
-      <div className="p-2 border-b border-border bg-card dark:bg-card text-muted-foreground text-sm text-center">
+      <div className="p-2  bg-card dark:bg-card text-muted-foreground text-sm text-center">
         You should generate something by chatting...
       </div>
     );
@@ -262,7 +262,7 @@ export function GenerationHistory({
 
 
   return (
-    <div className="p-2 border-b border-border bg-card dark:bg-card">
+    <div className="p-2 bg-card dark:bg-card">
       <div className="w-full overflow-x-auto" style={{ maxWidth: '100%' }}>
         <div className="flex flex-nowrap space-x-2 p-1">
           {uniqueGenerations.map(generation => (

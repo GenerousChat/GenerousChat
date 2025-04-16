@@ -245,7 +245,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
   });
 
   return (
-    <div className="w-full border dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col">
+    <div className="w-full  overflow-hidden  flex flex-col">
     <div className="text-sm text-muted-foreground">
           {participants?.length || 0} participant(s)
         </div>
