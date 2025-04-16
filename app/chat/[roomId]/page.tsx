@@ -111,15 +111,7 @@ export default async function ChatRoomPage(props: any) {
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-120px)]">
-      <div className="flex flex-col items-center justify-center mb-4 space-y-2">
-        <nav className="flex items-center space-x-2 text-sm">
-          <Button size="sm" variant="ghost" asChild>
-            <Link href="/chat">Lobby</Link>
-          </Button>
-          <span className="text-muted-foreground">/</span>
-          <span className="font-medium text-foreground">{room.name}</span>
-        </nav>
-      </div>
+
 
       <ChatRoom
         roomId={roomId}

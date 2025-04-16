@@ -8,6 +8,7 @@ import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Space_Grotesk } from 'next/font/google'
  
 // If loading a variable font, you don't need to specify the font weight
@@ -50,15 +51,19 @@ export default async function RootLayout({
           <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
             {/* Header */}
             <nav className="sticky top-0 z-50 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="h-full flex items-center justify-between">
-                <Link 
-                  href="/" 
-                  className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
-                >
-                    <img src="/logo.svg" alt="Logo" className="h-26" />
-                </Link>
-                
-                <div className="flex items-center gap-2">
+              <div className="h-full grid grid-cols-3 items-center">
+                <div className="flex justify-start">
+                  <Link 
+                    href="/" 
+                    className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
+                  >
+                      <img src="/logo.svg" alt="Logo" className="h-26" />
+                  </Link>
+                </div>
+                <div className="flex justify-center items-center">
+                  <Breadcrumbs />
+                </div>
+                <div className="flex justify-end items-center gap-2">
                   {/* Desktop navigation - hidden on mobile */}
                   <div className="hidden md:flex md:items-center md:gap-4">
                     <ThemeSwitcher />
