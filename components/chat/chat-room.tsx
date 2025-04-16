@@ -61,7 +61,7 @@ export default function ChatRoom({
     <div className="flex w-full h-full">
 
       {/* Canvas Panel - Grows to fill remaining space */}
-      <div className="flex-grow bg-red h-full">
+      <div className="flex-grow h-full overflow-hidden min-w-0">
         <CanvasPanel
           latestHtmlContent={latestHtmlContent}
           defaultHtmlContent={defaultHtmlContent}

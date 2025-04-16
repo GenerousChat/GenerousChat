@@ -130,22 +130,7 @@ export default function Canvas({
                 </div>
               </div>
             </div>
-            <motion.h2 
-              className="text-xl font-semibold mb-3 text-foreground"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              No Room ID Specified
-            </motion.h2>
-            <motion.p 
-              className="text-muted-foreground mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              A room ID is required to display visualizations. Please provide a valid room ID.
-            </motion.p>
+ 
           </CardContent>
         </Card>
       </div>

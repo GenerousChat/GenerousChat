@@ -181,7 +181,7 @@ export function GenerationHistory({
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex space-x-2 p-1">
           {generations.map(generation => (
-            <button
+            <span
               key={generation.id}
               onClick={() => onSelectGeneration(generation)}
               className={`px-3 py-1 rounded text-sm transition-colors ${
@@ -192,7 +192,7 @@ export function GenerationHistory({
               title={generation.summary || new Date(generation.created_at).toLocaleString()}
             >
               {generation.slug || 'Gen'}
-            </button>
+            </span>
           ))}
         </div>
       </ScrollArea>
