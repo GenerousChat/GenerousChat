@@ -27,6 +27,22 @@ async function generateResponseWithAgent(
   lastGenerationHtml: string
 ): Promise<boolean> {
   try {
+
+
+    /*
+    messageHistory (10-30)
+    lastGenerationHtml 
+    lastUserMessage
+    agentCasualMessage (100-200 chars)
+    agentExpertMessage (1000 chars) 
+
+    visualizationConfidencePrompt (sent to client be rendered in chat)
+    agentCasualPrompt (sent to client be rendered in chat)
+    agentExpertPrompt (sent to the htmlGenerationPrompt)
+    htmlGenerationPrompt (stored in database)
+    
+    */
+
     logger.info(`Generating response with agent: ${agent.name}`);
 
     // Check if the message is asking for a visualization
@@ -43,8 +59,9 @@ async function generateResponseWithAgent(
       }generate HTML`
     );
 
-    // Create the prompt for the AI based on the agent's personality
-    const agentPrompt = `
+    //// ==== START AGENT CASUAL REPLY ====
+
+    const agentCasualPrompt = `
 You are ${agent.name}, an AI assistant with the following personality:
 ${agent.personality_prompt || "You are a helpful, friendly assistant."}
 
@@ -62,26 +79,65 @@ Be playful, engaging, and humorous where appropriate.
 Your response:
 `;
 
+    const agentCasualResponse = await generateAITextResponse(agentCasualPrompt, {
+      tokens: 150
+    });
 
-    // Generate a text response
-    const aiResponse = await generateAITextResponse(agentPrompt);
-
-    // Ensure aiResponse is a string before using substring
-    const responseText = typeof aiResponse === 'string' ? aiResponse : String(aiResponse);
-    logger.info(`AI response generated: ${responseText.substring(0, 100)}...`);
-
-    // Save the AI response to the database
-    await supabaseService.saveMessage(roomId, agent.id, aiResponse);
+    await supabaseService.saveMessage(roomId, agent.id, agentCasualResponse);
     logger.info("AI response saved to database");
+
+    // ==== END AGENT CASUAL REPLY ==== 
+
 
     // If the confidence for a visualization is high, generate HTML content
     if (shouldGenerateHtml) {
+
+        //// ==== START AGENT EXPERT REPLY ====
+        // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
+        const agentExpertPrompt = `
+        You are ${agent.name}, an AI assistant with the following personality:
+        ${agent.personality_prompt || "You are a helpful, friendly assistant."}
+        
+        Last Generation HTML:
+        ${lastGenerationHtml}
+        - Ignore the last generation html if the user asks for something new
+
+        The conversation so far:
+        ${messageHistory}
+        
+        The last message to respond to is:
+        ${lastUserMessage.content}
+        
+        Reply with a more technical experience on how to make the html better as ${agent.name}.
+
+        `;
+        
+        const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
+          tokens: 850
+        });
+    
+        // ==== END AGENT EXPERT REPLY ==== 
+
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log("XXXXXXXXX");
+        console.log({agentExpertResponse});
+
+
+
       // Create a prompt specifically for HTML visualization
       const htmlPrompt = `
 # Visualization Generator
 
 You are a visualization generator for a group chat. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content}
 The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}, otherwise focus on fast responses and utilize the following guidelines.
+
+Agent Expert Response: 
+${agentExpertResponse}
 
 #HTML/CSS/JS Generation Guidelines:
 - Use semantic HTML5 elements and CSS for styling
@@ -147,6 +203,7 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
             summary: `Visualization for:...`, // @todo - make a summary
             created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a', // @todo - figure that out
             type: "visualization",
+            agent_expert_response: agentExpertResponse,
             room_id: roomId,
             metadata: {
               fallback: true
