@@ -76,8 +76,6 @@ export default function Canvas({
     log('Setting up generations listener for room:', roomId);
     setIsLoading(true);
 
-       
-
     const pusher = new Pusher('96f9360f34a831ca1901', {
       cluster: 'us3',
     });

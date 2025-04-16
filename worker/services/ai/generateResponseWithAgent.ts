@@ -5,8 +5,9 @@ import supabaseService, { Message } from "../supabase.js";
 import pusherService from "../pusher.js";
 import analyzeMessageForVisualizationIntent from "../ai/analyzeMessageForVisualizationIntent";
 import generateAITextResponse from "../ai/generateAITextResponse";
-import generateHTMLContent from "../ai/generateHTMLContent.js";
-import generateCanvas from "./generateCanvas";
+// import generateHTMLContent from "../ai/generateHTMLContent.js";
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
 
 interface Agent {
   id: string;
@@ -16,11 +17,6 @@ interface Agent {
   avatar_url?: string;
 }
 
-async function generateTravisCanvas(canvasId: string, messages: any[], prompt: string, roomId: string): Promise<any> {
-  // This is a simplified implementation that doesn't depend on external modules
-  logger.info(`Generating canvas visualization for canvas ${canvasId}`);
-  return await generateCanvas(canvasId, messages, prompt, roomId);
-}
 
 
 async function generateResponseWithAgent(
@@ -132,14 +128,32 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
           console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-          console.log("129o837198371398173918237189237191");
-         const generation  = await generateTravisCanvas("canvas-1744521365054", [], htmlPrompt, roomId);
+    
+
+         const { text: htmlContent } = await generateText({
+          model: openai('o3-mini'),
+          temperature: 0.9,
+          prompt: htmlPrompt,
+          maxTokens: 10000,
+        });
+
+        // Store the generated HTML in the database
+        const { data: generation, error: insertError } = await supabaseService.supabase
+          .from("canvas_generations")
+          .insert({
+            canvas_id: roomId,
+            html: htmlContent,
+            render_method: 'fallback_iframe',
+            summary: `Visualization for:...`, // @todo - make a summary
+            created_by: 'e92d83f8-b2cd-4ebe-8d06-6e232e64736a', // @todo - figure that out
+            type: "visualization",
+            room_id: roomId,
+            metadata: {
+              fallback: true
+            },
+          })
+          .select()
+          .single();
 
          console.log("DREAM");
          console.log("DREAM");
