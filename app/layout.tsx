@@ -55,10 +55,7 @@ export default async function RootLayout({
                   href="/" 
                   className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
                 >
-                    <div className="rounded-lg bg-background p-2">
-                      <MessageSquare className="h-6 w-6 text-primary" />
-                    </div>
-                    Generous
+                    <img src="/logo.svg" alt="Logo" className="h-26" />
                 </Link>
                 
                 <div className="flex items-center gap-2">

@@ -112,7 +112,7 @@ export default async function ChatRoomPage(props: any) {
   return (
     <div className="flex flex-col w-full h-[calc(100vh-120px)]">
       <div className="flex justify-between items-center mb-4">
-          <Button variant="outline" size="sm" asChild className="mb-2">
+          <Button size="sm" asChild className="mb-2">
             <Link href="/chat">← Back to Rooms</Link>
           </Button>
           <h1 className="text-2xl font-bold">{room.name}</h1>

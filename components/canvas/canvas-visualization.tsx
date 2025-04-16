@@ -30,6 +30,7 @@ export function CanvasVisualization({
     >
       {/* Toolbar */}
       <div className="absolute top-0 left-0 right-0 z-30 p-2 flex items-center justify-between bg-gradient-to-b from-background to-transparent">
+        <div></div> {/* Empty div to maintain justify-between */}
         
         <div className="flex gap-2">
           {generationId && (
@@ -37,7 +38,7 @@ export function CanvasVisualization({
               asChild
               variant="outline" 
               size="icon"
-              className="h-8 w-8 bg-card/90 dark:bg-card/80 backdrop-blur-sm shadow-sm"
+              className="h-8 w-8 bg-white dark:bg-white shadow-sm"
             >
               <Link href={`/api/generation/${generationId}`} target="_blank">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -51,7 +52,7 @@ export function CanvasVisualization({
             onClick={toggleFullscreen}
             variant="outline" 
             size="icon"
-            className="h-8 w-8 bg-card/90 dark:bg-card/80 backdrop-blur-sm shadow-sm"
+            className="h-8 w-8 bg-white dark:bg-white shadow-sm"
           >
             {isFullscreen ? (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -64,16 +65,6 @@ export function CanvasVisualization({
             )}
           </Button>
           
-          <Button
-            onClick={onClose}
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 bg-card/90 dark:bg-card/80 backdrop-blur-sm shadow-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </Button>
         </div>
       </div>
       
