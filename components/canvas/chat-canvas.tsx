@@ -26,8 +26,12 @@ type CanvasGeneration = {
 
 export default function Canvas({
   activeGeneration,
+  roomId,
+  onSelectGeneration
 }: {
   activeGeneration?: CanvasGeneration | null;
+  roomId?: any;
+  onSelectGeneration?: any;
 }) {
   
   // Generation state is now managed by parent component
