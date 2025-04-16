@@ -185,6 +185,20 @@ Light Gray (#B0B0B0) for text and icons, replacing Soft Black for better contras
 Background (Non-Canvas): Deep Black (#1A1A1A) for the top bar and side panels, as seen in the dark mode Figma screenshot.
 Typography
 Primary Font: Space Grotesk, consistent across both modes.
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+Space Grotesk: CSS class for a variable style
+
+// <weight>: Use a value from 300 to 700
+// <uniquifier>: Use a unique and descriptive class name
+
+.space-grotesk-<uniquifier> {
+  font-family: "Space Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+}
 Headings: Space Grotesk Bold, 18-24pt (e.g., "SAMPLE ROOM TITLE").
 Body Text: Space Grotesk Regular, 12-14pt (e.g., user list, chat messages).
 Accents: Space Grotesk Italic for secondary info (e.g., timestamps).
