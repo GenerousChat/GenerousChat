@@ -6,14 +6,11 @@ import { User } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { 
   CanvasVisualization,
-  LoadingOverlay,
   ErrorMessage,
   CanvasMessage,
   ClientTemplateRenderer
 } from "./index";
 import { Card, CardContent } from "@/components/ui/card";
-import { BlurFade } from "@/components/ui/magicui";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Pusher from 'pusher-js';
 
 // Add debugging flag

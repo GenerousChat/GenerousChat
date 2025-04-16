@@ -1,4 +1,26 @@
-import { BackgroundGradient } from "@/components/ui/background-gradient";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Authentication",
+  description: "Sign in, sign up, or reset your password for your Generous account.",
+  openGraph: {
+    title: "Authentication | Generous",
+    description: "Sign in, sign up, or reset your password for your Generous account.",
+    type: "website",
+    siteName: "Generous",
+    images: ["/Favicons/android-chrome-512x512.png"],
+  },
+  twitter: {
+    card: "summary",
+    title: "Authentication | Generous",
+    description: "Sign in, sign up, or reset your password for your Generous account.",
+    images: ["/Favicons/android-chrome-512x512.png"],
+  },
+  robots: {
+    index: false,
+    follow: true,
+  }
+};
 
 export default async function Layout({
   children,

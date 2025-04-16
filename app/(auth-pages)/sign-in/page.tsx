@@ -7,9 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, UserPlus } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
+import { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "Sign In",
+  description: "Sign in to your Generous account to access collaborative development features.",
+};
 
 function LoginForm() {
   const [mounted, setMounted] = useState(false);

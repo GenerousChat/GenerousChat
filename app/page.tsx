@@ -1,6 +1,11 @@
 import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Generous - Collaborative Development Canvas",
+  description: "Build applications visually with your team and AI assistance in real-time. Get started with Generous today.",
+};
 
 export default async function Home() {
   const supabase = await createClient();

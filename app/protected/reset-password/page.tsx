@@ -3,6 +3,12 @@ import { FormMessage, Message } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Reset Password",
+  description: "Change your Generous account password to secure your account.",
+};
 
 export default async function ResetPassword(props: {
   searchParams: Promise<Message>;

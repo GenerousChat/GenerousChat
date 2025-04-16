@@ -12,6 +12,12 @@ import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import { ShinyButton } from "@/components/ui/magicui/shiny-button";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { ArrowRight, LogIn } from "lucide-react";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Forgot Password",
+  description: "Reset your Generous account password to regain access to your account.",
+};
 
 function ForgotPasswordForm() {
   const [mounted, setMounted] = useState(false);
