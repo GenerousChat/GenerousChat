@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 interface Message {
   id: string;
   content: string;
-  inserted_at: string;
+  created_at: string;
   user_id: string;
   name?: string; 
   users?: { email: string | null } | null; 
@@ -51,7 +51,7 @@ export function MessageList({
   }, [messages]);
 
   const getMessageTimestamp = (message: Message): number => {
-    return new Date(message.inserted_at).getTime();
+    return new Date(message.created_at).getTime();
   };
 
   return (
