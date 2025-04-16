@@ -42,6 +42,7 @@
     "react-hook-form": "^7.55.0",
     "react-intersection-observer": "^9.16.0",
     "react-markdown": "^10.1.0",
+    "react-timeago": "^8.2.0",
     "swiper": "^11.2.6",
     "unique-names-generator": "^4.7.1",
     "use-debounce": "^10.0.4",

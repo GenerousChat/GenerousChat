@@ -5,11 +5,13 @@ import CreateRoomForm from "@/components/chat/create-room-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TimeAgoDisplay from '@/components/ui/time-ago-display';
 
 // Define an interface for the room data including the message count
 interface RoomWithCount {
   id: string;
   created_at: string;
+  updated_at: string;
   name: string | null;
   description: string | null;
   user_id: string;
@@ -34,7 +36,7 @@ export default async function ChatPage() {
       *,
       messages ( count )
     `)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   // Cast the data to our interface
   const rooms: RoomWithCount[] | null = roomsData as any;
@@ -66,6 +68,7 @@ export default async function ChatPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="truncate flex-1 mr-4">{room.name || 'Untitled Room'}</span>
+                    <TimeAgoDisplay date={room.updated_at} className="text-xs text-muted-foreground font-normal whitespace-nowrap" />
                   </CardTitle>
                   <CardDescription className="flex items-center justify-between pt-1">
                     <span className="truncate flex-1 mr-4">
