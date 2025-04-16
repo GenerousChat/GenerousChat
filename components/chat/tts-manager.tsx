@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AbstractTTSService, TTSMessage } from "@/utils/text-to-speech/abstract-tts";
 import { OpenAITTSService, OpenAITTSOptions } from "@/utils/text-to-speech/openai-tts";
+import { Message } from "./hooks/useChatMessages";
 import { useTTS } from "@/utils/tts-context";
 import { useSpeaking } from "@/utils/speaking-context";
 import { Button } from "@/components/ui/button";
@@ -23,36 +24,13 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-type ChatMessage = {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  users: {
-    email: string;
-  };
-  name?: string;
-  profile?: {
-    name: string;
-  };
-  type: 'chat';
-};
-
-type StatusMessage = {
-  type: 'status';
-  statusType: 'join' | 'leave' | 'generation';
-  userId: string;
-  timestamp: string;
-  message?: string; // Optional custom message for status updates
-};
-
-type Message = ChatMessage | StatusMessage;
+// Using Message type imported from useChatMessages
 
 interface TTSManagerProps {
   messages: Message[];
   userCache: Record<string, { name: string; isAgent: boolean }>;
   currentUserId: string;
-  newMessageReceived?: Message | null; // New prop to track messages from Pusher
+  newMessageReceived?: Message | null;
 }
 
 export function TTSManager({ messages, userCache, currentUserId, newMessageReceived }: TTSManagerProps ) {
@@ -198,9 +176,8 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   useEffect(() => {
     if (!ttsService || !enabled || !newMessageReceived || serviceStatus === 'error') return;
     
-    // Skip if it's a status message or already processed or it's the current user's message
-    if (newMessageReceived.type === 'status' || 
-        processedMessageIds.current.has(newMessageReceived.id) || 
+    // Skip if already processed or it's the current user's message
+    if (processedMessageIds.current.has(newMessageReceived.id) || 
         newMessageReceived.user_id === currentUserId) {
       return;
     }
@@ -227,29 +204,21 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
         timestamp: newMessageReceived.created_at
       };
       
-      // Don't set the speaking indicator yet - we'll let the message processor handle that
-      // Just queue the message without changing indicators
-      
       // Queue the message with error handling
       try {
         ttsService.queueMessage(ttsMessage);
         processedMessageIds.current.add(newMessageReceived.id);
+        // The TTSService will handle the speaking indicators internally
       } catch (error) {
-        console.error('Error queueing TTS message:', error);
-        setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
-        
-        // If queueing fails, try to recover the service
-        if (serviceStatus === 'healthy' || serviceStatus === 'warning') {
-          setServiceStatus('warning');
-          resetTTSService();
-        }
+        console.error('Error playing TTS message:', error);
+        setServiceStatus('warning');
       }
     } catch (error) {
       console.error('Critical error processing message for TTS:', error);
-      setParticipantSpeaking(newMessageReceived.user_id, 'tts', false);
+      setServiceStatus('error');
     }
-  }, [newMessageReceived, ttsService, enabled, userCache, currentUserId, setParticipantSpeaking, serviceStatus, resetTTSService]);
-  
+  }, [ttsService, enabled, newMessageReceived, currentUserId, userCache, serviceStatus, resetTTSService, setParticipantSpeaking]);
+
   // Toggle TTS
   const toggleTTS = () => {
     try {
