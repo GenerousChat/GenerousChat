@@ -76,7 +76,8 @@ Your response should be short and pithy, one to two sentences at most. You may u
 `;
 
     const agentCasualResponse = await generateAITextResponse(agentCasualPrompt, {
-      tokens: 150
+      tokens: 150,
+      temperature: 0.9,
     });
 
     await supabaseService.saveMessage(roomId, agent.id, agentCasualResponse);
@@ -152,7 +153,8 @@ Your response should be short and pithy, one to two sentences at most. You may u
         `;
         
         const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
-          tokens: 850
+          tokens: 850,
+          temperature: 0.9,
         });
     
         // ==== END AGENT EXPERT REPLY ==== 

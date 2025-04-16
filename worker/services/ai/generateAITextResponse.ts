@@ -2,12 +2,12 @@ import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import logger from "../../utils/logger.js";
 
-async function generateAITextResponse(prompt: string, options: any): Promise<string> {
+async function generateAITextResponse(prompt: string, options: any, temperature: any): Promise<string> {
   try {
     const { text } = await generateText({
       model: openai(process.env.DEBUG_MODEL || 'gpt-4o'),
       prompt,
-      temperature: 0.8,
+      temperature: temperature || 0.9,
       maxTokens: options?.tokens || 150, // Adjust as needed for response length
     });
 
