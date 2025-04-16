@@ -142,8 +142,7 @@ Your response should be short and pithy, one to two sentences at most. You may u
         You are ${agent.name}, an AI with the following personality: ${agent.personality_prompt}. 
         Use your expertise to create better visualizations and interactive elements for the shared canvas in online chat room. The current canvas is ${lastGenerationHtml}. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} If you need more context, refer to the conversation history: ${messageHistory}. 
 
-        Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate visualization. Your response should be a complete HTML document that includes the following:
-        - A description of the visualization
+        Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate visualization.
         `;
         
         const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
@@ -309,7 +308,7 @@ You are a visualization generator for a group chat. Your task is to create a cus
 The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. Utilize the following expert response to inform your creation: ${agentExpertResponse} but make sure to follow the guidelines below.
 
 #HTML/CSS/JS Generation Guidelines:
-- Use semantic HTML5 elements and refer to ${styleGuide} for styling
+- Use semantic HTML5 elements and refer to ${styleGuide} for styling and the ${toolList} for the available tools.
 - Make sure the design is responsive and works well in the sidebar panel
 
 ## Available Visualization Types:
