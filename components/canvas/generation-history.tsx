@@ -47,8 +47,8 @@ export function GenerationHistory({
         
         if (data && data.length > 0) {
           setGenerations(data);
-          // If there's no active generation yet, set the most recent one
-          if (!activeGenerationId) {
+          // Only set the first generation as active on initial load
+          if (data.length > 0 && generations.length === 0) {
             onSelectGeneration(data[0]);
           }
         }
@@ -82,7 +82,7 @@ export function GenerationHistory({
             setGenerations(prev => [newGeneration, ...prev]);
             
             // Set as active if it's the first one or if we don't have an active one
-            if (!activeGenerationId || generations.length === 0) {
+            if (generations.length === 0) {
               onSelectGeneration(newGeneration);
             }
           } else if (payload.eventType === 'UPDATE') {
@@ -91,19 +91,13 @@ export function GenerationHistory({
               prev.map(gen => gen.id === updatedGeneration.id ? updatedGeneration : gen)
             );
             
-            // If this is the active generation, update the displayed content
-            if (activeGenerationId === updatedGeneration.id) {
-              onSelectGeneration(updatedGeneration);
-            }
+            // Parent component will handle updating the active generation if needed
           } else if (payload.eventType === 'DELETE') {
             const deletedId = payload.old.id;
             setGenerations(prev => {
               const filtered = prev.filter(gen => gen.id !== deletedId);
               
-              // If the active generation was deleted, set a new active one
-              if (activeGenerationId === deletedId && filtered.length > 0) {
-                onSelectGeneration(filtered[0]);
-              }
+              // Parent component will handle selecting a new generation if needed
               
               return filtered;
             });
@@ -143,8 +137,8 @@ export function GenerationHistory({
             // Add the new generation to the list
             setGenerations(prev => [generation, ...prev].slice(0, 20));
             
-            // Set the most recent generation as active if there's no active one
-            if (!activeGenerationId) {
+            // Only set as active on first load
+            if (generations.length === 0) {
               onSelectGeneration(generation);
             }
           } else {
@@ -171,7 +165,7 @@ export function GenerationHistory({
         subscription.unsubscribe();
       };
     }
-  }, [roomId, activeGenerationId, onSelectGeneration]);
+  }, [roomId]); // Remove activeGenerationId and onSelectGeneration from dependencies
 
   if (generations.length === 0 && !isLoading) return null;
   if (isLoading) return <div className="p-2 border-b border-border bg-card dark:bg-card">Loading generations...</div>;
