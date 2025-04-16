@@ -1725,8 +1725,7 @@ The current canvas is ${lastGenerationHtml}. If you need more context, refer to 
 - Scientific visualizations → Use Plotly.js or Vega-Lite
 - Youtube videos → Use lite YouTube embed
 - Simple text/concepts → Use elegant typography
-- For three js refer to the guide here ${threeJsGuide}
-
+- Do not render WebGL content in the sidebar panel, as it is not supported.
 ## Your Creation Requirements:
 - Ensure responsive design that works well in the sidebar panel
 - Create a visualization that directly fulfills the most recent build/create/update request, ${lastUserMessage.content}
