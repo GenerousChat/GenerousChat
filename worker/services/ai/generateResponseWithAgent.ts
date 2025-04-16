@@ -119,7 +119,40 @@ Your response should be short and pithy, one to two sentences at most. You may u
         console.log("XXXXXXXXX");
         console.log({agentExpertResponse});
 
+const styleGuide =
+`Style Guide for Generous App
+Overview
+Generous is a generative AI app with a collaborative canvas, blending a retro-inspired aesthetic with modern functionality. The style reflects a nostalgic, analog vibe while maintaining a clean, user-friendly interface for seamless collaboration.
 
+Color Palette
+Primary Background: Vibrant Sky Blue (#00AEEF)
+Inspired by the bold blue background in the image, this color evokes a sense of openness and creativity, perfect for a collaborative canvas.
+Accent Color: Warm Orange (#FF6200)
+Drawn from the orange cube, this retro-inspired hue adds warmth and energy, highlighting interactive elements like buttons or collaborative tools.
+Neutral Tones:
+Off-White (#F5F5F5) for the robotic arm’s tone, used in UI elements like cards or backgrounds.
+Soft Black (#1A1A1A) for joints and outlines, used for text and subtle borders.
+Typography
+Primary Font: Space Grotesk
+A modern, geometric sans-serif font with a retro twist, aligning with the app’s aesthetic.
+Headings: Space Grotesk Bold, 24-36pt, for titles and section headers.
+Body Text: Space Grotesk Regular, 14-16pt, for descriptions and canvas labels.
+Accents: Space Grotesk Italic for emphasis or tooltips.
+Text Color: Soft Black (#1A1A1A) for readability, with Warm Orange (#FF6200) for CTAs or highlights.
+Imagery & Iconography
+Imagery Style: Retro-futuristic with a warm, analog filter (like the image’s soft glow). Use visuals of robotic hands, vintage tech (e.g., cassettes, dials), or abstract shapes to symbolize collaboration and creation.
+Icons: Minimal, line-based icons with rounded edges, reflecting the robotic arm’s smooth joints. Use Off-White (#F5F5F5) for icon fills with Warm Orange (#FF6200) accents on hover or active states.
+UI Elements
+Buttons: Rounded rectangles with Warm Orange (#FF6200) backgrounds, Off-White (#F5F5F5) text, and a subtle glow effect on hover to mimic the image’s lighting.
+Canvas Background: Sky Blue (#00AEEF) to create a cohesive workspace, with a faint grid pattern in Off-White (#F5F5F5) for a retro tech vibe.
+Collaborative Elements: Highlight active users or shared tools with glowing Warm Orange (#FF6200) outlines, inspired by the cube’s prominence.
+Borders & Shadows: Soft Black (#1A1A1A) for borders, with a light drop shadow to give a floating, analog feel.
+Tone & Voice
+Visual Tone: Playful yet functional, blending retro nostalgia with modern collaboration.
+Language: Friendly, encouraging, and creative. Example: “Let’s build something amazing together!” Use Space Grotesk for all in-app text to maintain consistency.
+Example Application
+Home Screen: Sky Blue (#00AEEF) background with a robotic hand graphic passing an orange cube, welcoming users to “Start Creating.” Buttons in Warm Orange (#FF6200) with Space Grotesk Bold text.
+Collaborative Canvas: Sky Blue workspace with Off-White gridlines, orange-highlighted tools, and user cursors with glowing Warm Orange outlines. Tooltips in Space Grotesk Italic.`
 
       // Create a prompt specifically for HTML visualization
       const htmlPrompt = `
@@ -129,7 +162,7 @@ You are a visualization generator for a group chat. Your task is to create a cus
 The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. Utilize the following expert response to inform your creation: ${agentExpertResponse} but make sure to follow the guidelines below.
 
 #HTML/CSS/JS Generation Guidelines:
-- Use semantic HTML5 elements and CSS for styling
+- Use semantic HTML5 elements and refer to ${styleGuide} for styling
 - Make sure the design is responsive and works well in the sidebar panel
 
 ## Available Visualization Types:
