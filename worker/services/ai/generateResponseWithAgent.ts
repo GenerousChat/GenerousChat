@@ -92,7 +92,7 @@ Your response:
         // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
         const agentExpertPrompt = `
         You are ${agent.name}, an AI with the following personality: ${agent.personality_prompt}. 
-        You are an expert in creating visualizations and interactive elements for online chat rooms. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. 
+        Use your expertise to create better visualizations and interactive elements for an online chat room. The current canvas is ${lastGenerationHtml}. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} If you need more context, refer to the conversation history: ${messageHistory}. 
 
         Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate visualization. Your response should be a complete HTML document that includes the following:
         - A title for the visualization
