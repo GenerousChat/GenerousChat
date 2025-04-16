@@ -239,6 +239,7 @@ Language: Casual and community-driven. Example: “Let’s create something awes
 Example Application
 Home Screen (Light Mode): Dark Gray (#333333) top bar, Light Gray (#E5E5E5) canvas with dot grid, Off-White (#F5F5F5) side panels, Warm Orange (#FF6200) chat highlights.
 Home Screen (Dark Mode): Deep Black (#1A1A1A) top bar, Dark Gray (#2A2A2A) canvas with dot grid, Dark Off-White (#D5D5D5) side panels, Warm Orange (#FF6200) chat highlights.
+`;
 
       // Create a prompt specifically for HTML visualization
       const htmlPrompt = `
