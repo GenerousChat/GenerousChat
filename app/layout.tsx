@@ -2,12 +2,13 @@ import HeaderAuth from "@/components/ui/header-auth";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ThemeProvider } from "next-themes";
-import Link from "next/link";
+import ConditionalLogo from "@/components/ui/conditional-logo";
 import { createClient } from "@/utils/supabase/server";
 import { TTSProvider } from "@/utils/tts-context";
 import { SpeakingProvider } from "@/utils/speaking-context";
 import { Space_Grotesk } from 'next/font/google'
 import { Viewport } from 'next'
+import { headers } from 'next/headers';
  
 // If loading a variable font, you don't need to specify the font weight
 const spaceGrotesk = Space_Grotesk({
@@ -18,6 +19,9 @@ const spaceGrotesk = Space_Grotesk({
 import "./globals.css";
 
 const defaultUrl = "https://generous.rocks";
+
+// Define paths where desktop HeaderAuth should be hidden
+const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -110,6 +114,11 @@ export default async function RootLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
+  // Get current pathname on the server
+  const headersList = await headers(); 
+  const pathname = headersList.get('next-url') || '';
+  const shouldHideDesktopAuth = pathsToHideDesktopAuth.includes(pathname);
+  
   return (
     <html lang="en" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
@@ -123,28 +132,38 @@ export default async function RootLayout({
             <SpeakingProvider>
           <main className="relative min-h-screen flex flex-col overflow-hidden isolate">
             {/* Header */}
-            <nav className="sticky top-0 z-50 w-full h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="h-full grid grid-cols-3 items-center">
+            <nav className="sticky top-0 z-40 w-full h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="h-full grid grid-cols-3 items-center px-4">
+                {/* Left Column */} 
                 <div className="flex justify-start">
-                  <Link 
-                    href="/" 
-                    className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary transition-colors"
-                  >
-                      <img src="/logo.svg" alt="Logo" className="h-26 dark:invert dark:brightness-200" />
-                  </Link>
+                  <ConditionalLogo />
                 </div>
-                <div className="flex justify-center items-center">
+                {/* Center Column (Breadcrumbs hidden on mobile) */} 
+                <div className="hidden md:flex justify-center items-center">
                   <Breadcrumbs />
                 </div>
+                {/* Right Column */} 
                 <div className="flex justify-end items-center gap-2">
-                  {/* Desktop navigation - hidden on mobile */}
-                  <div className="hidden md:flex md:items-center md:gap-4">
-                    <HeaderAuth />
+                  {/* HeaderAuth conditionally visible on desktop */}
+                  <div className="hidden md:block">
+                    {!shouldHideDesktopAuth && <HeaderAuth />} 
+                  </div>
+                  {/* HeaderAuth always visible on mobile */}
+                  <div className="block md:hidden">
+                     <HeaderAuth />
+                  </div>
+                  {/* ThemeSwitcher hidden on mobile (desktop version) */}
+                  <div className="hidden md:flex">
                     <ThemeSwitcher />
                   </div>
                 </div>
               </div>
             </nav>
+
+            {/* Absolutely positioned ThemeSwitcher for Mobile Only */}
+            <div className="fixed top-4 right-4 z-50 block md:hidden">
+              <ThemeSwitcher />
+            </div>
 
             {/* Main content */}
             <div className="flex-1 flex flex-col">

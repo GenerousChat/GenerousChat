@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { Viewport } from "next";
+import Image from "next/image";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -46,20 +47,47 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-8">
-      {/* Decorative elements */}
-      <div className="absolute pointer-events-none inset-0 flex items-center justify-center overflow-hidden">
-        <div className="w-[40rem] h-[40rem] rounded-full bg-primary/5 blur-3xl opacity-50" />
+    <div className="relative min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-8 overflow-hidden">
+      {/* Background image - Changed to Walking.png and centered */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/Images/Walking.png"
+          alt="Background"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+          quality={100}
+        />
       </div>
       
-      <div className="absolute pointer-events-none -bottom-40 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute pointer-events-none -top-40 -right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-      
-      {/* Card */}
-      <div className="w-full max-w-[450px] relative z-10">
-        <div className="w-full bg-background/60 backdrop-blur-lg rounded-2xl shadow-xl p-5 sm:p-8 border border-primary/10">
+      {/* Card container */}
+      <div className="w-full max-w-[450px] relative z-10 mb-20 md:mb-0">
+        <div className="w-full bg-white dark:bg-black rounded-2xl shadow-xl p-6 sm:p-10">
           {children}
         </div>
+      </div>
+
+      {/* Top-left logo for desktop only */}
+      <div className="absolute top-8 left-8 z-10 hidden md:block">
+        <Image
+          src="/Images/Generous_Logo.png"
+          alt="Generous Logo"
+          width={200}
+          height={64}
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity duration-300"
+        />
+      </div>
+
+      {/* Centered logo below card for mobile only */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 block md:hidden">
+        <Image
+          src="/Images/Generous_Logo.png"
+          alt="Generous Logo"
+          width={180}
+          height={58}
+          className="object-contain opacity-70"
+        />
       </div>
     </div>
   );

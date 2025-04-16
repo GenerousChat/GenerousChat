@@ -9,7 +9,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, LogIn } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
+import Image from "next/image";
+import { BlurFade } from "@/components/ui/magicui/blur-fade";
+import { BackgroundGradient } from "@/components/ui/background-gradient";
 import { Metadata } from "next";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -53,86 +57,94 @@ function SignupForm() {
   }
 
   return (
-    <div className="flex flex-col space-y-6 w-full">
-      <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-          Create an <span className="text-primary">account</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your email to get started
-        </p>
-      </div>
-
-      <div>
-        <form className="grid gap-4 p-4 sm:p-5 rounded-xl bg-background/95">
-          <div className="grid gap-2">
-            <Label className="sr-only" htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              required
-              className="rounded-xl bg-background/80 border-2 h-11 px-4"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label className="sr-only" htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              minLength={6}
-              required
-              className="rounded-xl bg-background/80 border-2 h-11 px-4"
-            />
-            <p className="text-xs text-muted-foreground">
-              Must be at least 6 characters
-            </p>
-          </div>
-          
-          <div>
-            <SubmitButton
-              className="w-full h-11 rounded-xl font-medium"
-              formAction={signUpAction}
-              pendingText="Creating account..."
-            >
-              Create account <ArrowRight className="ml-2 h-4 w-4" />
-            </SubmitButton>
-          </div>
-        </form>
-      </div>
+    <>
+      {/* Remove the separate background image div if present */}
       
-      {/* "Already have an account?" section */}
-      <div>
-        <Link href="/sign-in" className="block">
-          <button className="w-full p-4 rounded-lg border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full flex items-center justify-center">
-                <LogIn size={16} />
+      {/* Use space-y-4 like sign-in */}
+      <div className="flex flex-col space-y-4 w-full relative z-10">
+        {/* Title section */}
+        <BlurFade delay={0.1} className="flex flex-col space-y-2 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
+            Create an <span className="text-primary">account</span>
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Enter your email to get started
+          </p>
+        </BlurFade>
+
+        {/* Form section - remove BackgroundGradient, apply styles directly */}
+        <BlurFade delay={0.2}>
+          {/* Use gap-6 like sign-in, add bg, shadow, padding */}
+          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-white dark:bg-black shadow-lg">
+            {/* Email Input - Make label visible */}
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                placeholder="name@example.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                required
+                // Match sign-in input style
+                className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
+              />
+            </div>
+            
+            {/* Password Input - Make label visible and match structure */}
+            <div className="grid gap-2">
+              {/* Add flex container to match sign-in structure */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {/* Empty span as placeholder for alignment consistency */}
+                <span></span> 
               </div>
-              <p className="text-sm">
-                <span>Already have an account?</span>
-                <span className="ml-2 font-medium">Sign in</span>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                // Match sign-in input style
+                className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be at least 6 characters
               </p>
             </div>
-            <ArrowRight size={16} />
-          </button>
-        </Link>
-      </div>
+            
+            {/* Submit Button - Match sign-in style */}
+            <div>
+              <SubmitButton
+                className="w-full h-11 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 border border-foreground/10"
+                formAction={signUpAction}
+                pendingText="Creating account..."
+              >
+                Create account <ArrowRight className="ml-2 h-4 w-4" />
+              </SubmitButton>
+            </div>
+          </form>
+        </BlurFade>
+      
+        {/* "Already have an account?" link */}
+        <BlurFade delay={0.3} className="text-center">
+          <Link href="/sign-in" className="text-sm font-medium text-primary hover:underline">
+            Already have an account? Sign in
+          </Link>
+        </BlurFade>
 
-      {message && (
-        <div>
-          <FormMessage message={message} />
-        </div>
-      )}
-    </div>
+        {/* Message section */}
+        {message && (
+            <BlurFade delay={0.4}>
+              <FormMessage message={message} />
+            </BlurFade>
+        )}
+      </div>
+    </>
   );
 }
 
