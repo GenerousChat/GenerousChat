@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { DyteProvider } from '@dytesdk/react-web-core';
 import AudioRoom from '@/components/audio/audio-room';
@@ -13,6 +13,12 @@ import Canvas from "@/components/canvas/chat-canvas";
 import { GenerationHistory } from "@/components/canvas/index";
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
 import { useAudioRoom } from './hooks/useAudioRoom';
+// Import Swiper and required modules
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCoverflow } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import { ChevronLeft, ChevronRight, Users, MessageSquare, Layers } from 'lucide-react';
 
 interface ChatRoomProps {
   roomId: string;
@@ -27,6 +33,10 @@ export default function ChatRoom({
   currentUser,
   participants: initialParticipants,
 }: ChatRoomProps) {
+  // State to track if we're on mobile
+  const [isMobile, setIsMobile] = useState(false);
+  // State to track active slide
+  const [activeSlide, setActiveSlide] = useState(1); // Default to chat view (middle slide)
   // Initialize hooks
   const {
     messages,
@@ -55,14 +65,133 @@ export default function ChatRoom({
     setActiveGeneration(generation);
   };
 
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px is a common breakpoint for mobile
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full flex flex-col">
       <GenerationHistory 
         roomId={roomId || ''}
         activeGenerationId={activeGeneration?.id}
         onSelectGeneration={handleSelectGeneration}
       />
-    <div className="flex w-full h-full">
+      
+      {/* Mobile view with swiper */}
+      {isMobile ? (
+        <div className="relative w-full h-full">
+          <Swiper
+            effect={'coverflow'}
+            grabCursor={true}
+            centeredSlides={true}
+            slidesPerView={1}
+            initialSlide={1}
+            coverflowEffect={{
+              rotate: 50,
+              stretch: 0,
+              depth: 100,
+              modifier: 1,
+              slideShadows: true,
+            }}
+            modules={[EffectCoverflow]}
+            className="w-full h-full"
+            onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
+          >
+            {/* Participants Slide */}
+            <SwiperSlide>
+              <div className="w-full h-full flex flex-col">
+                <div className="p-2 bg-primary text-white flex items-center justify-between">
+                  <Users className="h-5 w-5" />
+                  <h2 className="text-center font-medium">Participants</h2>
+                  <ChevronRight className="h-5 w-5 animate-pulse" />
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <ParticipantList
+                    participants={participants}
+                    onJoinAudio={handleJoinAudioRoom}
+                    showAudioRoom={showAudioRoom}
+                  />
+                </div>
+              </div>
+            </SwiperSlide>
+            
+            {/* Chat Slide (default) */}
+            <SwiperSlide>
+              <div className="w-full h-full flex flex-col">
+                <div className="p-2 bg-primary text-white flex items-center justify-between">
+                  <ChevronLeft className="h-5 w-5 animate-pulse" />
+                  <h2 className="text-center font-medium">Chat</h2>
+                  <ChevronRight className="h-5 w-5 animate-pulse" />
+                </div>
+                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                  {showAudioRoom && meeting && (
+                    <DyteProvider value={meeting}>
+                      <AudioRoom
+                        roomId={roomId}
+                        userId={currentUser.id}
+                        userName={currentUser.email?.split('@')[0] || 'User'}
+                      />
+                    </DyteProvider>
+                  )}
+                  
+                  <MessageList
+                    messages={messages}
+                    userCache={userCache}
+                    isCurrentUser={isCurrentUser}
+                    getUserEmail={getUserEmail}
+                    getMessageTimestamp={getMessageTimestamp}
+                    formatTime={formatTime}
+                  />
+                  
+                  <OptimizedInput 
+                    onSubmit={handleSendMessage}
+                    isLoading={isLoading} 
+                  />
+                </div>
+              </div>
+            </SwiperSlide>
+            
+            {/* Canvas Slide */}
+            <SwiperSlide>
+              <div className="w-full h-full flex flex-col">
+                <div className="p-2 bg-primary text-white flex items-center justify-between">
+                  <ChevronLeft className="h-5 w-5 animate-pulse" />
+                  <h2 className="text-center font-medium">Canvas</h2>
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <Canvas 
+                    roomId={roomId}
+                    activeGeneration={activeGeneration}
+                    onSelectGeneration={handleSelectGeneration}
+                  />
+                </div>
+              </div>
+            </SwiperSlide>
+          </Swiper>
+          
+          {/* Navigation Indicators */}
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-10">
+            <div className={`h-2 w-2 rounded-full ${activeSlide === 0 ? 'bg-primary' : 'bg-gray-300'}`}></div>
+            <div className={`h-2 w-2 rounded-full ${activeSlide === 1 ? 'bg-primary' : 'bg-gray-300'}`}></div>
+            <div className={`h-2 w-2 rounded-full ${activeSlide === 2 ? 'bg-primary' : 'bg-gray-300'}`}></div>
+          </div>
+        </div>
+      ) : (
+        /* Desktop view with flex layout */
+        <div className="flex w-full h-full">
 
       {/* Canvas Panel - Grows to fill remaining space */}
       <div className="flex-grow h-full overflow-hidden min-w-0">
@@ -121,8 +250,8 @@ export default function ChatRoom({
           isLoading={isLoading} 
         />
       </div>
-
       </div>
+      )}
     </div>
   );
 }
