@@ -153,6 +153,7 @@ export default async function RootLayout({
                     </div>
                     <div className="flex justify-end items-center gap-2">
                       <div className="hidden md:flex items-center gap-2">
+                        <ThemeSwitcher />
                         {!shouldHideDesktopAuth && <HeaderAuth user={user} />}
                       </div>
                     </div>

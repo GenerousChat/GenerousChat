@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "./button";
 import { UserCircle, LogOut, ChevronDown } from "lucide-react";
-import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import type { User } from '@supabase/supabase-js';
 
 interface AuthButtonProps {
@@ -57,11 +56,9 @@ export default function AuthButton({ user }: AuthButtonProps) {
 
   return user ? (
     <div className="relative flex items-center gap-2">
-      <ThemeSwitcher />
-
       <Button 
-        ref={triggerRef}
         id="user-menu-button"
+        ref={triggerRef}
         variant="ghost" 
         className="flex items-center gap-1.5 px-3 py-1 h-9 text-sm bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-full"
         aria-label="User menu"
