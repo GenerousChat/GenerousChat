@@ -131,12 +131,7 @@ export default function Canvas({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Generation history at the top */}
-      <GenerationHistory 
-        roomId={roomId}
-        activeGenerationId={activeGeneration?.id}
-        onSelectGeneration={handleSelectGeneration}
-      />
+   
       
       {/* Main content area with visualization */}
       <div className="flex-1 relative overflow-hidden bg-background dark:bg-background">
@@ -159,24 +154,6 @@ export default function Canvas({
                       </div>
                     </div>
                   </div>
-                  <motion.h2 
-                    className="text-xl font-semibold mb-3 text-foreground"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    {generations.length === 0 ? "No Visualizations Yet" : "Select a Visualization"}
-                  </motion.h2>
-                  <motion.p 
-                    className="text-muted-foreground mb-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    {!activeGeneration 
-                      ? "No visualizations available for this room yet." 
-                      : "Click on a visualization in the history above to view it."}
-                  </motion.p>
                 </CardContent>
               </Card>
             </BlurFade>
