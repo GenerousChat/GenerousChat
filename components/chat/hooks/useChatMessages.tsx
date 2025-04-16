@@ -6,22 +6,16 @@ import Pusher from 'pusher-js';
 // Get messages table name from environment variable or use default
 const MESSAGES_TABLE = process.env.NEXT_PUBLIC_MESSAGES_TABLE || 'messages';
 
-export type StatusType = 'join' | 'leave' | 'generation';
+// Deprecated status types - keeping for reference but no longer using
+// export type StatusType = 'join' | 'leave' | 'generation';
 
-export type StatusMessage = {
-  type: 'status';
-  statusType: StatusType;
-  userId: string;
-  timestamp: string;
-  message?: string; // Optional custom message for status updates
-};
-
-export type ChatMessage = {
+// Simplified Message type - no longer using StatusMessage
+export type Message = {
   id: string;
   content: string;
   created_at: string;
   user_id: string;
-  users: {
+  users?: {
     email: string;
   };
   name?: string;
@@ -30,8 +24,6 @@ export type ChatMessage = {
   };
   type: 'chat';
 };
-
-export type Message = ChatMessage | StatusMessage;
 
 export type Participant = {
   user_id: string;
@@ -209,7 +201,7 @@ export function useChatMessages(
         const userInfo = await getUserInfo(messageData.user_id);
         
         // Create a properly typed message object
-        const newMessage: ChatMessage = {
+        const newMessage: Message = {
           ...messageData,
           type: 'chat',
           users: { email: userInfo.email || '' },
@@ -233,14 +225,7 @@ export function useChatMessages(
       };
       setParticipants(prev => [...prev, newParticipant]);
       
-      // Add status message
-      const statusMsg: StatusMessage = {
-        type: 'status',
-        statusType: 'join',
-        userId: data.user_id,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, statusMsg]);
+      // No longer adding status messages
     });
 
     // Listen for user left events
@@ -248,28 +233,13 @@ export function useChatMessages(
       // Remove from participants list
       setParticipants(prev => prev.filter(p => p.user_id !== data.user_id));
       
-      // Add status message
-      const statusMsg: StatusMessage = {
-        type: 'status',
-        statusType: 'leave',
-        userId: data.user_id,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, statusMsg]);
+      // No longer adding status messages
     });
     
-    // Listen for new status events
-    channel.bind('new-status', (data: { user_id: string, status_type: StatusType, message?: string }) => {
-      // Add status message
-      const statusMsg: StatusMessage = {
-        type: 'status',
-        statusType: data.status_type,
-        userId: data.user_id,
-        timestamp: new Date().toISOString(),
-        message: data.message // Optional custom message
-      };
-      setMessages(prev => [...prev, statusMsg]);
-    });
+    // No longer listening for status events
+    // channel.bind('new-status', (data: { user_id: string, status_type: string, message?: string }) => {
+    //   // Status messages have been deprecated
+    // });
 
     // Clean up on unmount
     return () => {
@@ -280,10 +250,7 @@ export function useChatMessages(
 
   // Helper functions
   const getMessageTimestamp = (message: Message): string => {
-    if (message.type === 'chat') {
-      return message.created_at;
-    }
-    return message.timestamp;
+    return message.created_at;
   };
 
   const formatTime = (timestamp: string) => {
