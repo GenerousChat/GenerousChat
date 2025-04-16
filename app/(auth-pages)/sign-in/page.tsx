@@ -7,18 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, UserPlus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { Button } from "@/components/ui/button";
 
 
 function LoginForm() {
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   
-  // Create message object from searchParams
   const messageFromParams = (): Message | undefined => {
     if (!searchParams) return undefined;
     

@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import React from "react";
 import { Viewport } from "next";
-import { notFound } from "next/navigation";
 
 export const viewport: Viewport = {
   width: "device-width",

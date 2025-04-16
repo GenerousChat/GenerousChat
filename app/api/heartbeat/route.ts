@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 import Pusher from 'pusher';
 
 export async function POST(request: NextRequest) {

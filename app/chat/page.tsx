@@ -2,20 +2,17 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import CreateRoomForm from "@/components/chat/create-room-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Plus, Users } from "lucide-react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TimeAgoDisplay from '@/components/ui/time-ago-display';
 import RoomThumbnail from '@/components/chat/room-thumbnail';
 
-// Define an interface for the room data including the message count and generations
 interface RoomWithCount {
   id: string;
   created_at: string;
   updated_at: string;
   name: string | null;
   description: string | null;
-  // Change messages from a tuple to an array to match Supabase return type
   messages: { count: number; }[];
   canvas_generations: { id: string; created_at: string }[];
 }
