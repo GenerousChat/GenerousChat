@@ -91,21 +91,16 @@ Your response:
         //// ==== START AGENT EXPERT REPLY ====
         // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
         const agentExpertPrompt = `
-        You are ${agent.name}, an AI assistant with the following personality:
-        ${agent.personality_prompt || "You are a helpful, friendly assistant."}
-        
-        Last Generation HTML:
-        ${lastGenerationHtml}
-        - Ignore the last generation html if the user asks for something new
+        You are ${agent.name}, an AI with the following personality: ${agent.personality_prompt}. 
+        You are an expert in creating visualizations and interactive elements for online chat rooms. Your task is to create a custom HTML visualization or interactive element based on this latest request: ${lastUserMessage.content} The current canvas is ${lastGenerationHtml}. If you need more context, refer to the conversation history: ${messageHistory}. 
 
-        The conversation so far:
-        ${messageHistory}
-        
-        The last message to respond to is:
-        ${lastUserMessage.content}
-        
-        Reply with a more technical experience on how to make the html better as ${agent.name}.
-
+        Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate visualization. Your response should be a complete HTML document that includes the following:
+        - A title for the visualization
+        - A description of the visualization
+        - The necessary HTML structure
+        - Any required CSS styles
+        - JavaScript for interactivity
+        - Any external libraries or resources needed for the visualization
         `;
         
         const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
