@@ -10,7 +10,10 @@ interface TimeAgoDisplayProps {
 
 const TimeAgoDisplay: React.FC<TimeAgoDisplayProps> = ({ date, className }) => {
   return (
-    <TimeAgo date={date} className={className} />
+    // Apply className to a wrapper span, not directly to TimeAgo
+    <span className={className}>
+      <TimeAgo date={date} />
+    </span>
   );
 };
 
