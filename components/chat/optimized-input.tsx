@@ -1,6 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, FormEvent, KeyboardEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SendHorizontal } from 'lucide-react'; 
 
 interface OptimizedInputProps {
   onSubmit: (message: string) => void;
@@ -22,7 +23,7 @@ export function OptimizedInput({ onSubmit, isLoading }: OptimizedInputProps) {
   }, [isLoading, localLoading]);
   
   // Handle submit with optimistic UI updates
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!localMessage.trim() || localLoading) return;
     
@@ -59,7 +60,7 @@ export function OptimizedInput({ onSubmit, isLoading }: OptimizedInputProps) {
   };
   
   // Handle key press without re-rendering parent
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -69,24 +70,29 @@ export function OptimizedInput({ onSubmit, isLoading }: OptimizedInputProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t p-4 flex gap-2 items-end"
+      className="border-t p-2 flex items-end"
     >
-      <Textarea
-        ref={inputRef}
-        value={localMessage}
-        onChange={(e) => setLocalMessage(e.target.value)}
-        placeholder="Type your message..."
-        className="min-h-[60px] resize-none"
-        onKeyDown={handleKeyDown}
-      />
-      <Button 
-        ref={buttonRef}
-        type="submit" 
-        disabled={localLoading || !localMessage.trim()}
-        className="relative overflow-hidden transition-all duration-200 active:scale-95"
-      >
-        {localLoading ? "Sending..." : "Send"}
-      </Button>
+      <div className="relative flex-grow">
+        <Textarea
+          ref={inputRef}
+          value={localMessage}
+          onChange={(e) => setLocalMessage(e.target.value)}
+          placeholder="Type your message..."
+          className="min-h-[52px] resize-none pr-12 w-full"
+          rows={1} 
+          onKeyDown={handleKeyDown}
+        />
+        <Button 
+          ref={buttonRef}
+          type="submit" 
+          variant="ghost" 
+          size="icon" 
+          disabled={localLoading || !localMessage.trim()} 
+          className="absolute bottom-1.5 right-1.5 h-8 w-8 transition-colors duration-200 disabled:text-muted-foreground hover:text-primary active:scale-95"
+        >
+          <SendHorizontal className="h-4 w-4" />
+        </Button>
+      </div>
     </form>
   );
 }
