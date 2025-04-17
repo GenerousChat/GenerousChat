@@ -82,7 +82,7 @@ export default function AuthButton({ user }: AuthButtonProps) {
       {/* Conditional GitHub Icon Link (About Page Only) */}
       {isAboutPage && (
         <Link 
-          href="https://github.com/GenerousChat/Generous" 
+          href="https://github.com/GenerousChat/GenerousChat" 
           target="_blank" 
           rel="noopener noreferrer"
           aria-label="View source code on GitHub"
