@@ -84,7 +84,7 @@ export default async function Layout({
           alt="Generous Logo"
           width={180} 
           height={58}
-          className="object-contain md:w-[400px] md:h-auto dark:invert dark:brightness-200"
+          className="object-contain md:w-[400px] md:h-auto invert brightness-200"
         />
       </div>
 
