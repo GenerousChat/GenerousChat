@@ -53,6 +53,15 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        "spin-fast": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+      },
+      animation: {
+        "spin-fast": "spin-fast 0.5s linear infinite",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

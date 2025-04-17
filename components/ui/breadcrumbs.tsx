@@ -100,6 +100,10 @@ export function Breadcrumbs() {
         if (!isCurrent) return;
         // If current, use the determined label
         label = finalLabelForRoom;
+      } else if (segment === 'profile' && index === 0) { // Handle /profile
+        label = 'Profile';
+        // Prepend 'Lobby' pointing to the chat base path
+        breadcrumbItems.splice(1, 0, { label: 'Lobby', href: '/chat', isCurrent: false });
       } else {
         label = label.charAt(0).toUpperCase() + label.slice(1);
       }

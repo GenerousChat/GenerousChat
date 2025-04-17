@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { User, RefreshCw, Save, Shield, Loader2, ArrowLeft } from "lucide-react";
+import Image from "next/image";
 
 type Profile = {
   id: string;
@@ -19,18 +20,21 @@ type Profile = {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
   const router = useRouter();
   const supabase = createClient();
 
+  // Ref to store the timer ID for the random name spin delay
+  const randomNameTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     async function loadProfile() {
-      setLoading(true);
-      setError(""); // Clear any previous errors
+      setError("");
       
       try {
         // Check if user is authenticated
@@ -40,6 +44,8 @@ export default function ProfilePage() {
           router.push("/login");
           return;
         }
+        
+        setUserEmail(user.email || "");
         
         console.log("Loading profile for user:", user.id);
         
@@ -92,18 +98,25 @@ export default function ProfilePage() {
         console.error("Unexpected error loading profile:", err);
         setError("An unexpected error occurred. Please refresh the page.");
       } finally {
-        setLoading(false);
+        console.log(`[Profile Load] Finished.`);
       }
     }
     
     loadProfile();
+
+    // Cleanup function to clear random name timer on unmount
+    return () => {
+      if (randomNameTimerRef.current) {
+        clearTimeout(randomNameTimerRef.current);
+      }
+    };
   }, [router, supabase]);
   
   const handleUpdateProfile = async () => {
     if (!profile || !name.trim()) return;
     
     setUpdating(true);
-    setError(""); // Clear previous errors
+    setError("");
     console.log("Updating profile with name:", name);
     
     try {
@@ -174,8 +187,9 @@ export default function ProfilePage() {
   };
   
   const handleGenerateRandomName = async () => {
-    setLoading(true);
-    setError(""); // Clear previous errors
+    const startTime = Date.now(); // Record start time
+    setIsGeneratingName(true);
+    setError("");
     
     try {
       console.log("Calling generate_random_name RPC");
@@ -187,6 +201,8 @@ export default function ProfilePage() {
       } else if (data) {
         console.log("Generated random name:", data);
         setName(data);
+        setSuccess('');
+        setError('');
       } else {
         // If the RPC doesn't work, generate a name client-side as fallback
         const adjectives = ['Happy', 'Sleepy', 'Grumpy', 'Sneezy', 'Dopey', 'Bashful', 'Doc', 'Jumpy', 'Silly', 'Witty'];
@@ -196,110 +212,119 @@ export default function ProfilePage() {
         const randomName = randomAdjective + randomNoun;
         console.log("Generated fallback name:", randomName);
         setName(randomName);
+        setSuccess('');
+        setError('');
       }
     } catch (err) {
       console.error("Unexpected error generating name:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      setLoading(false);
+      const elapsedTime = Date.now() - startTime; 
+      const minimumSpinTime = 1000; // 2 seconds minimum spin time
+      const delay = Math.max(0, minimumSpinTime - elapsedTime); 
+      console.log(`[Random Name] Generated in: ${elapsedTime}ms. Delaying spin stop by: ${delay}ms`);
+
+      // Clear previous timer if it exists
+      if (randomNameTimerRef.current) {
+        clearTimeout(randomNameTimerRef.current);
+      }
+
+      // Set generating state to false after the minimum delay
+      randomNameTimerRef.current = setTimeout(() => {
+        setIsGeneratingName(false);
+        randomNameTimerRef.current = null; // Clear ref after execution
+        console.log(`[Random Name] Spin timeout finished.`);
+      }, delay);
+
+      console.log(`[Random Name] API call finished.`); // Log API finish time
     }
   };
   
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] gap-4">
-        <Loader2 className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-muted-foreground">Loading your profile...</p>
-      </div>
-    );
-  }
-  
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <div className="container max-w-2xl">
-        <h1 className="text-3xl font-bold text-center mb-8">Your Profile</h1>
-        <p className="text-muted-foreground text-center mt-2 mb-8">Manage your account settings and preferences</p>
-        
-        <Card className="rounded-xl shadow-xl border bg-card text-card-foreground">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10 text-primary">
-                <User className="h-5 w-5" />
+    <div className="flex flex-1 items-center justify-center p-4 py-6 sm:p-6 sm:py-8 md:p-8 md:py-12">
+      
+      <div className={`container w-full max-w-2xl space-y-4 sm:space-y-6 md:space-y-8`}>
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Your Profile</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Manage your account settings</p>
+        </div>
+
+        <Card className="rounded-xl shadow-lg border w-full">
+          <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6 pb-2 sm:pb-3">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1">
+              <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <CardTitle>Profile Details</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Profile Details</CardTitle>
             </div>
-            <CardDescription className="mt-2">
-              Update your profile information that will be visible to others in chat rooms.
+            <CardDescription className="text-sm">
+              Update your display name and email.
             </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-4 sm:p-6">
             {error && (
-              <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+              <div className="mb-4 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
                 {error}
               </div>
             )}
             {success && (
-              <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
-                <Shield className="h-4 w-4" />
+              <div className="mb-4 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                <Shield className="h-4 w-4 flex-shrink-0" />
                 <span>{success}</span>
               </div>
             )}
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
+
+            <div className="space-y-1.5 mt-0">
+              <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+              <p id="email" className="text-sm text-muted-foreground border rounded-md h-9 px-3 py-1.5 bg-muted sm:h-10 sm:py-2">
+                {userEmail || "-"}
+              </p>
+              <p className="text-xs text-muted-foreground">Your login email (cannot be changed here).</p>
+            </div>
+            
+            <div className="space-y-1.5 mt-4">
               <Label htmlFor="name" className="text-sm font-medium">Display Name</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your display name"
-                  className="h-11 rounded-lg bg-background/80 border-muted-foreground/20 focus:border-primary/60"
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setSuccess(''); 
+                    setError(''); 
+                  }}
+                  disabled={updating || isGeneratingName}
+                  className="flex-grow rounded-md h-9 sm:h-10"
+                  placeholder="E.g., HappyPanda"
                 />
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleGenerateRandomName}
-                  disabled={loading}
-                  className="rounded-lg flex gap-2 items-center border-muted-foreground/20 hover:border-primary/30 hover:bg-primary/5"
+                  disabled={updating || isGeneratingName}
+                  className="rounded-md h-9 sm:h-10 w-full sm:w-auto flex-shrink-0"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Random</span>
+                  <RefreshCw className={`mr-1.5 h-4 w-4 ${isGeneratingName ? 'animate-spin-fast' : ''}`} />
+                  Random Name
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                This name will be visible to other users in chat rooms
-              </p>
+              <p className="text-xs text-muted-foreground">Enter a name or generate a random one.</p>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-3">
+          <CardFooter className="border-t p-4 sm:p-6 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <Button
+              size="sm"
               onClick={handleUpdateProfile}
-              disabled={updating || !name.trim() || (profile?.name === name)}
-              className={`w-full px-4 py-2.5 rounded-lg flex items-center gap-2 justify-center ${
-                (updating || !name.trim() || (profile?.name === name)) 
-                  ? 'opacity-70 cursor-not-allowed bg-muted hover:bg-muted' 
-                  : 'bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary'
-              }`}
+              disabled={isGeneratingName || updating || !name.trim() || name === profile?.name}
+              className="w-full sm:w-auto rounded-md h-9 sm:h-10"
             >
               {updating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Saving...</span>
-                </>
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Save className={`h-4 w-4 ${(!name.trim() || (profile?.name === name)) ? 'text-muted-foreground' : 'text-white dark:text-primary-foreground'}`} />
-                  <span className={`${(!name.trim() || (profile?.name === name)) ? 'text-muted-foreground' : 'text-white dark:text-primary-foreground'}`}>
-                    Save Changes
-                  </span>
-                </>
+                <Save className="mr-1.5 h-4 w-4" />
               )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => router.push("/")}
-              className="w-full rounded-lg flex gap-2 items-center justify-center border-muted-foreground/20 hover:border-primary/30 hover:bg-primary/5"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              {updating ? 'Saving...' : 'Save Changes'}
             </Button>
           </CardFooter>
         </Card>
