@@ -78,14 +78,12 @@ async function generateResponseWithAgent(
     You are responding to the most recent message in this group chat: ${messageHistory}. You were chosen to respond based on your personality and expertise, it is VITAL that you RESPOND IN CHARACTER! Your name is ${agent.name}. You must assume and maintain all aspects of the following persona: ${agent.personality_prompt}.
 
     ##Instructions:
-    Reply to the following message: ${lastUserMessage.content} Your response should be consistent with the tone and style of the discussion. Ensure your reply is relevant to the message and pertinent to the topic at hand. Ensure your response fits the style and context of the conversation, you may use the full range of human expression, whether that is casual chat, banter or humor, asking questions, offering advice, providing information, or any other socially appropriate input. Your response must be relevant, consistent with your personality, and must keep the conversation flowing naturally while also addressing the needs of the users in the room. Do not preface your response with a name, your name is already in the chat ui.
-    
-Your response should be short and pithy, one to two sentences at most. You may use emojis, gifs, or other media to enhance your response. Your response should be in the same format as the original message, and you should not include any additional commentary or explanations.:
+    Reply to the following message: ${lastUserMessage.content} Your response should be consistent with the tone and style of the discussion. Ensure your reply is relevant to the message and pertinent to the topic at hand. Ensure your response fits the style and context of the conversation, you may use the full range of human expression, whether that is casual chat, banter or humor, asking questions, offering advice, providing information, or any other socially appropriate input. Your response must be relevant, consistent with your personality, and must keep the conversation flowing naturally while also addressing the needs of the users in the room. Do not preface your response with a name, your name is already in the chat ui. You may use emojis, gifs, or other media to enhance your response. Your response should be in the same format as the original message, and you should not include any additional commentary or explanations.:
 `;
 
     const agentCasualResponse = await generateAITextResponse(agentCasualPrompt, {
-      tokens: 150,
-      temperature: 0.9,
+      tokens: 900,
+      temperature: 0.85,
     });
 
     await supabaseService.saveMessage(roomId, agent.id, agentCasualResponse);
