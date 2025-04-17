@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message, UserInfo } from './hooks/useChatMessages';
 import ReactMarkdown from 'react-markdown';
 
@@ -25,16 +24,11 @@ export function MessageList({
 }: MessageListProps) { 
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom when new messages arrive or on component load
   useEffect(() => {
-    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (!viewport) return;
-
-    const scrollBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-    const isNearBottom = scrollBottom < 150;
-
-    if (messagesEndRef.current && isNearBottom) {
+    if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'end',
@@ -44,7 +38,7 @@ export function MessageList({
 
 
   return (
-    <ScrollArea className="flex-1 w-full h-full" ref={scrollAreaRef}>
+    <div className="flex-1 w-full h-full overflow-y-auto" ref={containerRef}>
       <div className="p-4 space-y-4">
         {loading ? (
           <div className="space-y-4">
@@ -91,6 +85,6 @@ export function MessageList({
         )}
         <div ref={messagesEndRef} /> 
       </div>
-    </ScrollArea>
+    </div>
   );
 }
