@@ -2,6 +2,7 @@ import supabaseService from "../supabase";
 import logger from "../../utils/logger.js";
 import selectBestAgent from "./selectBestAgent";
 import generateResponseWithAgent from "./generateResponseWithAgent";
+import config from "../../config/index.js";
 
 // Helper function to fetch names (could be moved to supabaseService)
 async function fetchNamesForUserIds(userIds: string[]): Promise<{ profiles: Map<string, string>, agents: Map<string, string> }> {
@@ -34,16 +35,16 @@ async function fetchNamesForUserIds(userIds: string[]): Promise<{ profiles: Map<
   if (agentUserIds.length > 0) {
       const { data: agentsData, error: agentsError } = await supabaseService.supabase
         .from('agents') // Assuming 'agents' is your table name
-        .select('user_id, name') // Assuming 'user_id' links to auth user and 'name' is the agent's name
-        .in('user_id', agentUserIds);
+        .select('id, name') // Assuming 'user_id' links to auth user and 'name' is the agent's name
+        .in('id', agentUserIds);
 
        if (agentsError) {
         logger.error("Error fetching agents:", agentsError);
         // Continue without agent names
        } else if (agentsData) {
         agentsData.forEach(agent => {
-           if (agent.user_id && agent.name) {
-             agentMap.set(agent.user_id, agent.name);
+           if (agent.id && agent.name) {
+             agentMap.set(agent.id, agent.name);
            }
          });
        }
@@ -54,7 +55,7 @@ async function fetchNamesForUserIds(userIds: string[]): Promise<{ profiles: Map<
 }
 
 
-export const generateAIResponse = async (roomId: string): Promise<boolean> => {
+const generateAIResponse = async (roomId: string): Promise<boolean> => {
   const functionTimerLabel = `generateAIResponse-${roomId}`;
   console.time(functionTimerLabel);
   logger.info(`Starting AI response generation for room ${roomId}`);
@@ -92,7 +93,7 @@ export const generateAIResponse = async (roomId: string): Promise<boolean> => {
      // --- Name Enrichment End ---
 
     // Get the most recent user message
-    const lastUserMessage = messages[0] as Message;
+    const lastUserMessage = messages[0] as any;
      const lastUserMessageSenderName = profileNameMap.get(lastUserMessage.user_id) ?? agentNameMap.get(lastUserMessage.user_id) ?? lastUserMessage.user_id;
      logger.info(`Last message from ${lastUserMessageSenderName}: ${lastUserMessage.content}`);
 
@@ -100,7 +101,7 @@ export const generateAIResponse = async (roomId: string): Promise<boolean> => {
     // Create a formatted message history for the AI
     const messageHistory = messages
       .reverse()
-      .map((msg: Message) => {
+      .map((msg: any) => {
          // Look up name: Profile -> Agent -> user_id
          const senderName = profileNameMap.get(msg.user_id) ?? agentNameMap.get(msg.user_id) ?? msg.user_id;
          return `- ${senderName}: ${msg.content}`;
@@ -128,7 +129,7 @@ export const generateAIResponse = async (roomId: string): Promise<boolean> => {
     console.time(getLastGenerationTimerLabel);
     const lastGeneration = await supabaseService.getLastGeneration(roomId);
     console.timeEnd(getLastGenerationTimerLabel);
-    const lastGenerationHtml = lastGeneration?.html_content || "";
+    const lastGenerationHtml = lastGeneration?.html || "";
 
 
      const generateResponseTimerLabel = `generateResponse-${roomId}`;
@@ -152,3 +153,5 @@ export const generateAIResponse = async (roomId: string): Promise<boolean> => {
     console.timeEnd(functionTimerLabel);
   }
 };
+
+export default generateAIResponse;
