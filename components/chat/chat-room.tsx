@@ -57,7 +57,9 @@ export default function ChatRoom({
   const {
     meeting,
     showAudioRoom,
-    handleJoinAudioRoom
+    handleJoinAudioRoom,
+    handleLeaveAudioRoom,
+    
   } = useAudioRoom(roomId, currentUser.id, currentUser.email || '');
   
   // Canvas generation state
@@ -222,11 +224,11 @@ export default function ChatRoom({
         <ParticipantList
           participants={participants}
           onJoinAudio={handleJoinAudioRoom}
+          onLeaveAudio={handleLeaveAudioRoom}
           showAudioRoom={showAudioRoom}
         />
          {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
-            trtrtr
             <AudioRoom
               roomId={roomId}
               userId={currentUser.id}

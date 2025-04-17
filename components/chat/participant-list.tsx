@@ -19,6 +19,8 @@ interface Participant {
 interface ParticipantListProps {
   participants: Participant[];
   onJoinAudio?: () => void;
+  onLeaveAudio?: () => void;
+  onToggleAudio?: () => void; // Add single toggle function
   showAudioRoom?: boolean;
 }
 
@@ -49,7 +51,7 @@ const getAgentColor = (index: number): string => {
   return agentColors[index % agentColors.length];
 };
 
-const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {  const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
+const ParticipantList = memo(({ participants, onJoinAudio, onLeaveAudio, onToggleAudio, showAudioRoom = false }: ParticipantListProps) => {  const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [lastActivityMap, setLastActivityMap] = useState<Record<string, number>>({});
   const { isParticipantSpeaking, getParticipantActivityType } = useSpeaking();
@@ -370,9 +372,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
         <p>Participants ({totalActiveHumans} / {totalHumanParticipants})</p>
       </div>
       
-      {/* Audio Room Join Button */}
-      
-      
       <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
         {/* Human participants */}
         {sortedParticipants.map((participant) => {
@@ -435,40 +434,48 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
 
       </div>
 
-<div className="text-sm text-muted-foreground">
+      <div className="text-sm text-muted-foreground">
         {/* Show Active Humans / Total Humans */}
-        <p>Audio shit ({totalActiveHumans} / {totalHumanParticipants})</p>
+        <p>Audio shit</p>
       </div>
 
-{ onJoinAudio && !showAudioRoom && (
-        <div className="p-3 border-b">
+      {/* Audio Toggle Button */}
+      {(
+        <div className="p-3 border-b dark:border-gray-700">
           <Button 
-            onClick={onJoinAudio} 
-            className="w-full flex items-center justify-center gap-2 text-xs"
+            onClick={showAudioRoom ? onLeaveAudio : onJoinAudio}
+            className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${ // Add disabled style
+              showAudioRoom 
+                ? 'bg-gray-100 dark:bg-gray-800 rounded-xl text-red-700 dark:text-red-400' 
+                : 'bg-transparent text-gray-700 dark:text-gray-300'
+            }`}
             size="sm"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-            Join Audio Chat
+            {showAudioRoom ? (
+              // Content when connected (Leave)
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Leave Audio Chat 
+              </>
+            ) : (
+              // Content when disconnected (Join)
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                Join Audio Chat
+              </>
+            )}
           </Button>
         </div>
       )}
       
-      {/* Audio Room Status */}
-      {showAudioRoom && (
-        <div className="p-3 border-b dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
-          <div className="flex items-center justify-center gap-2 text-xs text-green-700 dark:text-green-400">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></span>
-              Audio Connected
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 });

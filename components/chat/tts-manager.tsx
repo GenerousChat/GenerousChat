@@ -7,7 +7,7 @@ import { Message } from "./hooks/useChatMessages";
 import { useTTS } from "@/utils/tts-context";
 import { useSpeaking } from "@/utils/speaking-context";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, Settings } from "lucide-react";
+import { Bot } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -273,16 +273,16 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   
   return (
     <div className="">
-      DOLPHIN LAZY
       <Button
-        variant="ghost"
-        size="icon"
+        variant={enabled ? "default" : "outline"}
+        size="sm"
         onClick={toggleTTS}
         title={enabled ? "Disable text-to-speech" : "Enable text-to-speech"}
-        className={serviceStatus === 'error' ? 'text-red-500' : 
-                  serviceStatus === 'warning' ? 'text-amber-500' : ''}
+        className={`flex items-center gap-2 ${serviceStatus === 'error' ? 'text-red-500' : 
+                  serviceStatus === 'warning' ? 'text-amber-500' : ''}`}
       >
-        {enabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        <Bot className="h-4 w-4" />
+        <span>Hear Agents</span>
         {serviceStatus === 'error' && (
           <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
         )}
@@ -290,77 +290,6 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
           <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-500"></span>
         )}
       </Button>
-      
-      <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" title="TTS Settings">
-            <Settings className="h-5 w-5" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <h4 className="font-medium">Text-to-Speech Settings</h4>
-              <p className="text-sm text-muted-foreground">
-                Configure how the text-to-speech feature works.
-              </p>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="tts-model">Model</Label>
-              <Select 
-                value={ttsOptions.model || 'tts-1'} 
-                onValueChange={(value) => updateTTSOptions({ model: value as 'tts-1' | 'tts-1-hd' })}
-              >
-                <SelectTrigger id="tts-model">
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tts-1">Standard (tts-1)</SelectItem>
-                  <SelectItem value="tts-1-hd">High Definition (tts-1-hd)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <div className="flex justify-between">
-                <Label htmlFor="tts-speed">Speech Speed: {ttsOptions.speed?.toFixed(2)}</Label>
-              </div>
-              <Slider
-                id="tts-speed"
-                min={0.25}
-                max={4.0}
-                step={0.05}
-                value={[ttsOptions.speed || 1.0]}
-                onValueChange={([value]) => updateTTSOptions({ speed: value })}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <div className="flex justify-between">
-                <Label htmlFor="tts-volume">Volume: {ttsOptions.volume?.toFixed(2)}</Label>
-              </div>
-              <Slider
-                id="tts-volume"
-                min={0.1}
-                max={1.0}
-                step={0.05}
-                value={[ttsOptions.volume || 1.0]}
-                onValueChange={([value]) => updateTTSOptions({ volume: value })}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="read-new-only"
-                checked={enabled}
-                onCheckedChange={toggleTTS}
-              />
-              <Label htmlFor="read-new-only">Enable Text-to-Speech</Label>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }
