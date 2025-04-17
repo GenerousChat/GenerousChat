@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RoomThumbnail from '@/components/chat/room-thumbnail';
+import { RelativeTime } from '@/components/ui/timeago';
 
 interface RoomWithCount {
   id: string;
@@ -111,6 +112,9 @@ export default async function ChatPage() {
                       {/* Apply truncate only on sm screens and up */}
                       <p className="text-xs text-muted-foreground sm:truncate">
                         {room.description || 'No description.'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Updated <RelativeTime date={room.updated_at} className="font-medium" />
                       </p>
                     </div>
                   </CardHeader>
