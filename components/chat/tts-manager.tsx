@@ -272,22 +272,34 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   };
   
   return (
-    <div className="">
+    <div className="p-3 border-b dark:border-gray-700">
       <Button
-        variant={enabled ? "default" : "outline"}
-        size="sm"
         onClick={toggleTTS}
-        title={enabled ? "Disable text-to-speech" : "Enable text-to-speech"}
-        className={`flex items-center gap-2 ${serviceStatus === 'error' ? 'text-red-500' : 
-                  serviceStatus === 'warning' ? 'text-amber-500' : ''}`}
+        className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${
+          enabled 
+            ? 'bg-gray-100 dark:bg-gray-800 rounded-xl text-green-700 dark:text-green-400' 
+            : 'bg-transparent text-gray-700 dark:text-gray-300'
+        }`}
+        size="sm"
       >
-        <Bot className="h-4 w-4" />
-        <span>Hear Agents</span>
-        {serviceStatus === 'error' && (
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-        )}
-        {serviceStatus === 'warning' && (
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-500"></span>
+        {enabled ? (
+          // Content when enabled
+          <>
+            <Bot className="h-4 w-4" />
+            <span>Hearing Agents</span>
+            {serviceStatus === 'error' && (
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+            )}
+            {serviceStatus === 'warning' && (
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-500"></span>
+            )}
+          </>
+        ) : (
+          // Content when disabled
+          <>
+            <Bot className="h-4 w-4" />
+            <span>Hear Agents</span>
+          </>
         )}
       </Button>
     </div>
