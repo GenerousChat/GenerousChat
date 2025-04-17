@@ -35,7 +35,7 @@ jobs:
           push: true # Push to Docker Hub
           tags: |
             rsafier/hackerthem_worker:latest
-            rsafier/hackerthem_worker:${{ github.sha }} # Optional: Tag with commit SHA
+            rsafier/hackerthem_worker:${{ github.sha }}
           platforms: linux/amd64 # Optional: Specify platform (add others if needed, e.g., linux/arm64)
       - name: Deploy to remote server
         env:
