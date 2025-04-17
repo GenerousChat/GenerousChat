@@ -37,11 +37,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/hackerthem_worker:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/hackerthem_worker:${{ github.sha }} # Optional: Tag with commit SHA
           platforms: linux/amd64 # Optional: Specify platform (add others if needed, e.g., linux/arm64)
-
-      # Optional: Output image digest
-      - name: Output image digest
-        run: echo "Image digest: ${{ steps.docker_build.outputs.digest }}"
-       - name: Deploy to remote server
+      - name: Deploy to remote server
         env:
           SSH_PRIVATE_KEY: ${{ secrets.HACKERTHEM_SSH_KEY }}
         run: |
