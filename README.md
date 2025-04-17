@@ -304,3 +304,5 @@ Distributed under the MIT License. This project is licensed under the MIT Licens
 - [Pusher](https://pusher.com/) - Real-time communication
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - All the open source libraries and tools that made this project possible
+
+LISA TRAVIS AJAX KAPPA
