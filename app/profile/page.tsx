@@ -249,7 +249,7 @@ export default function ProfilePage() {
           <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">Manage your account settings</p>
         </div>
 
-        <Card className="rounded-xl shadow-lg border w-full">
+        <Card className="rounded-xl border w-full">
           <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6 pb-2 sm:pb-3">
             <div className="flex items-center gap-2 sm:gap-3 mb-1">
               <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 text-primary flex items-center justify-center">

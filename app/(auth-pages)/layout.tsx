@@ -63,7 +63,7 @@ export default async function Layout({
   }
 
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-start md:justify-center gap-8 px-4 py-12 md:py-8 overflow-hidden">
+    <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-start md:justify-center gap-6 px-4 py-8 md:py-8 overflow-hidden">
       {/* Background image - conditional based on path */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -77,33 +77,23 @@ export default async function Layout({
         />
       </div>
       
-      {/* Centered logo above card for mobile only - MOVED & position removed */}
-      <div className="z-10 block md:hidden">
+      {/* Centered logo above card for DESKTOP screen sizes */}
+      <div className="z-10 hidden md:block">
         <Image
           src="/Images/Generous_Logo.png"
           alt="Generous Logo"
           width={180} 
           height={58}
-          className="object-contain"
+          className="object-contain md:w-[400px] md:h-auto"
         />
       </div>
 
-      {/* Card container - remove specific mobile margin */}
+      {/* Card container */}
       <div className="w-full max-w-[450px] relative z-10">
-        <div className="w-full bg-background rounded-2xl shadow-xl p-6 sm:p-10">
+        {/* Removed min-h-[550px] to allow natural height */}
+        <div className="w-full bg-background rounded-2xl shadow-xl p-6 sm:p-10 flex flex-col justify-center">
           {children}
         </div>
-      </div>
-
-      {/* Top-left logo for desktop only */}
-      <div className="absolute top-8 left-8 z-10 hidden md:block">
-        <Image
-          src="/Images/Generous_Logo.png"
-          alt="Generous Logo"
-          width={200}
-          height={64}
-          className="object-contain opacity-80 hover:opacity-100 transition-opacity duration-300"
-        />
       </div>
     </div>
   );

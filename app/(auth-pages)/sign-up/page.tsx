@@ -57,19 +57,21 @@ function SignupForm() {
       
       {/* Use space-y-4 like sign-in */}
       <div className="flex flex-col space-y-4 w-full relative z-10">
-        {/* Title section */}
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-            Create an <span className="text-primary">account</span>
+        {/* Title section - Stacked with logo */}
+        <div className="flex flex-col space-y-2">
+          {/* Updated H1 for responsive text/logo */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative flex flex-col items-center gap-1">
+            {/* Mobile view: Stacked text + logo */} 
+            <span className="md:hidden">Create a</span>
+            <img src="/logo.svg" alt="Generous Logo" className="h-16 dark:invert dark:brightness-200 md:hidden" /> 
+            <span className="text-primary md:hidden">account</span>
+            {/* Desktop view: Simple text - Added text-center */}
+            <span className="hidden md:inline-block text-center">Create an <span className="text-primary">account</span></span>
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your email to get started
-          </p>
         </div>
 
-        {/* Form section - remove BackgroundGradient, apply styles directly */}
-          {/* Use gap-6 like sign-in, apply standard background, shadow, padding */}
-          <form className="grid gap-6 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
+        {/* Form section - Ensure gap-4 and no padding */}
+          <form className="grid gap-4 rounded-xl bg-background">
             {/* Email Input - Make label visible */}
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>

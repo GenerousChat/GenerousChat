@@ -66,7 +66,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
           }}
         >
           <motion.div
-            className="h-5 w-5 rounded-full bg-background shadow-lg"
+            className="h-5 w-5 rounded-full bg-background"
             initial={false}
             animate={{
               x: isChecked ? 20 : 0,

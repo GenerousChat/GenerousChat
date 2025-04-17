@@ -45,30 +45,40 @@ function ForgotPasswordForm() {
 
   return (
     <>
-      {/* Background image - positioned absolutely within the auth layout card */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden -z-10">
+      {/* Background image - REMOVED as it's handled by layout.tsx */}
+      {/* <div className="absolute inset-0 rounded-2xl overflow-hidden -z-10">
         <Image
-          src="/Images/Walking.png"
+          src="/Images/Walking.png" // Note: Layout uses /Images/Robohand.png for this path
           alt="Background"
           fill
           sizes="(max-width: 450px) 100vw, 450px"
           className="object-cover object-center opacity-15 dark:opacity-10"
           priority
         />
-      </div>
+      </div> */} 
       
-      <div className="flex flex-col space-y-4 w-full relative z-10">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-            Reset <span className="text-primary">Password</span>
+      {/* Ensured space-y-4 */}
+      <div className="flex flex-col space-y-4 w-full relative z-10"> 
+        {/* Title section - Stacked with logo */}
+        <div className="flex flex-col space-y-2">
+          {/* Updated H1 for responsive text/logo */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight relative flex flex-col items-center gap-1">
+            {/* Mobile view: Stacked text + logo */} 
+            <span className="md:hidden">Reset</span>
+            <img src="/logo.svg" alt="Generous Logo" className="h-16 dark:invert dark:brightness-200 md:hidden" /> 
+            <span className="text-primary md:hidden">Password</span>
+            {/* Desktop view: Simple text */} 
+            <span className="hidden md:inline-block">Reset <span className="text-primary">Password</span></span>
           </h1>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          {/* Removed subheading */}
+          {/* <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Enter your email address and we'll send you a link to reset your password
-          </p>
+          </p> */} 
         </div>
 
-        <form className="grid gap-4 p-4 sm:p-10 rounded-xl bg-background shadow-lg">
-            <div className="grid gap-2">
+        {/* Reverted to gap-4, removed specific margins, added space-grotesk, removed shadow-lg */}
+        <form className="grid gap-4 rounded-xl bg-background space-grotesk"> 
+            <div className="grid gap-2"> {/* Removed mb-4 */} 
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -79,11 +89,11 @@ function ForgotPasswordForm() {
                 autoComplete="email"
                 autoCorrect="off"
                 required
-                className="rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
+                className="rounded-xl bg-gray-100 dark:bg-gray-800 h-11 px-4 focus:ring-primary/40 focus:border-primary/40 focus:ring-2"
               />
             </div>
 
-            <div className="grid gap-2 invisible" aria-hidden="true">
+            <div className="grid gap-2 invisible" aria-hidden="true"> {/* Removed mb-4 */} 
               <div className="flex items-center justify-between">
                 <Label htmlFor="placeholder-password">Password</Label>
                 <span className="text-xs">&nbsp;</span>
@@ -106,8 +116,7 @@ function ForgotPasswordForm() {
               </SubmitButton>
             </div>
           </form>
-        </div>
-
+        {/* MOVED LINK AND MESSAGE INSIDE THIS DIV */} 
         <div className="text-center">
           <Link href="/sign-in" className="text-sm font-medium text-primary hover:underline">
             Remember your password? Sign in
@@ -117,6 +126,7 @@ function ForgotPasswordForm() {
         {message && (
           <FormMessage message={message} />
         )}
+        </div>
     </>
   );
 }

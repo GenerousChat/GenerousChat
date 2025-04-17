@@ -140,7 +140,7 @@ function DialogContent({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               className={cn(
-                "w-full max-w-lg p-6 border bg-background shadow-lg sm:rounded-lg",
+                "w-full max-w-lg p-6 border bg-background sm:rounded-lg",
                 className
               )}
               onClick={onClick}
