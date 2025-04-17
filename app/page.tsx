@@ -2,6 +2,9 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import Image from "next/image";
+import Link from 'next/link';
+import { Github } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: "Generous | Build Together",
@@ -55,6 +58,19 @@ export default async function Home() {
           className="object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 dark:invert dark:brightness-200"
         />
       </div>
+
+      {/* Bottom-right GitHub icon link */}
+      <Link 
+        href="https://github.com/GenerousChat/Generous" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        aria-label="View source code on GitHub"
+        className="absolute bottom-8 right-8 z-10"
+      >
+        <Button variant="ghost" size="icon" className="w-10 h-10 text-muted-foreground/70 hover:text-foreground/90 hover:bg-muted/50 transition-all duration-300 rounded-full">
+          <Github className="h-5 w-5" />
+        </Button>
+      </Link>
     </div>
   );
 }
