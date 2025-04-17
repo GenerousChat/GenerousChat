@@ -35,6 +35,7 @@ async function selectBestAgent(
 
     logger.info(`Selecting from ${aiAgents.length} available AI agents`);
 
+    // Create a prompt for agent selection
     const prompt = `
 You are controlling a group of AI agents with distinct personalities. Each agent has its own unique perspective and expertise. Your task is to analyze the last message in the conversation and determine if any of the agents should respond. Consider the context of the conversation, the personalities of the agents, and the content of the last message.
  
