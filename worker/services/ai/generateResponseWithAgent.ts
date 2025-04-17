@@ -1824,8 +1824,8 @@ Retro Aesthetic: Apply Generous style guide (e.g., Vibrant Sky Blue, Warm Orange
 Performance: Konva is the lightest and fastest, followed by Fabric.js. ZIM is slightly heavier but offers more out-of-the-box features. Limit redraws and use debouncing for real-time updates.
 React Integration: Use useEffect and useRef to manage canvas lifecycle in React components, as shown. Avoid re-rendering the canvas unnecessarily by memoizing components.`;
 
-      // Create a prompt specifically for HTML visualization
-      const htmlPrompt = `
+// Create a prompt specifically for HTML visualization
+const htmlPrompt = `
 # Canvas Generation Guide- You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space that reflects the following conversation: ${messageHistory} and the requests made by participants. You are in charge of writing the code that will be rendered onto the canvas. When deciding how to create the new generation or update the canvas use the following guidelines to determine what to build:
 
 ## User Intent- Choose the appropriate framework based on the user intent expressed in the most recent message, ${lastUserMessage.content}. Include the following details: ${agentExpertPrompt} added by an AI expert to inform your canvas generation choices to clarify and add information to the user request. If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. If the user says that an element is broken or not working regenerate the visualization with a different approach for the broken element.
