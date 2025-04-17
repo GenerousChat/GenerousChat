@@ -280,7 +280,7 @@ export default function ProfilePage() {
               <p id="email" className="text-sm text-muted-foreground border rounded-md h-9 px-3 py-1.5 bg-muted sm:h-10 sm:py-2">
                 {userEmail || "-"}
               </p>
-              <p className="text-xs text-muted-foreground">Your login email (cannot be changed here).</p>
+              <p className="text-xs text-muted-foreground">Your login email.</p>
             </div>
             
             <div className="space-y-1.5 mt-4">
