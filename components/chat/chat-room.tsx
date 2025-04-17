@@ -7,8 +7,7 @@ import AudioRoom from '@/components/audio/audio-room';
 import { TTSManager } from "@/components/chat/tts-manager";
 import ParticipantList from "@/components/chat/participant-list";
 import { Transcription } from './transcription';
-import { OptimizedInput } from './optimized-input';
-import { MessageList } from './message-list';
+import { IntegratedChat } from './integrated-chat';
 import Canvas from "@/components/canvas/chat-canvas";
 import { GenerationHistory } from "@/components/canvas/index";
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
@@ -146,19 +145,14 @@ export default function ChatRoom({
                     </DyteProvider>
                   )}
                   
-                  <MessageList
+                  <IntegratedChat
                     messages={messages}
                     userCache={userCache}
                     isCurrentUser={isCurrentUser}
                     getUserEmail={getUserEmail}
-                    getMessageTimestamp={getMessageTimestamp}
                     formatTime={formatTime}
-                    loading={isLoading}
-                  />
-                  
-                  <OptimizedInput 
-                    onSubmit={handleSendMessage}
-                    isLoading={isLoading} 
+                    onSendMessage={handleSendMessage}
+                    isLoading={isLoading}
                   />
                 </div>
               </div>
@@ -235,21 +229,14 @@ export default function ChatRoom({
           newMessageReceived={newMessageReceived}
         />}
         
-        <MessageList
+        <IntegratedChat
           messages={messages}
           userCache={userCache}
           isCurrentUser={isCurrentUser}
           getUserEmail={getUserEmail}
-          getMessageTimestamp={getMessageTimestamp}
           formatTime={formatTime}
-          loading={isLoading}
-        />
-
-       
-
-        <OptimizedInput 
-          onSubmit={handleSendMessage}
-          isLoading={isLoading} 
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
         />
       </div>
       </div>
