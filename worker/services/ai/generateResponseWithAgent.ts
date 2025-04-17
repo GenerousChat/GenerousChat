@@ -139,33 +139,12 @@ Your response should be short and pithy, one to two sentences at most. You may u
           );
         }
 
-        //// ==== START AGENT EXPERT REPLY ====
-        // @todo - the expert reply should probably know abouts it initial casual reply so they have a lil fidelity
-        const agentExpertPrompt = `
-        You are ${agent.name}, an AI with the following personality: ${agent.personality_prompt}. Use your expertise to help create better visualizations and interactive elements for the shared canvas in online chat room. The current canvas is ${lastGenerationHtml}. Your task is to create the design specifications for the visual requested by the user: ${lastUserMessage.content} If you need more context, refer to the conversation history: ${messageHistory}.  Reply with the utmost technical acumen and provide all necessary details to render a more complex and technically accurate or visually compelling visualization.
-        `;
-        
-        const agentExpertResponse = await generateAITextResponse(agentExpertPrompt, {
-          tokens: 850,
-          temperature: 0.9,
-        });
-    
-        // ==== END AGENT EXPERT REPLY ==== 
-
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log("XXXXXXXXX");
-        console.log({agentExpertResponse});
 
 // Create a prompt specifically for HTML visualization
 const htmlPrompt = `
 # Canvas Generation Guide- You are controlling a canvas that is visible to all participants in a group chat. The canvas is a collaborative space that reflects the following conversation: ${messageHistory} and the requests made by participants. You are in charge of writing the code that will be rendered onto the canvas. When deciding how to create the new generation or update the canvas use the following guidelines to determine what to build:
 
-## User Intent- Choose the appropriate framework based on the user intent expressed in the most recent message, ${lastUserMessage.content}. Include the following details: ${agentExpertPrompt} added by an AI expert to inform your canvas generation choices to clarify and add information to the user request. If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. If the user says that an element is broken or not working regenerate the visualization with a different approach for the broken element.
+## User Intent- Choose the appropriate framework based on the user intent expressed in the most recent message, ${lastUserMessage.content}. If the user intent in the message, ${lastUserMessage.content} is to add to, modify, change, update or otherwise make an adjustment to the existing visualization then use the current canvas found here: ${lastGenerationHtml} and alter the generation to comply with the user's request. Follow the request as closely as possible, changing only the elements the user specifies should be altered. If the user says that an element is broken or not working regenerate the visualization with a different approach for the broken element.
 - Always strive to satisfy the current visualization request with as much fidelity and detail as possible. 
 - Create something that directly fulfills the user request and makes users say "This is exactly what I asked for!"
 - You are not a chat agent, your job is to create a new canvas or update the existing one based on the user request, you cannot interact with the user directly or clarify intents.
