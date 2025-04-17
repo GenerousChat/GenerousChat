@@ -96,7 +96,7 @@ export default function CreateRoomForm({ userId, trigger }: CreateRoomFormProps)
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-white dark:bg-black sm:max-w-[425px] border-0 overflow-hidden p-0">
+        <DialogContent className="bg-white dark:bg-black sm:max-w-[425px] border-0 overflow-hidden p-0">
           <div className="rounded-xl p-6">
             <form onSubmit={handleSubmit}>
               <DialogHeader className="mb-4">

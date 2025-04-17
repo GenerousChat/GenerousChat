@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState, useCallback } from 'react';
+import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
 import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
@@ -36,11 +36,32 @@ interface AgentInfo {
   description: string;
 }
 
-const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {
-  const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
+const agentColors = [
+  'bg-blue-500 dark:bg-blue-400',
+  'bg-purple-500 dark:bg-purple-400',
+  'bg-pink-500 dark:bg-pink-400',
+  'bg-indigo-500 dark:bg-indigo-400',
+  'bg-cyan-500 dark:bg-cyan-400',
+  'bg-teal-500 dark:bg-teal-400',
+];
+
+const getAgentColor = (index: number): string => {
+  return agentColors[index % agentColors.length];
+};
+
+const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false }: ParticipantListProps) => {  const [userInfo, setUserInfo] = useState<Record<string, ParticipantInfo>>({});
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [lastActivityMap, setLastActivityMap] = useState<Record<string, number>>({});
   const { isParticipantSpeaking, getParticipantActivityType } = useSpeaking();
+
+  // Create a map of agent IDs to their colors
+  const agentColorMap = useMemo(() => {
+    const colorMap: Record<string, string> = {};
+    agents.forEach((agent, index) => {
+      colorMap[agent.id] = getAgentColor(index);
+    });
+    return colorMap;
+  }, [agents]);
   
   // Check if user is active (activity in last 5 minutes)
   const isActive = useCallback((userId: string) => {
@@ -392,8 +413,13 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
             <div 
               key={participant.user_id} 
               className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
-            >
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+            >              <div className={`w-2 h-2 rounded-full ${
+                info.isAgent 
+                  ? agentColorMap[participant.user_id] 
+                  : isOnline 
+                    ? 'bg-green-500 dark:bg-green-400' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+              }`} />
               {/* Use displayName */}
               <span className="text-sm truncate text-gray-900 dark:text-gray-100">{displayName}</span>
               {info.isAgent && (
@@ -417,17 +443,14 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           return (
             <div 
               key={agent.id} 
-              // Add data attributes for react-tooltip
               data-tooltip-id="agent-tooltip" 
               data-tooltip-content={agent.description} 
-              data-tooltip-place="right" // Optional: position preference
+              data-tooltip-place="right"
               className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70 cursor-default"
             >
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-blue-500 dark:bg-blue-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+              <div className={`w-2 h-2 rounded-full ${agentColorMap[agent.id]}`} />
               <span className="text-sm truncate text-gray-900 dark:text-gray-100">{agent.name}</span>
               <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
-              
-              {/* Speaking indicator */}
               {false && isParticipantSpeaking(agent.id) && (
                 <SpeakingIndicator 
                   activityType={getParticipantActivityType(agent.id)} 
