@@ -111,14 +111,14 @@ export default function CreateRoomForm({ userId, trigger }: CreateRoomFormProps)
                               sm:h-auto sm:w-full sm:max-w-2xl sm:max-h-[85vh] sm:rounded-lg 
                               [&>button]:hidden">
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 h-full flex flex-col">
-            <div className="flex-grow">
+            <div>
               <DialogHeader className="mb-4 text-left">
                   <DialogTitle className="text-xl font-semibold">Create a new space</DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1">
                     Give your space a name and an optional description.
                   </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-4">
                 <div className="grid gap-1.5">
                   <Label htmlFor="name" className="text-sm font-medium">Name</Label>
                   <Input
@@ -131,26 +131,25 @@ export default function CreateRoomForm({ userId, trigger }: CreateRoomFormProps)
                     disabled={isLoading}
                   />
                 </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="description" className="text-sm font-medium">
-                    Description{' '}
-                    <span className="text-xs text-muted-foreground/80 font-normal">
-                      (optional)
-                    </span>
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What is this space for?"
-                    rows={3}
-                    className="rounded-md min-h-[80px] resize-none px-3 py-2 text-sm 
-                               focus-visible:outline-none focus-visible:ring-2 
-                               focus-visible:ring-ring focus-visible:ring-offset-2"
-                    disabled={isLoading}
-                  />
-                </div>
               </div>
+            </div>
+            <div className="flex flex-col gap-1.5 flex-grow mt-4">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description{' '}
+                <span className="text-xs text-muted-foreground/80 font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What is this space for?"
+                className="rounded-md flex-grow resize-none px-3 py-2 text-sm 
+                           focus-visible:outline-none focus-visible:ring-2 
+                           focus-visible:ring-ring focus-visible:ring-offset-2"
+                disabled={isLoading}
+              />
             </div>
             <DialogFooter className="mt-4 gap-2 flex-row justify-end">
               <Button 
