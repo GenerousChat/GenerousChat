@@ -146,7 +146,7 @@ export function IntegratedChat({
                   <img 
                     src={userCache[message.user_id]?.name?.toLowerCase().includes('agent') ? "/chat_message_agent_avatar.svg" : "/chat_message_user_avatar.svg"} 
                     alt={userCache[message.user_id]?.name?.toLowerCase().includes('agent') ? "Agent" : "User"}
-                    className="w-5 h-5 invert dark:invert-0"
+                    className="w-5 h-5 invert"
                   />
                   {message.name || userCache[message.user_id]?.name || getUserEmail(message.user_id)}
                 </div>
