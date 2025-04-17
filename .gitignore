@@ -2,6 +2,7 @@
 
 # dependencies
 worker/node_modules
+worker/logs
 /node_modules
 /.pnp
 .pnp.*

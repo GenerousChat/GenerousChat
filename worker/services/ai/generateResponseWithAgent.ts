@@ -1913,6 +1913,7 @@ const htmlPrompt = `
               status: 'completed',
               fallback: true
             },
+						listener_name: process.env.HOME
           })
           .eq('id', emptyGeneration.id)
           .select()
