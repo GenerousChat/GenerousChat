@@ -13,6 +13,7 @@ import { GenerationHistory } from "@/components/canvas/index";
 import { useChatMessages, Message, Participant } from './hooks/useChatMessages';
 import { useAudioRoom } from './hooks/useAudioRoom';
 // Import Swiper and required modules
+import SwiperCore from 'swiper'; // Import SwiperCore for instance type
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
@@ -36,6 +37,9 @@ export default function ChatRoom({
   const [isMobile, setIsMobile] = useState(false);
   // State to track active slide
   const [activeSlide, setActiveSlide] = useState(1); // Default to chat view (middle slide)
+  // State to hold Swiper instance
+  const [swiperInstance, setSwiperInstance] = useState<SwiperCore | null>(null);
+  
   // Initialize hooks
   const {
     messages,
@@ -107,16 +111,20 @@ export default function ChatRoom({
             modules={[EffectCoverflow]}
             className="w-full h-full"
             onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
+            onSwiper={setSwiperInstance}
           >
             {/* Participants Slide */}
             <SwiperSlide>
               <div className="w-full h-full flex flex-col">
-                <div className="p-2 bg-primary text-white flex items-center justify-between">
+                <div className="p-2 bg-primary text-primary-foreground flex items-center justify-between">
                   <Users className="h-5 w-5" />
                   <h2 className="text-center font-medium">Participants</h2>
-                  <ChevronRight className="h-5 w-5 animate-pulse" />
+                  <ChevronRight 
+                    className="h-5 w-5 animate-pulse cursor-pointer"
+                    onClick={() => swiperInstance?.slideNext()}
+                  />
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto pb-20">
                   <ParticipantList
                     participants={participants}
                     onJoinAudio={handleJoinAudioRoom}
@@ -129,12 +137,18 @@ export default function ChatRoom({
             {/* Chat Slide (default) */}
             <SwiperSlide>
               <div className="w-full h-full flex flex-col">
-                <div className="p-2 bg-primary text-white flex items-center justify-between">
-                  <ChevronLeft className="h-5 w-5 animate-pulse" />
+                <div className="p-2 bg-primary text-primary-foreground flex items-center justify-between">
+                  <ChevronLeft 
+                    className="h-5 w-5 animate-pulse cursor-pointer"
+                    onClick={() => swiperInstance?.slidePrev()}
+                  />
                   <h2 className="text-center font-medium">Chat</h2>
-                  <ChevronRight className="h-5 w-5 animate-pulse" />
+                  <ChevronRight 
+                    className="h-5 w-5 animate-pulse cursor-pointer"
+                    onClick={() => swiperInstance?.slideNext()}
+                  />
                 </div>
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="flex-1 flex flex-col h-full overflow-hidden pb-2">
                   {showAudioRoom && meeting && (
                     <DyteProvider value={meeting}>
                       <AudioRoom
@@ -161,12 +175,15 @@ export default function ChatRoom({
             {/* Canvas Slide */}
             <SwiperSlide>
               <div className="w-full h-full flex flex-col">
-                <div className="p-2 bg-primary text-white flex items-center justify-between">
-                  <ChevronLeft className="h-5 w-5 animate-pulse" />
+                <div className="p-2 bg-primary text-primary-foreground flex items-center justify-between">
+                  <ChevronLeft 
+                    className="h-5 w-5 animate-pulse cursor-pointer"
+                    onClick={() => swiperInstance?.slidePrev()}
+                  />
                   <h2 className="text-center font-medium">Canvas</h2>
                   <Layers className="h-5 w-5" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 pb-20">
                   <Canvas 
                     roomId={roomId}
                     activeGeneration={activeGeneration}
@@ -178,7 +195,7 @@ export default function ChatRoom({
           </Swiper>
           
           {/* Navigation Indicators */}
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-10">
+          <div className="absolute bottom-0.5 left-0 right-0 flex justify-center gap-2 z-10">
             <div className={`h-2 w-2 rounded-full ${activeSlide === 0 ? 'bg-primary' : 'bg-gray-300'}`}></div>
             <div className={`h-2 w-2 rounded-full ${activeSlide === 1 ? 'bg-primary' : 'bg-gray-300'}`}></div>
             <div className={`h-2 w-2 rounded-full ${activeSlide === 2 ? 'bg-primary' : 'bg-gray-300'}`}></div>

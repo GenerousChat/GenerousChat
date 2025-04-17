@@ -177,7 +177,7 @@ export function IntegratedChat({
       {/* Input form */}
       <form
         onSubmit={handleSubmit}
-        className="border-t p-2 flex items-end"
+        className="p-2 flex items-end"
       >
         <div className="relative flex-grow">
           <Textarea

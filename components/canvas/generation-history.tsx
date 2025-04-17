@@ -261,28 +261,24 @@ export function GenerationHistory({
 
 
   return (
-    <div className="p-2">
-      <div className="w-full overflow-x-auto scrollbar-hide" style={{ maxWidth: '100%', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <div className="flex flex-nowrap space-x-2 p-1" onWheel={(e) => {
-          const container = e.currentTarget.parentElement;
-          if (container) {
-            container.scrollLeft += e.deltaY;
-            e.preventDefault();
-          }
-        }}>
-          {uniqueGenerations.map(generation => (
+    <div className="p-2 border-b border-border">
+      <div 
+        className="w-full overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,black,black_calc(100%-4rem),transparent)]" 
+        style={{ maxWidth: "100%", scrollbarWidth: "none" }}
+      >
+        <div className="flex flex-nowrap space-x-2 p-1">
+          {uniqueGenerations.map((gen) => (
             <span
-              key={generation.id}
-              onClick={() => onSelectGeneration(generation)}
+              key={gen.id}
+              onClick={() => onSelectGeneration(gen)}
+              title={gen.summary || gen.slug || `Generation ${gen.id}`}
               className={`px-3 py-1 rounded-xl border dark:border-[#444] text-sm transition-colors cursor-pointer inline-block flex-shrink-0 ${
-                activeGenerationId === generation.id 
-                  ? "bg-primary text-primary-foreground font-medium" 
+                activeGenerationId === gen.id
+                  ? "bg-primary text-primary-foreground font-medium"
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
               }`}
-              title={generation.summary || new Date(generation.created_at).toLocaleString()}
             >
-              {generation.slug || 'Gen'}
-              {generation.metadata?.status === 'generating' && ' ⏳'}
+              {gen.slug || gen.id.substring(0, 8)}
             </span>
           ))}
         </div>
