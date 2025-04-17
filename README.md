@@ -1,10 +1,13 @@
 # Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md) [![GitHub Stars](https://img.shields.io/github/stars/generouschat/generous)](https://github.com/generouschat/generous/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/generouschat/generous)](https://github.com/generouschat/generous/issues)
 
 <div align="center">
-  <img src="./public/logo.svg" alt="Generous Logo" width="400" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./public/logo.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./public/logo.svg">
+    <img src="./public/logo.svg" alt="Generous Logo" width="400" />
+  </picture>
 
 Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
-
 </div>
 
 <div align="center">
@@ -13,7 +16,8 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 </div>
 
-![Generous Screenshot (Placeholder)](./placeholder-screenshot.png) <!-- Replace with an actual screenshot of the application -->
+[![Watch the Loom Video](loom-preview.png)](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
+
 
 ## 📋 Table of Contents
 
@@ -304,5 +308,3 @@ Distributed under the MIT License. This project is licensed under the MIT Licens
 - [Pusher](https://pusher.com/) - Real-time communication
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - All the open source libraries and tools that made this project possible
-
-LISA TRAVIS AJAX KAPPA
