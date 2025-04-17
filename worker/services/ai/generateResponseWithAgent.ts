@@ -225,7 +225,7 @@ const htmlPrompt = `
           .from("canvas_generations")
           .update({
             html: htmlContent,
-            agent_expert_response: agentExpertResponse,
+            agent_expert_response: 'lisa hated expert prompts',
             summary: `Visualization for: ${lastUserMessage.content.substring(0, 50)}${lastUserMessage.content.length > 50 ? '...' : ''}`,
             metadata: {
               status: 'completed',
