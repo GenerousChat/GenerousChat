@@ -224,13 +224,9 @@ export default function ChatRoom({
           onJoinAudio={handleJoinAudioRoom}
           showAudioRoom={showAudioRoom}
         />
-        {<Transcription onTranscript={handleSendMessage} />}
-      </div>
-
-      {/* Main Chat Column - Max width 300px */}
-      <div className="flex bg-green flex-col h-full overflow-hidden relative max-w-[400px] min-w-[400px]">
-        {showAudioRoom && meeting && (
+         {showAudioRoom && meeting && (
           <DyteProvider value={meeting}>
+            trtrtr
             <AudioRoom
               roomId={roomId}
               userId={currentUser.id}
@@ -238,13 +234,20 @@ export default function ChatRoom({
             />
           </DyteProvider>
         )}
-
-        { <TTSManager 
+       asdasd
+       { <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}
           newMessageReceived={newMessageReceived}
         />}
+        wttrtyerfg
+        {<Transcription onTranscript={handleSendMessage} />}
+      </div>
+
+      {/* Main Chat Column - Max width 300px */}
+      <div className="flex bg-green flex-col h-full overflow-hidden relative max-w-[400px] min-w-[400px]">
+
         
         <IntegratedChat
           messages={messages}

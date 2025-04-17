@@ -433,6 +433,13 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           );
         })}
 
+      </div>
+
+<div className="text-sm text-muted-foreground">
+        {/* Show Active Humans / Total Humans */}
+        <p>Audio shit ({totalActiveHumans} / {totalHumanParticipants})</p>
+      </div>
+
 { onJoinAudio && !showAudioRoom && (
         <div className="p-3 border-b">
           <Button 
@@ -462,7 +469,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 });

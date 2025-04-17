@@ -310,7 +310,7 @@ export function GenerationHistory({
 
 
   return (
-    <div className="p-2 border-b border-border">
+    <div className="p-2">
       <div 
         ref={scrollableContainerRef}
         className="w-full overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,black,black_calc(100%-4rem),transparent)] cursor-grab"

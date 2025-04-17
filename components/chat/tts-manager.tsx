@@ -160,17 +160,17 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   }, [systemState, serviceStatus, createTTSService]);
 
   // Use a simpler approach to manage speaking indicators
-  useEffect(() => {
-    // This effect handles cleanup of speaking indicators when TTS is disabled
-    if (!enabled && ttsService) {
-      // Turn off all agent speaking indicators when TTS is disabled
-      Object.keys(userCache).forEach(userId => {
-        if (userCache[userId].isAgent) {
-          setParticipantSpeaking(userId, 'tts', false);
-        }
-      });
-    }
-  }, [enabled, ttsService, userCache, setParticipantSpeaking]);
+  // useEffect(() => {
+  //   // This effect handles cleanup of speaking indicators when TTS is disabled
+  //   if (!enabled && ttsService) {
+  //     // Turn off all agent speaking indicators when TTS is disabled
+  //     Object.keys(userCache).forEach(userId => {
+  //       if (userCache[userId].isAgent) {
+  //         setParticipantSpeaking(userId, 'tts', false);
+  //       }
+  //     });
+  //   }
+  // }, [enabled, ttsService, userCache, setParticipantSpeaking]);
 
   // Process only new messages received through Pusher
   useEffect(() => {
@@ -272,7 +272,8 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   };
   
   return (
-    <div className="absolute top-4 right-4 z-10 flex gap-2">
+    <div className="">
+      DOLPHIN LAZY
       <Button
         variant="ghost"
         size="icon"
