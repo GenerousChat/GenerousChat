@@ -272,7 +272,7 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   };
   
   return (
-    <div className="p-3 border-b dark:border-gray-700">
+    <div className="p-3  dark:border-gray-700">
       <Button
         onClick={toggleTTS}
         className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${

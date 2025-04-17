@@ -441,7 +441,7 @@ const ParticipantList = memo(({ participants, onJoinAudio, onLeaveAudio, onToggl
 
       {/* Audio Toggle Button */}
       {(
-        <div className="p-3 border-b dark:border-gray-700">
+        <div className="p-3 dark:border-gray-700">
           <Button 
             onClick={showAudioRoom ? onLeaveAudio : onJoinAudio}
             className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${ // Add disabled style

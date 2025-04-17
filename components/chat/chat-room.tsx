@@ -236,14 +236,12 @@ export default function ChatRoom({
             />
           </DyteProvider>
         )}
-       asdasd
        { <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}
           newMessageReceived={newMessageReceived}
         />}
-        wttrtyerfg
         {<Transcription onTranscript={handleSendMessage} />}
       </div>
 
