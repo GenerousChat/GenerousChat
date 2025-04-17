@@ -11,6 +11,7 @@ import { Viewport } from 'next'
 import { headers } from 'next/headers';
 import { signOutAction } from "@/app/actions";
 import { MobileMenu } from "@/components/ui/mobile-menu";
+import { Analytics } from "@vercel/analytics/react"
 
 // If loading a variable font, you don't need to specify the font weight
 const spaceGrotesk = Space_Grotesk({
@@ -21,6 +22,8 @@ const spaceGrotesk = Space_Grotesk({
 import "./globals.css";
 
 const defaultUrl = "https://generous.rocks";
+
+console.log({ Analytics });
 
 // Define paths where desktop HeaderAuth should be hidden
 const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
