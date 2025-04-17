@@ -16,7 +16,7 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 </div>
 
-[![Watch the Loom Video](loom-preview.png)](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
+[![Watch the Loom Video](robohands.png)](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
 
 
 ## 📋 Table of Contents
