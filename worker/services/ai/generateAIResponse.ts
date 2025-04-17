@@ -39,8 +39,12 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
     // Create a formatted message history for the AI
     const messageHistory = messages
       .reverse()
-      .map((msg: Message) => `- ${msg.user_id}: ${msg.content}`)
+      .map((msg: Message) => {
+        // here, the message history uuids do not have names
+        return `- ${msg.user_id}: ${msg.content}`;
+      })
       .join("\n");
+
 
     const selectAgentTimerLabel = `selectAgent-${roomId}`;
     console.time(selectAgentTimerLabel);

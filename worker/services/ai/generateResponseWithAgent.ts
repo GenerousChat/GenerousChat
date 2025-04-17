@@ -32,7 +32,12 @@ async function generateResponseWithAgent(
 ): Promise<boolean> {
   try {
 
-
+    console.log("grassgrassgrasss");
+    console.log("grassgrassgrasss");
+    console.log("grassgrassgrasss");
+    console.log("grassgrassgrasss");
+    console.log("grassgrassgrasss");
+    console.log({ messageHistory });
     /*
     messageHistory (10-30)
     lastGenerationHtml 
