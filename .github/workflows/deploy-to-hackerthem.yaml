@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Deploy to remote server
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.HACKERTHEM_SSH_LEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.HACKERTHEM_SSH_KEY }}
         run: |
           echo "$SSH_PRIVATE_KEY" > key
           chmod 600 key
