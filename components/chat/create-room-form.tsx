@@ -32,134 +32,156 @@ export default function CreateRoomForm({ userId, trigger }: CreateRoomFormProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) return;
     setIsLoading(true);
 
     try {
       const supabase = createClient();
       
-      const { data, error } = await supabase
+      const { data: roomData, error: roomError } = await supabase
         .from("chat_rooms")
-        .insert([
-          {
-            name,
-            description,
-            created_by: userId,
-          },
-        ])
-        .select();
+        .insert([{ name, description, created_by: userId }])
+        .select('id')
+        .single();
 
-      if (error) {
-        console.error("Error creating chat room:", error);
+      if (roomError) {
+        console.error("Error creating chat room:", roomError);
+        setIsLoading(false);
         return;
       }
 
-      // Join the room as a participant
-      if (data && data.length > 0) {
-        const roomId = data[0].id;
-        
-        await supabase
-          .from("room_participants")
-          .insert([
-            {
-              room_id: roomId,
-              user_id: userId,
-            },
-          ]);
-          
-        // Navigate to the new room
-        router.push(`/chat/${roomId}`);
-        router.refresh();
+      if (!roomData) {
+         console.error("No data returned after creating room.");
+         setIsLoading(false);
+         return;
       }
-    } catch (error) {
-      console.error("Error creating chat room:", error);
-    } finally {
-      setIsLoading(false);
+      
+      const roomId = roomData.id;
+      console.log("Created room with ID:", roomId);
+
+      const { error: participantError } = await supabase
+        .from("room_participants")
+        .insert([{ room_id: roomId, user_id: userId }]);
+
+      if (participantError) {
+        console.error("Error adding participant:", participantError);
+      } else {
+        console.log("Added creator as participant.");
+      }
+        
+      router.push(`/chat/${roomId}`); 
+      router.refresh();
       setOpen(false);
+
+    } catch (error) {
+      console.error("Unexpected error creating chat room:", error);
+    } finally {
+      if (open) { 
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        setName("");
+        setDescription("");
+      }
+    }
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
       setName("");
       setDescription("");
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger ? (
           trigger
         ) : (
-          <button 
-            className="flex items-center gap-3 px-6 py-2.5 rounded-xl"
-          >
-            <div className="p-1.5 rounded-full flex items-center justify-center">
-              <Plus size={16} />
-            </div>
+          <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+            <Plus size={16} />
             <span>New Room</span>
-          </button>
+          </Button>
         )}
       </DialogTrigger>
-        <DialogContent className="bg-white dark:bg-black sm:max-w-[425px] border-0 overflow-hidden p-0">
-          <div className="rounded-xl p-6">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader className="mb-4">
-                  <DialogTitle className="text-2xl font-bold">Create a new space</DialogTitle>
-                  <DialogDescription className="text-muted-foreground mt-2">
-                    Create a room where people can join and collaborate together.
+      <DialogContent className="w-full h-full max-h-screen overflow-y-auto rounded-none 
+                              sm:h-auto sm:w-full sm:max-w-2xl sm:max-h-[85vh] sm:rounded-lg 
+                              [&>button]:hidden">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 h-full flex flex-col">
+            <div className="flex-grow">
+              <DialogHeader className="mb-4 text-left">
+                  <DialogTitle className="text-xl font-semibold">Create a new space</DialogTitle>
+                  <DialogDescription className="text-muted-foreground mt-1">
+                    Give your space a name and an optional description.
                   </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Room Name</Label>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="name" className="text-sm font-medium">Name</Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter room name"
+                    placeholder="E.g., Project Alpha Team"
                     required
-                    className="rounded-lg h-10"
+                    className="h-9 rounded-md"
+                    disabled={isLoading}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description" className="text-sm font-medium">Description (optional)</Label>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="description" className="text-sm font-medium">
+                    Description{' '}
+                    <span className="text-xs text-muted-foreground/80 font-normal">
+                      (optional)
+                    </span>
+                  </Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe what this chat room is about"
+                    placeholder="What is this space for?"
                     rows={3}
-                    className="rounded-lg min-h-[80px] resize-none"
+                    className="rounded-md min-h-[80px] resize-none px-3 py-2 text-sm 
+                               focus-visible:outline-none focus-visible:ring-2 
+                               focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
-              <DialogFooter className="mt-2 gap-2 flex-row justify-end">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setOpen(false)}
-                  className="bg-background border-muted-foreground/30 hover:bg-background/80"
-                >
-                  Cancel
-                </Button>
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className={`px-5 py-3 rounded-lg flex items-center gap-2 ${
-                    isLoading ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Creating...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Plus size={16} />
-                      <span>Create Room</span>
-                    </div>
-                  )}
-                </button>
-              </DialogFooter>
-            </form>
-          </div>
+            </div>
+            <DialogFooter className="mt-4 gap-2 flex-row justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={() => setOpen(false)}
+                disabled={isLoading}
+                className="rounded-md h-9 
+                           dark:bg-white dark:text-gray-900 dark:border-gray-300 
+                           dark:hover:bg-gray-100 dark:hover:text-gray-900"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                size="sm"
+                disabled={isLoading || !name.trim()}
+                className="rounded-md h-9 w-[120px]"
+              >
+                {isLoading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <>
+                    <Plus size={16} className="mr-1.5" /> 
+                    Create Space 
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
       </DialogContent>
     </Dialog>
   );
