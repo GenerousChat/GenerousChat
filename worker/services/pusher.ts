@@ -47,7 +47,7 @@ interface StatusMessageData {
 // Pusher configuration
 const pusherConfig: PusherConfig = {
   appId: config.pusher.appId || '1971423',
-  key: config.pusher.key || '96f9360f34a831ca1901',
+  key: config.pusher.key || process.env.NEXT_PUBLIC_PUSHER_KEY!,
   secret: config.pusher.secret || 'c508bc54a2ca619cfab8',
   cluster: config.pusher.cluster || 'us3',
 };

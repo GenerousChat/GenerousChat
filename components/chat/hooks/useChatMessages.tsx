@@ -175,7 +175,7 @@ export function useChatMessages(
     // Initialize Pusher without excessive logging
     Pusher.logToConsole = false;
     
-    const pusher = new Pusher('96f9360f34a831ca1901', {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: 'us3',
     });
 
