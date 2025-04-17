@@ -3,6 +3,7 @@
 import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "../ui/button";
+import { ToggleActionButton } from "../ui/toggle-action-button";
 import { useSpeaking, SpeakingActivityType } from "@/utils/speaking-context";
 import { Mic, Volume2 } from "lucide-react";
 import Pusher from 'pusher-js';
@@ -442,37 +443,27 @@ const ParticipantList = memo(({ participants, onJoinAudio, onLeaveAudio, onToggl
       {/* Audio Toggle Button */}
       {(
         <div className="p-3 dark:border-gray-700">
-          <Button 
+          <ToggleActionButton 
             onClick={showAudioRoom ? onLeaveAudio : onJoinAudio}
-            className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${ // Add disabled style
-              showAudioRoom 
-                ? 'bg-gray-100 dark:bg-gray-800 rounded-xl text-red-700 dark:text-red-400' 
-                : 'bg-transparent text-gray-700 dark:text-gray-300'
-            }`}
-            size="sm"
-          >
-            {showAudioRoom ? (
-              // Content when connected (Leave)
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-                Leave Audio Chat 
-              </>
-            ) : (
-              // Content when disconnected (Join)
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" y1="19" x2="12" y2="23"></line>
-                  <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-                Join Audio Chat
-              </>
-            )}
-          </Button>
+            isActive={showAudioRoom}
+            activeColor="red"
+            activeIcon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            }
+            activeText="Leave Audio Chat"
+            inactiveIcon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            }
+            inactiveText="Join Audio Chat"
+          />
         </div>
       )}
       

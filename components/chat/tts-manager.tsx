@@ -7,6 +7,7 @@ import { Message } from "./hooks/useChatMessages";
 import { useTTS } from "@/utils/tts-context";
 import { useSpeaking } from "@/utils/speaking-context";
 import { Button } from "@/components/ui/button";
+import { ToggleActionButton } from "@/components/ui/toggle-action-button";
 import { Bot } from "lucide-react";
 import {
   Popover,
@@ -273,35 +274,16 @@ export function TTSManager({ messages, userCache, currentUserId, newMessageRecei
   
   return (
     <div className="p-3  dark:border-gray-700">
-      <Button
+      <ToggleActionButton
         onClick={toggleTTS}
-        className={`w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 ${
-          enabled 
-            ? 'bg-gray-100 dark:bg-gray-800 rounded-xl text-green-700 dark:text-green-400' 
-            : 'bg-transparent text-gray-700 dark:text-gray-300'
-        }`}
-        size="sm"
-      >
-        {enabled ? (
-          // Content when enabled
-          <>
-            <Bot className="h-4 w-4" />
-            <span>Hearing Agents</span>
-            {serviceStatus === 'error' && (
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-            )}
-            {serviceStatus === 'warning' && (
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-500"></span>
-            )}
-          </>
-        ) : (
-          // Content when disabled
-          <>
-            <Bot className="h-4 w-4" />
-            <span>Hear Agents</span>
-          </>
-        )}
-      </Button>
+        isActive={enabled}
+        activeColor="green"
+        activeIcon={<Bot className="h-4 w-4" />}
+        activeText="Hearing Agents"
+        inactiveIcon={<Bot className="h-4 w-4" />}
+        inactiveText="Hear Agents"
+        statusIndicator={serviceStatus === 'error' ? 'error' : serviceStatus === 'warning' ? 'warning' : null}
+      />
     </div>
   );
 }
