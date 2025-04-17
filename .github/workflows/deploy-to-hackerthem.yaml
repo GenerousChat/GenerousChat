@@ -1,0 +1,15 @@
+name: Deploy to hackerthem.xenon.fun
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to remote server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HACKERTHEM_SSH_LEY }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > key
+          chmod 600 key
+          ssh -i key -o StrictHostKeyChecking=no hackerthem@hackerthem.xenon.fun 'deploy-script.sh'
