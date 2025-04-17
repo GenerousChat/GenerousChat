@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, MouseEvent, WheelEvent as ReactWheelEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 // Define the Generation type to match CanvasGeneration
@@ -37,6 +37,13 @@ export function GenerationHistory({
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
+
+  // State for drag-to-scroll
+  const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftStart, setScrollLeftStart] = useState(0);
+
   // Setup Supabase listener for generations
   useEffect(() => {
     if (!roomId) return;
@@ -240,6 +247,48 @@ export function GenerationHistory({
     }
   }, [roomId]); // Remove activeGenerationId and onSelectGeneration from dependencies
 
+  // --- Drag-to-scroll event handlers ---
+  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (!scrollableContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollableContainerRef.current.offsetLeft);
+    setScrollLeftStart(scrollableContainerRef.current.scrollLeft);
+    scrollableContainerRef.current.style.cursor = 'grabbing';
+    scrollableContainerRef.current.style.userSelect = 'none'; // Prevent text selection
+  };
+
+  const handleMouseLeave = () => {
+    if (!scrollableContainerRef.current || !isDragging) return;
+    setIsDragging(false);
+    scrollableContainerRef.current.style.cursor = 'grab';
+    scrollableContainerRef.current.style.removeProperty('user-select');
+  };
+
+  const handleMouseUp = () => {
+    if (!scrollableContainerRef.current || !isDragging) return;
+    setIsDragging(false);
+    scrollableContainerRef.current.style.cursor = 'grab';
+    scrollableContainerRef.current.style.removeProperty('user-select');
+  };
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !scrollableContainerRef.current) return;
+    e.preventDefault(); // Prevent default drag behavior
+    const x = e.pageX - scrollableContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Multiply for faster scrolling feel
+    scrollableContainerRef.current.scrollLeft = scrollLeftStart - walk;
+  };
+
+  // --- Mouse wheel scroll handler ---
+  const handleWheelScroll = (e: ReactWheelEvent<HTMLDivElement>) => {
+    if (!scrollableContainerRef.current) return;
+    // Prevent default vertical scroll
+    e.preventDefault(); 
+    // Adjust horizontal scroll based on vertical wheel movement
+    scrollableContainerRef.current.scrollLeft += e.deltaY * 0.5; // Adjust multiplier for sensitivity
+  };
+  // --- End Drag-to-scroll event handlers ---
+
   if (generations.length === 0 && !isLoading) {
     return (
       <div className="p-2  bg-card dark:bg-card text-muted-foreground text-sm text-center">
@@ -263,8 +312,14 @@ export function GenerationHistory({
   return (
     <div className="p-2 border-b border-border">
       <div 
-        className="w-full overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,black,black_calc(100%-4rem),transparent)]" 
-        style={{ maxWidth: "100%", scrollbarWidth: "none" }}
+        ref={scrollableContainerRef}
+        className="w-full overflow-x-auto scrollbar-hide [mask-image:linear-gradient(to_right,black,black_calc(100%-4rem),transparent)] cursor-grab"
+        style={{ scrollbarWidth: "none" }}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onWheel={handleWheelScroll}
       >
         <div className="flex flex-nowrap space-x-2 p-1">
           {uniqueGenerations.map((gen) => (

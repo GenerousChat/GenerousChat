@@ -10,10 +10,11 @@ interface TimeAgoProps {
 
 export function RelativeTime({ date, className }: TimeAgoProps) {
   return (
-    <TimeAgo 
-      date={date} 
-      className={className}
-      minPeriod={60} // Only update every minute
-    />
+    <span className={className}>
+      <TimeAgo 
+        date={date} 
+        minPeriod={60} // Only update every minute
+      />
+    </span>
   );
 }
