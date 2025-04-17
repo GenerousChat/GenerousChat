@@ -1,0 +1,201 @@
+
+const styleGuide =
+`Style Guide for Generous App
+Overview
+Generous is a generative AI app with a collaborative canvas, featuring a retro-inspired design with modern functionality. This updated style guide includes both light and dark modes, reflecting the Figma homepage revisions, while maintaining a clean, grid-based canvas and intuitive collaborative workspace.
+
+Color Palette
+Light Mode (Unchanged from Previous Guide):
+Primary Background (Canvas): Light Gray (#E5E5E5) with a dot grid pattern (#D5D5D5).
+Accent Color: Warm Orange (#FF6200) for highlights (e.g., chat messages).
+Secondary Accent: Bright Green (#00FF00) for interactive elements (e.g., "Join Audio Chat").
+Neutral Tones:
+Off-White (#F5F5F5) for UI panels (user list, chat).
+Soft Black (#1A1A1A) for text and icons.
+Background (Non-Canvas): Dark Gray (#333333) for the top bar and side panels.
+Dark Mode (New):
+Primary Background (Canvas): Dark Gray (#2A2A2A) with a lighter dot grid pattern (#3F3F3F).
+Accent Color: Warm Orange (#FF6200), retained for continuity, used for highlights (e.g., chat messages).
+Secondary Accent: Bright Green (#00FF00), retained for interactive elements (e.g., "Join Audio Chat").
+Neutral Tones:
+Dark Off-White (#D5D5D5) for UI panels (user list, chat), ensuring readability.
+Light Gray (#B0B0B0) for text and icons, replacing Soft Black for better contrast on dark backgrounds.
+Background (Non-Canvas): Deep Black (#1A1A1A) for the top bar and side panels, as seen in the dark mode Figma screenshot.
+Typography
+Primary Font: Space Grotesk, consistent across both modes.
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+Space Grotesk: CSS class for a variable style
+
+// <weight>: Use a value from 300 to 700
+// <uniquifier>: Use a unique and descriptive class name
+
+.space-grotesk-<uniquifier> {
+  font-family: "Space Grotesk", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+}
+Headings: Space Grotesk Bold, 18-24pt (e.g., "SAMPLE ROOM TITLE").
+Body Text: Space Grotesk Regular, 12-14pt (e.g., user list, chat messages).
+Accents: Space Grotesk Italic for secondary info (e.g., timestamps).
+Text Color:
+Light Mode: Soft Black (#1A1A1A) for primary text, Warm Orange (#FF6200) for highlighted chat messages, Bright Green (#00FF00) for interactive text.
+Dark Mode: Light Gray (#B0B0B0) for primary text, Warm Orange (#FF6200) for highlighted chat messages, Bright Green (#00FF00) for interactive text.
+Imagery & Iconography
+Imagery Style: Retain the retro-futuristic vibe with a watermark "Generous" logo on the canvas in both modes.
+Light Mode: Translucent Off-White (#F5F5F580).
+Dark Mode: Translucent Dark Off-White (#D5D5D580).
+Icons: Minimal icons with a retro feel.
+Light Mode: Soft Black (#1A1A1A), Bright Green (#00FF00) on hover/active.
+Dark Mode: Light Gray (#B0B0B0), Bright Green (#00FF00) on hover/active.
+Canvas Pattern:
+Light Mode: Dot grid in #D5D5D5 on Light Gray (#E5E5E5).
+Dark Mode: Dot grid in #3F3F3F on Dark Gray (#2A2A2A).
+UI Elements
+Top Bar:
+Light Mode: Dark Gray (#333333) background, Soft Black (#1A1A1A) text, Bright Green (#00FF00) hover states.
+Dark Mode: Deep Black (#1A1A1A) background, Light Gray (#B0B0B0) text, Bright Green (#00FF00) hover states.
+Canvas:
+Light Mode: Light Gray (#E5E5E5) with dot grid (#D5D5D5), faded "Generous" watermark.
+Dark Mode: Dark Gray (#2A2A2A) with dot grid (#3F3F3F), faded "Generous" watermark.
+Side Panel (User List):
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text, colored user dots.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text, colored user dots.
+Chat Section:
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text, Warm Orange (#FF6200) highlight.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text, Warm Orange (#FF6200) highlight.
+Timestamps in Space Grotesk Italic: #666666 (Light Mode), #999999 (Dark Mode).
+Buttons:
+Light Mode: Off-White (#F5F5F5) background, Soft Black (#1A1A1A) text/icons, Bright Green (#00FF00) active/hover.
+Dark Mode: Dark Off-White (#D5D5D5) background, Light Gray (#B0B0B0) text/icons, Bright Green (#00FF00) active/hover.
+Loading Indicator: Yellow dot (#FFFF00) in both modes.
+Tone & Voice
+Visual Tone: Clean, collaborative, and retro-inspired, with a seamless transition between light and dark modes.
+Language: Casual and community-driven. Example: “Let’s create something awesome together!” Use Space Grotesk for all text.
+Example Application
+Home Screen (Light Mode): Dark Gray (#333333) top bar, Light Gray (#E5E5E5) canvas with dot grid, Off-White (#F5F5F5) side panels, Warm Orange (#FF6200) chat highlights.
+Home Screen (Dark Mode): Deep Black (#1A1A1A) top bar, Dark Gray (#2A2A2A) canvas with dot grid, Dark Off-White (#D5D5D5) side panels, Warm Orange (#FF6200) chat highlights.
+`;
+
+const recommendedLibraries =
+`Recommended Canvas Visualization Libraries for Generous
+
+Below is a curated list of JavaScript libraries for HTML5 Canvas visualizations, tailored for Generous, a generative AI app with a collaborative, real-time canvas for simulations, games, and visualizations. These libraries are served via CDNJS, compatible with HTML and React, and optimized for mobile-first performance, real-time collaboration, and minimal dependencies to align with Generous retro-inspired, responsive design and dynamic rendering needs.
+
+1. Konva
+Purpose: A 2D canvas library for creating interactive shapes, animations, and visualizations with a scene graph.
+Why for Generous: Konva is lightweight (no external dependencies), supports real-time updates for collaborative features, and offers drag-and-drop, animations, and event handling, ideal for Generous dynamic canvas where users collaboratively create simulations or games. Its scene graph simplifies managing complex visuals, and it performs well on mobile devices.
+CDNJS Link (Konva 9.3.6):
+<script src="https://cdnjs.cloudflare.com/ajax/libs/konva/9.3.6/konva.min.js"></script>
+Integration with Generous:
+Real-Time Collaboration: Use Konvas stage.toJSON() and Konva.Node.create() to serialize and sync canvas state over WebSockets (e.g., via Socket.IO) for multiplayer updates.
+Mobile Performance: Enable pixelRatio adjustments for crisp rendering on high-DPI mobile screens.
+Retro Aesthetic: Style shapes with Generous color palette (e.g., Vibrant Sky Blue #00A3FF, Warm Orange #FF5733) and apply Space Grotesk for text via Konvas Text nodes.
+Example Usage (React for Generous):
+import { useEffect, useRef } from 'react';
+function CollaborativeCanvas() {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const stage = new window.Konva.Stage({
+      container: containerRef.current,
+      width: 400,
+      height: 400,
+    });
+    const layer = new window.Konva.Layer();
+    const rect = new window.Konva.Rect({
+      x: 50,
+      y: 50,
+      width: 100,
+      height: 100,
+      fill: '#00A3FF', // Vibrant Sky Blue from Generous palette
+      draggable: true,
+    });
+    layer.add(rect);
+    stage.add(layer);
+    // Simulate real-time update (e.g., via WebSocket)
+    rect.on('dragmove', () => {
+      // Emit position to other users
+      console.log('New position:', rect.x(), rect.y());
+    });
+  }, []);
+  return <div ref={containerRef} style={{ background: '#F5F5F5' }} />; // Light Gray canvas background
+}
+
+Why Best Fit: Konvas simplicity, performance, and event-driven API make it ideal for Generous real-time, interactive canvas. It was previously recommended (April 13, 2025) for its balance of ease and power, and it supports Generous collaborative and mobile-first goals.
+
+2. Fabric.js
+Purpose: A canvas library for interactive graphics, supporting shapes, text, images, and animations with an object-oriented model.
+Why for Generous: Fabric.js excels at creating editable, interactive visualizations (e.g., design tools or collaborative boards), supports real-time updates via canvas serialization, and is mobile-friendly. Its ability to handle text and images aligns with Generous retro aesthetic for styled visualizations.
+CDNJS Link (Fabric.js 5.3.1): <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+Integration with Generous:
+Real-Time Collaboration: Use canvas.toJSON() and canvas.loadFromJSON() to sync canvas state across users in real time.
+Mobile Performance: Optimize by limiting object counts and using canvas.renderOnAddRemove = false for batch updates.
+Retro Aesthetic: Apply Space Grotesk for text objects and use Generous colors (e.g., Bright Green #00FF85 for interactive elements).
+Example Usage (React for Generous):
+import { useEffect, useRef } from 'react';
+function CanvasEditor() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = new window.fabric.Canvas(canvasRef.current);
+    const circle = new window.fabric.Circle({
+      left: 100,
+      top: 100,
+      radius: 50,
+      fill: '#FF5733', // Warm Orange from Generous palette
+      selectable: true,
+    });
+    canvas.add(circle);
+    // Real-time sync simulation
+    canvas.on('object:modified', () => {
+      // Send canvas.toJSON() to server
+      console.log('Canvas updated:', canvas.toJSON());
+    });
+  }, []);
+  return <canvas ref={canvasRef} width={400} height={400} style={{ background: '#2A2A2A' }} />; // Dark Gray for dark mode
+}
+
+Why Suitable: Fabric.js is powerful for Generous collaborative editing needs, offering flexibility for simulations and visualizations with minimal setup.
+
+3. ZIM
+Purpose: A creative coding framework for canvas-based animations, games, and interactive visualizations.
+Why for Generous: ZIM provides a high-level API for rapid development of interactive visuals, supports drag-and-drop and animations, and includes built-in accessibility features, aligning with Generous collaborative and inclusive goals. Its mobile-optimized rendering suits your mobile-first design.
+CDNJS Link (ZIM 10.8.0):<script src="https://cdnjs.cloudflare.com/ajax/libs/zimjs/10.8.0/zim.min.js"></script>
+Integration with Generous:
+Real-Time Collaboration: Use ZIMs toString() and fromString() methods to serialize and share canvas states.
+Mobile Performance: Leverage ZIMs Frame scaling for responsive canvas sizing on mobile devices.
+Retro Aesthetic: Customize components with Generous palette and Space Grotesk for labels.
+Example Usage (React for Generous):
+
+import { useEffect } from 'react';
+function InteractiveCanvas() {
+  useEffect(() => {
+    const frame = new window.zim.Frame('fit', 400, 400, '#F5F5F5'); // Light Gray background
+    frame.on('ready', () => {
+      const stage = frame.stage;
+      const star = new window.zim.Star({
+        points: 5,
+        radius1: 50,
+        radius2: 25,
+        color: '#00FF85', // Bright Green from Generous palette
+      }).center(stage).drag();
+      stage.update();
+      // Simulate collaboration
+      star.on('pressmove', () => {
+        // Emit position to server
+        console.log('Star moved:', star.x, star.y);
+      });
+    });
+  }, []);
+  return <div id="canvas" />;
+}
+
+Why Suitable: ZIMs beginner-friendly API and built-in interactivity make it a strong choice for Generous dynamic, game-like visualizations, though its slightly heavier due to CreateJS inclusion.
+
+Considerations for Generous
+Real-Time Collaboration: All libraries support serialization (e.g., toJSON or toString) for syncing canvas states via WebSockets, critical for Generous multiplayer features. Pair with a library like Socket.IO (available on CDNJS) for networking.
+Mobile-First: Konva and ZIM offer responsive scaling, while Fabric.js requires manual optimization. Test on mobile devices to ensure smooth performance.
+Retro Aesthetic: Apply Generous style guide (e.g., Vibrant Sky Blue, Warm Orange, Space Grotesk) to shapes, text, and backgrounds. Use dark mode colors (e.g., Dark Gray #2A2A2A) for accessibility.
+Performance: Konva is the lightest and fastest, followed by Fabric.js. ZIM is slightly heavier but offers more out-of-the-box features. Limit redraws and use debouncing for real-time updates.
+React Integration: Use useEffect and useRef to manage canvas lifecycle in React components, as shown. Avoid re-rendering the canvas unnecessarily by memoizing components.`;
