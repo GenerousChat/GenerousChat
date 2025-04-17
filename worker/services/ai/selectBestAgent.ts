@@ -31,25 +31,10 @@ async function selectBestAgent(
   messageHistory: string
 ): Promise<Agent | null> {
   try {
-    // Get AI agents from the service
     const aiAgents = await supabaseService.fetchAIAgents();
 
-    // Log the number of agents available for debugging
     logger.info(`Selecting from ${aiAgents.length} available AI agents`);
 
-    if (!aiAgents || aiAgents.length === 0) {
-      // No agents available, return null
-      logger.info("No AI agents available in the database");
-      return null;
-    }
-
-    // If there's only one agent, return it immediately
-    if (aiAgents.length === 1) {
-      logger.info(`Only one agent available, selecting ${aiAgents[0].name}`);
-      return aiAgents[0] as Agent;
-    }
-
-    // Create a prompt for agent selection
     const prompt = `
 You are controlling a group of AI agents with distinct personalities. Each agent has its own unique perspective and expertise. Your task is to analyze the last message in the conversation and determine if any of the agents should respond. Consider the context of the conversation, the personalities of the agents, and the content of the last message.
  
