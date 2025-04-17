@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Build and Publish Docker Image, then deploy to hackerthem.xenon.fun
 
 on:
   push:
@@ -41,15 +41,7 @@ jobs:
       # Optional: Output image digest
       - name: Output image digest
         run: echo "Image digest: ${{ steps.docker_build.outputs.digest }}"
-name: Deploy to hackerthem.xenon.fun
-on:
-  push:
-    branches: [main]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to remote server
+       - name: Deploy to remote server
         env:
           SSH_PRIVATE_KEY: ${{ secrets.HACKERTHEM_SSH_KEY }}
         run: |
