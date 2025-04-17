@@ -23,7 +23,6 @@ import "./globals.css";
 
 const defaultUrl = "https://generous.rocks";
 
-console.log({ Analytics });
 
 // Define paths where desktop HeaderAuth should be hidden
 const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
@@ -169,6 +168,7 @@ export default async function RootLayout({
             </SpeakingProvider>
           </TTSProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
