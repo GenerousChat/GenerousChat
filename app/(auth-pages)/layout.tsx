@@ -80,11 +80,11 @@ export default async function Layout({
       {/* Centered logo above card for DESKTOP screen sizes */}
       <div className="z-10 hidden md:block">
         <Image
-          src="/Images/Generous_Logo.png"
+          src="/logo.svg"
           alt="Generous Logo"
           width={180} 
           height={58}
-          className="object-contain md:w-[400px] md:h-auto"
+          className="object-contain md:w-[400px] md:h-auto dark:invert dark:brightness-200"
         />
       </div>
 

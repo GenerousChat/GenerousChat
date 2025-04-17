@@ -37,22 +37,22 @@ export default async function Home() {
       {/* Centered logo for mobile only */}
       <div className="absolute inset-0 z-10 flex items-center justify-center md:hidden">
         <Image
-          src="/Images/Generous_Logo.png"
+          src="/logo.svg"
           alt="Generous Logo"
           width={250} 
           height={80} 
-          className="object-contain drop-shadow-lg"
+          className="object-contain drop-shadow-lg dark:invert dark:brightness-200"
         />
       </div>
 
       {/* Bottom-left logo for desktop only */}
       <div className="absolute bottom-8 left-8 z-10 hidden md:block">
         <Image
-          src="/Images/Generous_Logo.png"
+          src="/logo.svg"
           alt="Generous Logo"
           width={200} 
           height={64} 
-          className="object-contain opacity-80 hover:opacity-100 transition-opacity duration-300"
+          className="object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 dark:invert dark:brightness-200"
         />
       </div>
     </div>

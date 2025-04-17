@@ -1,7 +1,7 @@
 # Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md) [![GitHub Stars](https://img.shields.io/github/stars/generouschat/generous)](https://github.com/generouschat/generous/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/generouschat/generous)](https://github.com/generouschat/generous/issues)
 
 <div align="center">
-  <img src="./public/Images/Generous_Logo.png" alt="Generous Logo" width="400" />
+  <img src="./public/logo.svg" alt="Generous Logo" width="400" />
 
   Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
 </div>
