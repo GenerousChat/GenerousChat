@@ -78,9 +78,7 @@ export function useAudioRoom(roomId: string, userId: string, userEmail: string) 
   // Handle leaving the audio room
   const handleLeaveAudioRoom = useCallback(async () => {
     setShowAudioRoom(false);
-    if (meeting && meeting.self) {
-      meeting.self.leave();
-    }
+    // @todo - you can never leave audio room
   }, [meeting]);
 
   return {
