@@ -85,7 +85,7 @@ const generateAIResponse = async (roomId: string): Promise<boolean> => {
     }
 
      // --- Name Enrichment Start ---
-     const userIds = [...new Set(messages.map(msg => msg.user_id))]; // Get unique user IDs
+     const userIds = Array.from(new Set(messages.map(msg => msg.user_id))); // Get unique user IDs
      const fetchNamesTimerLabel = `fetchNames-${roomId}`;
      console.time(fetchNamesTimerLabel);
      const { profiles: profileNameMap, agents: agentNameMap } = await fetchNamesForUserIds(userIds);
