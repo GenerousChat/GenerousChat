@@ -12,4 +12,4 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > key
           chmod 600 key
-          ssh -i key -o StrictHostKeyChecking=no hackerthem@hackerthem.xenon.fun 'deploy-script.sh'
+          ssh -i key -o StrictHostKeyChecking=no hackerthem@hackerthem.xenon.fun '/home/hackerthem/deploy-script.sh'
