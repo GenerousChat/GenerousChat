@@ -3,7 +3,8 @@
 <div align="center">
   <img src="./public/logo.svg" alt="Generous Logo" width="400" />
 
-  Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
+Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
+
 </div>
 
 <div align="center">
@@ -172,6 +173,7 @@ PORT=3001                                      # Port for the worker process (de
 ```
 
 **Important Security Notes:**
+
 - The `SUPABASE_SERVICE_KEY` and `PUSHER_SECRET` are highly sensitive and should never be exposed publicly
 - We recommend using environment-specific `.env` files (`.env.development`, `.env.production`) for different settings
 - Consider using a secrets manager for production deployments
