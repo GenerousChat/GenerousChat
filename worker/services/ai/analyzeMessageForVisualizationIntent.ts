@@ -95,7 +95,9 @@ async function analyzeMessageForVisualizationIntent(
   3. Ignore casual conversation and messages that don't request anything, only respond to implied or explicit requests to generate or modify a canvas.  
   
   4. If the user requests to change, update, modify, or add to the canvas, use the following canvas as a starting point and modify only the parts that the user specifically says they wish to change: 
-  ${lastGenerationHtml}.`;
+  ${lastGenerationHtml}.
+  
+  5. If the message says that something is broken use the following canvas as a starting point and modify whatever the user says didn't work: ${lastGenerationHtml}.`;
 
   // For more accurate analysis, use the AI to evaluate
   try {
