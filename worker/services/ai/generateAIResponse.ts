@@ -2,7 +2,6 @@
 import config from "../../config/index.js";
 import logger from "../../utils/logger.js";
 import supabaseService, { Message } from "../supabase.js";
-import shouldAgentRespond from "./shouldAgentRespond";
 import selectBestAgent from "./selectBestAgent";
 import generateResponseWithAgent from "./generateResponseWithAgent";
 
@@ -16,7 +15,7 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(7);
 
     if (error) {
       logger.error("Error fetching recent messages:", error);
@@ -35,32 +34,10 @@ async function generateAIResponse(roomId: string): Promise<boolean> {
 
     // Create a formatted message history for the AI
     const messageHistory = messages
-      .slice(0, 25)
       .reverse()
       .map((msg: Message) => `- ${msg.user_id}: ${msg.content}`)
       .join("\n");
 
-    // Check if this message should receive an AI response
-    // Create a compatible AgentResponseConfig object from the available config
-    const agentResponseConfig = {
-      timeThreshold: config.ai.responseAlgorithm.responseDelayMs,
-      messageRateThreshold: config.ai.responseAlgorithm.maxConsecutiveUserMessages
-    };
-    
-    const responseDecision = await shouldAgentRespond(
-      roomId,
-      messages as Message[],
-      agentResponseConfig
-    );
-
-    if (!responseDecision.shouldRespond) {
-      logger.info(
-        `Skipping AI response: ${responseDecision.reason}`
-      );
-      return false;
-    }
-
-    // Select the best agent for this conversation
     const selectedAgent = await selectBestAgent(
       roomId,
       lastUserMessage,

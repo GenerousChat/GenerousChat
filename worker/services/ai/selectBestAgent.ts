@@ -49,10 +49,6 @@ async function selectBestAgent(
       return aiAgents[0] as Agent;
     }
 
-    // Get the last generation HTML for context
-    const lastGeneration = await supabaseService.getLastGeneration(roomId);
-    const lastGenerationHtml = lastGeneration?.html || "";
-
     // Create a prompt for agent selection
     const prompt = `
 You are controlling a group of AI agents with distinct personalities. Each agent has its own unique perspective and expertise. Your task is to analyze the last message in the conversation and determine if any of the agents should respond. Consider the context of the conversation, the personalities of the agents, and the content of the last message.
@@ -76,9 +72,6 @@ Based on these constraints, analyze the following message and rank the confidenc
         )
         .join("\n\n\n")}
 
-      This is the current conversation canvas, only use it in ranking if it is extremely relevant.
-      ${lastGenerationHtml}
-
       Message History:
       ${messageHistory}
 
@@ -91,7 +84,7 @@ Based on these constraints, analyze the following message and rank the confidenc
     `;
 
     const result = await generateObject({
-      model: openai.responses("gpt-4o"),
+      model: openai.responses("gpt-4o-mini"),
       temperature: 0.1,
       schema: z.object({
         agents_confidence: z
@@ -161,14 +154,6 @@ Based on these constraints, analyze the following message and rank the confidenc
 
     // Sort agents by confidence (descending)
     selectedAgents.sort((a, b) => b.confidence - a.confidence);
-
-    // If highest confidence is below threshold, don't select any agent
-    if (selectedAgents[0].confidence < 0.05) {
-      logger.info(
-        `Highest agent confidence (${selectedAgents[0].confidence}) is below threshold, not selecting any agent`
-      );
-      return null;
-    }
 
     // Find the agent with the highest confidence
     const bestAgentId = selectedAgents[0].agent_id;
