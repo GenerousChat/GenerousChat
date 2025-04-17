@@ -1,71 +1,99 @@
-# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md) [![GitHub Stars](https://img.shields.io/github/stars/generouschat/generous)](https://github.com/generouschat/generous/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/generouschat/generous)](https://github.com/generouschat/generous/issues)
 
-Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
+<div align="center">
+  <img src="./public/Images/Generous_Logo.png" alt="Generous Logo" width="400" />
 
-[Live Demo (Example)](https://generous.rocks) <!-- Replace with actual demo link if different -->
+  Build applications visually with your team and AI assistance in real-time. Collaborate, prototype, and create together on a shared canvas.
+</div>
 
-![Generous Screenshot (Placeholder)](./placeholder-screenshot.png) <!-- Replace with an actual screenshot -->
+<div align="center">
 
-## Table of Contents
+[Live Demo](https://generous.rocks) | [Documentation](README.md) | [Report Bug](https://github.com/generouschat/generous/issues) | [Request Feature](https://github.com/generouschat/generous/issues)
 
-- [About The Project](#about-the-project)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Environment Variables](#environment-variables)
-- [Getting Started](#getting-started)
+</div>
+
+![Generous Screenshot (Placeholder)](./placeholder-screenshot.png) <!-- Replace with an actual screenshot of the application -->
+
+## 📋 Table of Contents
+
+- [About The Project](#-about-the-project)
+- [Key Features](#-key-features)
+- [Demo](#-demo)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Environment Variables](#-environment-variables)
+- [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-- [Running the Application](#running-the-application)
-- [Available Scripts](#available-scripts)
-- [Contributing](#contributing)
-- [License](#license)
+- [Running the Application](#-running-the-application)
+- [Available Scripts](#-available-scripts)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [Security](#-security)
+- [Code of Conduct](#-code-of-conduct)
+- [Support](#-support)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
 
-## About The Project
+## 🚀 About The Project
 
 Generous is a web-based platform designed for collaborative application development and prototyping. It leverages a visual canvas interface combined with real-time communication features and AI assistance to streamline the building process for teams.
 
 Users can interact within chat rooms, visualize components or workflows on a canvas, and receive AI-generated responses or code suggestions, fostering a dynamic and efficient development environment.
 
-## Key Features
+### 💡 Motivation
 
-- **Real-time Collaboration:** Chat rooms and potentially shared canvas interactions powered by Pusher.
-- **AI Assistance:** Integrates with AI models (OpenAI, Google, XAI) to provide responses and potentially code generation within the chat context.
-- **Visual Canvas:** Includes canvas components for visualization (details inferred, needs confirmation).
-- **User Authentication:** Secure sign-up, sign-in, and password management using Supabase Auth.
-- **Audio Rooms:** Integration with Dyte SDK for potential audio/video communication.
-- **Text-to-Speech (TTS):** Provides audio playback for messages or AI responses.
-- **Responsive Design:** Adapts to various screen sizes with light and dark theme support.
-- **Profile Management:** Users can manage their profiles (details inferred).
+The Generous platform was created to address the challenges of remote collaborative development. By combining visual tools, AI assistance, and real-time communication, we aim to make development more accessible and efficient for teams of all sizes.
 
-## Tech Stack
+## ✨ Key Features
+
+- **Real-time Collaboration:** Chat rooms with shared canvas interactions powered by Pusher Channels
+- **AI Assistance:** Integration with multiple AI models:
+  - OpenAI (GPT models) for sophisticated text responses
+  - Google Gemini for alternative AI capabilities
+  - XAI (Grok) for additional AI functionality
+- **Visual Canvas:** Interactive visualization components for prototyping and ideation
+- **User Authentication:** Secure sign-up, sign-in, and password management using Supabase Auth
+- **Audio Communication:** Integration with Dyte SDK for real-time audio/video conversations
+- **Text-to-Speech (TTS):** Audio playback for messages and AI responses
+- **Responsive Design:** Fully responsive UI with light and dark theme support
+- **Profile Management:** Customizable user profiles and settings
+
+## 🔧 Demo
+
+Check out our live demo at [https://generous.rocks](https://generous.rocks) to experience the platform firsthand.
+
+[View Demo →](https://generous.rocks)
+
+## 🔧 Tech Stack
 
 **Frontend:**
 
-- [Next.js](https://nextjs.org/) (v14+ App Router)
-- [React](https://react.dev/) (v19)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Shadcn/ui](https://ui.shadcn.com/) (likely, based on component structure)
-- [Framer Motion](https://www.framer.com/motion/) (for animations)
-- [Pusher-JS](https://pusher.com/docs/channels/getting_started/javascript/)
-- [Dyte React UI Kit & Web Core](https://docs.dyte.io/react-ui-kit)
+- [Next.js](https://nextjs.org/) (App Router) - React framework
+- [React](https://react.dev/) (v19) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Shadcn/ui](https://ui.shadcn.com/) - UI component system
+- [Framer Motion](https://www.framer.com/motion/) - Animation library
+- [Pusher-JS](https://pusher.com/docs/channels/getting_started/javascript/) - Real-time client
+- [Dyte React UI Kit & Web Core](https://docs.dyte.io/react-ui-kit) - Audio/video components
 
 **Backend & Services:**
 
-- [Supabase](https://supabase.com/) (Database, Auth, Realtime)
-- [Pusher Channels](https://pusher.com/channels/) (Realtime Messaging)
-- [AI SDK](https://sdk.vercel.ai/) (integrating OpenAI, Google Gemini, XAI Grok)
-- Node.js (for the worker)
-- Express.js (in the worker)
+- [Supabase](https://supabase.com/) - PostgreSQL database, Auth, and Realtime
+- [Pusher Channels](https://pusher.com/channels/) - Reliable real-time messaging
+- [AI SDK](https://sdk.vercel.ai/) - Integration with OpenAI, Google Gemini, and XAI Grok
+- [Node.js](https://nodejs.org/) - JavaScript runtime for the worker
+- [Express.js](https://expressjs.com/) - Web framework for the worker
 
 **Worker Process:**
 
-- Handles bridging Supabase real-time events (DB changes) to Pusher.
-- Triggers AI response generation.
-- Built with TypeScript, run using `tsx` (dev) or compiled JS (prod).
+- Handles bridging Supabase real-time events (DB changes) to Pusher
+- Triggers AI response generation with multiple models
+- Built with TypeScript, run using `tsx` (dev) or compiled JS (prod)
+- Manages real-time data synchronization and event handling
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 /app/                # Next.js App Router pages and layouts
@@ -95,40 +123,60 @@ tsconfig.json       # TypeScript configuration
 README.md           # This file
 ```
 
-## Environment Variables
+## 🔐 Environment Variables
 
 Create a `.env` file in the root directory of the project and add the following environment variables. Obtain the necessary keys and secrets from the respective service providers (Supabase, Pusher, OpenAI, etc.).
 
+> ⚠️ **Security Notice**: Never commit your `.env` file to version control. It contains sensitive information that should remain private.
+
 ```bash
-# Supabase (Obtain from your Supabase project settings)
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key # !!! Keep this secret - Used by the worker
+SUPABASE_URL=your_supabase_project_url              # Same as NEXT_PUBLIC_SUPABASE_URL
+SUPABASE_ANON_KEY=your_supabase_anon_key            # Same as NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-# Pusher (Obtain from your Pusher Channels dashboard)
+# Pusher Configuration
 NEXT_PUBLIC_PUSHER_KEY=your_pusher_app_key
 NEXT_PUBLIC_PUSHER_CLUSTER=your_pusher_cluster
+NEXT_PUBLIC_PUSHER_APP_ID=your_pusher_app_id
 PUSHER_APP_ID=your_pusher_app_id
-PUSHER_SECRET=your_pusher_secret # !!! Keep this secret - Used by the worker
+PUSHER_KEY=your_pusher_key          # Same as NEXT_PUBLIC_PUSHER_KEY
+PUSHER_SECRET=your_pusher_secret    # !!! Keep this secret - Used by the worker
+PUSHER_CLUSTER=your_pusher_cluster  # Same as NEXT_PUBLIC_PUSHER_CLUSTER
 
-# AI Providers (Obtain API keys from the respective platforms)
-OPENAI_API_KEY=your_openai_api_key # Required if using OpenAI models
-GOOGLE_API_KEY=your_google_api_key # Required if using Google Gemini models
-XAI_API_KEY=your_xai_api_key       # Required if using XAI Grok models
+# AI Provider Keys
+OPENAI_API_KEY=your_openai_api_key             # Required if using OpenAI models
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key  # Required if using Google Gemini models
+XAI_API_KEY=your_xai_api_key                   # Required if using XAI Grok models
+USE_XAI=true                                   # Set to "true" to enable XAI (Grok) models
+DEBUG_MODEL=gpt-4o-mini                        # Specify model for debugging
 
-# Dyte (If using audio/video features - Obtain from Dyte dashboard)
-# DYTE_ORG_ID=your_dyte_org_id
-# DYTE_API_KEY=your_dyte_api_key
+# Dyte Audio/Video Configuration
+DYTE_ORG_ID=your_dyte_org_id
+DYTE_API_KEY=your_dyte_api_key
+DYTE_AUTH_HEADER=your_dyte_auth_header         # Usually Basic + base64 encoded credentials
+DYTE_BASE_URL=https://api.dyte.io/v2           # Dyte API endpoint
+NEXT_PUBLIC_DYTE_API_KEY=your_dyte_api_key     # Same as DYTE_API_KEY
+NEXT_PUBLIC_DYTE_ORG_ID=your_dyte_org_id       # Same as DYTE_ORG_ID
+NEXT_PUBLIC_DYTE_AUTH_HEADER=your_dyte_auth_header  # Same as DYTE_AUTH_HEADER
+NEXT_PUBLIC_DYTE_PRESET_NAME=group_call_participant # Dyte preset configuration
 
-# Optional: Worker Configuration
-PORT=3001 # Port for the worker process (default: 3001)
-# HTML_CONTENT_CHANCE=90 # Chance (in %) for AI to generate HTML (default: 90)
-MESSAGES_TABLE=messages # Name of the Supabase table for chat messages (default: messages)
+# Database Configuration
+MESSAGES_TABLE=messages                        # Name of the Supabase table for chat messages
+NEXT_PUBLIC_MESSAGES_TABLE=messages            # Same as MESSAGES_TABLE
+
+# Worker Configuration
+PORT=3001                                      # Port for the worker process (default: 3001)
 ```
 
-**Important:** The `SUPABASE_SERVICE_KEY` and `PUSHER_SECRET` are highly sensitive and should never be exposed publicly.
+**Important Security Notes:**
+- The `SUPABASE_SERVICE_KEY` and `PUSHER_SECRET` are highly sensitive and should never be exposed publicly
+- We recommend using environment-specific `.env` files (`.env.development`, `.env.production`) for different settings
+- Consider using a secrets manager for production deployments
 
-## Getting Started
+## 🚦 Getting Started
 
 Follow these steps to set up the project locally.
 
@@ -175,7 +223,7 @@ Follow these steps to set up the project locally.
     npm run worker:build
     ```
 
-## Running the Application
+## 🏃‍♂️ Running the Application
 
 To run the application in development mode, you need to start both the Next.js frontend and the backend worker process.
 
@@ -195,7 +243,7 @@ To run the application in development mode, you need to start both the Next.js f
 
 Now you can access the application in your browser at `http://localhost:3000`.
 
-## Available Scripts
+## 📜 Available Scripts
 
 - `npm run dev`: Starts the Next.js frontend in development mode.
 - `npm run build`: Builds the Next.js frontend for production.
@@ -204,10 +252,53 @@ Now you can access the application in your browser at `http://localhost:3000`.
 - `npm run worker:build`: Compiles the worker TypeScript code to JavaScript (`dist/` directory).
 - `npm run worker:start`: Starts the compiled worker process from the `dist/` directory (for production).
 
-## Contributing
+## 🗺️ Roadmap
 
-Contributions are welcome! Please follow standard fork/pull request procedures. (Add more specific contribution guidelines if desired).
+- [ ] Enhanced visualization capabilities
+- [ ] Additional AI model integrations
+- [ ] Advanced code generation features
+- [ ] Mobile application
+- [ ] Plugin ecosystem
 
-## License
+See the [open issues](https://github.com/generouschat/generous/issues) for a complete list of proposed features and known issues.
 
-Distributed under the MIT License. See `LICENSE` file for more information (if a LICENSE file exists).
+## 🤝 Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project.
+
+## 🔒 Security
+
+We take the security of Generous seriously. If you believe you have found a security vulnerability, please follow our responsible disclosure guidelines in [SECURITY.md](SECURITY.md).
+
+**DO NOT** disclose security vulnerabilities publicly until they have been addressed by the team.
+
+## 📝 Code of Conduct
+
+We expect all contributors and users to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it to understand what actions will and will not be tolerated.
+
+## 💬 Support
+
+Have questions? Need help? Join our community channels:
+
+- [GitHub Discussions](https://github.com/generouschat/generous/discussions)
+- [Discord Server](https://discord.gg/generous) <!-- Replace with actual Discord link if available -->
+
+## 📄 License
+
+Distributed under the MIT License. This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React framework
+- [Supabase](https://supabase.com/) - Backend as a Service
+- [Pusher](https://pusher.com/) - Real-time communication
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- All the open source libraries and tools that made this project possible
