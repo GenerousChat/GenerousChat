@@ -34,8 +34,8 @@ jobs:
           file: ./Dockerfile # Path to Dockerfile (modify if not in root)
           push: true # Push to Docker Hub
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/hackerthem_worker:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/hackerthem_worker:${{ github.sha }} # Optional: Tag with commit SHA
+            rsafier/hackerthem_worker:latest
+            rsafier/hackerthem_worker:${{ github.sha }} # Optional: Tag with commit SHA
           platforms: linux/amd64 # Optional: Specify platform (add others if needed, e.g., linux/arm64)
       - name: Deploy to remote server
         env:
