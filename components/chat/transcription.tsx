@@ -161,7 +161,7 @@ export function Transcription({ className, onTranscript }: TranscriptionProps) {
 
 
   return (
-    <div className={`p-3 ${className}`}>
+    <div className={`pr-3 pl-3 ${className}`}>
       <ToggleActionButton
         onClick={isTranscribing ? stopTranscription : startTranscription}
         isActive={isTranscribing}

@@ -38,8 +38,15 @@ const ToggleActionButton = React.forwardRef<HTMLButtonElement, ToggleActionButto
     return (
       <Button
         ref={ref}
+        style={{
+          marginLeft: '-10px',
+          paddingTop: 0,
+          paddingBottom: 0,
+          marginTop: 0,
+          marginBottom: 0
+        }}
         className={cn(
-          "w-full flex items-center justify-center gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50",
+          "w-full m-0  pt-0 pb-0 flex items-center justify-start gap-2 text-xs outline-none focus:outline-none focus:ring-0 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700",
           isActive
             ? `bg-gray-100 dark:bg-gray-800 rounded-xl ${colorMap[activeColor]}`
             : "bg-transparent text-gray-700 dark:text-gray-300",

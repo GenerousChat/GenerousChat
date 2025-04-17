@@ -437,12 +437,12 @@ const ParticipantList = memo(({ participants, onJoinAudio, onLeaveAudio, onToggl
 
       <div className="text-sm text-muted-foreground">
         {/* Show Active Humans / Total Humans */}
-        <p>Audio shit</p>
+        <p>Join conversation</p>
       </div>
 
       {/* Audio Toggle Button */}
       {(
-        <div className="p-3 dark:border-gray-700">
+        <div className="pr-3 pl-3 mb-1 dark:border-gray-700">
           <ToggleActionButton 
             onClick={showAudioRoom ? onLeaveAudio : onJoinAudio}
             isActive={showAudioRoom}
