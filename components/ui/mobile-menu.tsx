@@ -12,15 +12,18 @@ import { createClient } from "@/utils/supabase/client";
 interface MobileMenuProps {
   user: User | null;
   signOutAction: () => Promise<never>;
-  shouldShowAboutButton?: boolean;
 }
 
-export function MobileMenu({ user, signOutAction, shouldShowAboutButton }: MobileMenuProps) {
+export function MobileMenu({ user, signOutAction }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const [roomName, setRoomName] = useState<string | null>(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  // Determine if it's one of the auth pages directly in the client component
+  const authPathsForAbout = ['/sign-in', '/sign-up', '/forgot-password'];
+  const shouldShowAboutButton = authPathsForAbout.includes(pathname);
 
   // Determine if it's the main page directly in the client component
   const isMainPage = pathname === '/';
@@ -180,8 +183,8 @@ export function MobileMenu({ user, signOutAction, shouldShowAboutButton }: Mobil
                      )}
                  </div>
                  
-                 {/* Conditionally add About link here, using isMainPage */}
-                 {isMainPage && (
+                 {/* Conditionally add About link here, using shouldShowAboutButton */}
+                 {shouldShowAboutButton && (
                    <div className="space-y-2">
                       <div className="my-1 h-px bg-muted" />
                       <Link

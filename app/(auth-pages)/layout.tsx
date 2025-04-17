@@ -52,19 +52,13 @@ export default async function Layout({
   
   console.log('>>> Auth Layout Detected Pathname:', pathname);
   
-  let imageSrc = "/Images/Walking.png";
-  let objectPosition = "object-center";
-
-  if (pathname === '/sign-up') {
-    imageSrc = "/Images/Hands.png";
-  } else if (pathname === '/forgot-password') {
-    imageSrc = "/Images/Robohand.png";
-    objectPosition = "object-[center_35%]";
-  }
+  // Always use Robohand.png for auth pages
+  const imageSrc = "/Images/Robohand.png";
+  const objectPosition = "object-[center_35%]";
 
   return (
     <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-start md:justify-center gap-6 px-4 py-8 md:py-8 overflow-hidden">
-      {/* Background image - conditional based on path */}
+      {/* Background image - now always Robohand */}
       <div className="absolute inset-0 z-0">
         <Image
           src={imageSrc}

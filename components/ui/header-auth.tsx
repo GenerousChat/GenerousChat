@@ -20,16 +20,18 @@ export default function AuthButton({ user }: AuthButtonProps) {
     router.push('/profile');
   };
 
-  const isMainPage = pathname === '/';
-  const isAboutPage = pathname === '/about';
+  // Show About button only on specified auth pages
+  const authPathsForAbout = ['/sign-in', '/sign-up', '/forgot-password'];
+  const shouldShowAboutButton = authPathsForAbout.includes(pathname);
+  const isAboutPage = pathname === '/about'; // Keep this check for Sign In/Up buttons
 
-  // Restore original gap logic
-  const gapClass = isMainPage || isAboutPage ? 'gap-4' : 'gap-2';
+  // Adjust gap based on whether the About button is shown
+  const gapClass = shouldShowAboutButton || isAboutPage ? 'gap-4' : 'gap-2';
 
   return (
     <div className={`relative flex items-center ${gapClass}`}>
-      {/* Conditional About Link (Main Page Only) */}
-      {isMainPage && (
+      {/* Conditional About Link (Auth Pages Only) */}
+      {shouldShowAboutButton && (
         <Button asChild variant="link" className="text-sm font-medium text-muted-foreground hover:text-foreground px-0">
           <Link href="/about">About</Link>
         </Button>

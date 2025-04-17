@@ -26,10 +26,9 @@ import "./globals.css";
 const defaultUrl = "https://generous.rocks";
 
 
-// Define paths where desktop HeaderAuth should be hidden
-const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
-// Define paths where breadcrumbs should be hidden
-const pathsToHideBreadcrumbs = ['/sign-in', '/sign-up', '/forgot-password', '/']; // Example, adjust as needed
+// Remove path definitions for hiding components
+// const pathsToHideDesktopAuth = ['/sign-in', '/sign-up', '/forgot-password'];
+const pathsToHideBreadcrumbs = ['/sign-in', '/sign-up', '/forgot-password', '/']; // Keep hiding breadcrumbs on auth/main
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -125,7 +124,8 @@ export default async function RootLayout({
   // Get current pathname on the server
   const headersList = await headers(); 
   const pathname = headersList.get('next-url') || '';
-  const shouldHideDesktopAuth = pathsToHideDesktopAuth.includes(pathname);
+  // Remove logic for hiding desktop auth
+  // const shouldHideDesktopAuth = pathsToHideDesktopAuth.includes(pathname);
   const shouldHideBreadcrumbs = pathsToHideBreadcrumbs.includes(pathname);
   
   return (
@@ -158,7 +158,10 @@ export default async function RootLayout({
                     <div className="flex justify-end items-center gap-2">
                       <div className="hidden md:flex items-center gap-2">
                         <ThemeSwitcher />
-                        {!shouldHideDesktopAuth && <HeaderAuth user={user} />}
+                        {/* Always render HeaderAuth now */}
+                        <HeaderAuth user={user} />
+                        {/* Remove conditional rendering based on shouldHideDesktopAuth */}
+                        {/* {!shouldHideDesktopAuth && <HeaderAuth user={user} />} */}
                       </div>
                     </div>
                   </div>
