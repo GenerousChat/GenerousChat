@@ -60,6 +60,7 @@ export default async function Home() {
       </div>
 
       {/* Bottom-right GitHub icon link */}
+      {/*
       <Link 
         href="https://github.com/GenerousChat/Generous" 
         target="_blank" 
@@ -71,6 +72,7 @@ export default async function Home() {
           <Github className="h-5 w-5" />
         </Button>
       </Link>
+      */}
     </div>
   );
 }

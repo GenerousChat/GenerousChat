@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="relative flex flex-col items-center justify-center h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-muted/20 via-background to-background p-6 md:p-8">
+    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] overflow-y-auto bg-gradient-to-br from-muted/20 via-background to-background p-6 md:p-8">
       
       <div className="container z-10 flex flex-col items-center justify-center h-full max-w-6xl mx-auto text-center space-y-6 md:space-y-8">
 
@@ -35,11 +35,25 @@ export default function AboutPage() {
         </h1>
 
         <p className="text-base md:text-lg text-muted-foreground max-w-3xl">
-          Generous is a real-time, AI-enhanced platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualizations tools and AI agents.
+          Generous is a real-time, social AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents
         </p>
 
-        {/* New Team Section using basic <img> */}
-        <section className="text-center">
+        {/* Canva Embed Section */}
+        <div className="w-full max-w-4xl my-6 md:my-8">
+          <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.25%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
+            <iframe 
+              loading="lazy" 
+              style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
+              src="https://www.canva.com/design/DAGk4XrJ4uw/BnBGoqY4P1ZIWltql4Psyg/watch?embed"
+              allowFullScreen 
+              allow="fullscreen"
+              title="Canva Presentation Embed"
+            />
+          </div>
+        </div>
+
+        {/* Team Section */}
+        <section className="text-center pt-4 md:pt-6">
           <h2 className="text-2xl font-semibold mb-4 md:mb-6">Meet the Team</h2>
           <div className="flex flex-wrap justify-center gap-8 md:gap-12">
             {teamMembers.map((member) => (

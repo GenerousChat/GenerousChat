@@ -12,14 +12,18 @@ import { createClient } from "@/utils/supabase/client";
 interface MobileMenuProps {
   user: User | null;
   signOutAction: () => Promise<never>;
+  shouldShowAboutButton?: boolean;
 }
 
-export function MobileMenu({ user, signOutAction }: MobileMenuProps) {
+export function MobileMenu({ user, signOutAction, shouldShowAboutButton }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const [roomName, setRoomName] = useState<string | null>(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  // Determine if it's the main page directly in the client component
+  const isMainPage = pathname === '/';
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -175,6 +179,20 @@ export function MobileMenu({ user, signOutAction }: MobileMenuProps) {
                        </div>
                      )}
                  </div>
+                 
+                 {/* Conditionally add About link here, using isMainPage */}
+                 {isMainPage && (
+                   <div className="space-y-2">
+                      <div className="my-1 h-px bg-muted" />
+                      <Link
+                        href="/about"
+                        className="block rounded-md px-2 py-2 text-lg font-medium hover:bg-accent"
+                        onClick={toggleMenu}
+                      >
+                        About
+                      </Link>
+                   </div>
+                 )}
              </div>
 
              <div className="mt-6 border-t border-muted pt-4">

@@ -72,6 +72,19 @@ export default async function ChatPage() {
         </div>
       </div>
 
+      {/* Loom Embed Section */}
+      <div className="w-full my-4"> {/* Added margin for spacing */} 
+        <div style={{ position: 'relative', paddingBottom: '53.28125%', height: 0 }}>
+          <iframe 
+            src="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729"
+            frameBorder="0" 
+            allowFullScreen 
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+            title="Loom Video Embed" // Added title for accessibility
+          ></iframe>
+        </div>
+      </div>
+
       <div className="space-y-4">
         {rooms && rooms.length > 0 ? (
           rooms.map((room) => {

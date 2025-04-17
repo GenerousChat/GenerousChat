@@ -23,6 +23,7 @@ export default function AuthButton({ user }: AuthButtonProps) {
   const isMainPage = pathname === '/';
   const isAboutPage = pathname === '/about';
 
+  // Restore original gap logic
   const gapClass = isMainPage || isAboutPage ? 'gap-4' : 'gap-2';
 
   return (
@@ -34,7 +35,7 @@ export default function AuthButton({ user }: AuthButtonProps) {
         </Button>
       )}
 
-      {/* User-specific buttons */} 
+      {/* User-specific buttons */}
       {user ? (
         // Logged In State
         <div className="flex items-center gap-2">

@@ -12,6 +12,8 @@ import { headers } from 'next/headers';
 import { signOutAction } from "@/app/actions";
 import { MobileMenu } from "@/components/ui/mobile-menu";
 import { Analytics } from "@vercel/analytics/react"
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // If loading a variable font, you don't need to specify the font weight
 const spaceGrotesk = Space_Grotesk({
