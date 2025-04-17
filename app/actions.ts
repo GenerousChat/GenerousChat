@@ -19,24 +19,41 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
 
-  const { error } = await supabase.auth.signUp({
+  // Attempt sign up
+  const { error: signUpError } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      // emailRedirectTo is likely not needed if verification is off,
+      // but keeping it doesn't hurt unless Supabase throws an error.
+      // Consider removing if issues arise.
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });
 
-  if (error) {
-    console.error(error.code + " " + error.message);
-    return encodedRedirect("error", "/sign-up", error.message);
-  } else {
+  if (signUpError) {
+    console.error("Sign up error:", signUpError.code + " " + signUpError.message);
+    return encodedRedirect("error", "/sign-up", signUpError.message);
+  }
+
+  // Sign up successful, attempt sign in immediately
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError) {
+    console.error("Sign in after sign up error:", signInError.message);
+    // Redirect back to sign-up with a generic or specific error
     return encodedRedirect(
-      "success",
+      "error",
       "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
+      `Account created, but auto sign-in failed: ${signInError.message}`,
     );
   }
+
+  // Sign in successful, redirect to the main app page
+  return redirect("/chat");
 };
 
 export const signInAction = async (formData: FormData) => {
