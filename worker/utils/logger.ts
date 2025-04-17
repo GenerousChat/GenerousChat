@@ -25,7 +25,7 @@ const loggerOptions = {
 
 // In production: JSON logs to file only
 // In development: Pretty logs to stdout and JSON logs to file
-let pinoLogger;
+let pinoLogger: pino.Logger;
 
 if (isProduction) {
   // Production: JSON logs to file only
@@ -94,7 +94,6 @@ function error(message: string, error?: Error | any): void {
       {
         msg: message,
         err: {
-          message: error.message,
           stack: error.stack,
           ...error
         }
