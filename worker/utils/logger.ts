@@ -1,26 +1,68 @@
 /**
- * Logger utility for consistent logging
+ * Logger utility using Pino for JSON logging
  */
+import pino from 'pino';
+import fs from 'fs';
+import path from 'path';
 
-/**
- * Log levels enum
- */
-enum LogLevel {
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
-  DEBUG = 'DEBUG',
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'worker', 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
 }
 
-/**
- * Format a log message with timestamp and level
- * @param level - Log level
- * @param message - Log message
- * @returns Formatted log message
- */
-function formatLogMessage(level: LogLevel, message: string): string {
-  const timestamp = new Date().toISOString();
-  return `[${timestamp}] [${level}] ${message}`;
+// Configure log file destination
+const logFilePath = path.join(logsDir, 'app.log');
+
+// Determine if we're in production mode
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure logger options
+const loggerOptions = {
+  level: isProduction ? 'info' : 'debug',
+  timestamp: pino.stdTimeFunctions.isoTime,
+};
+
+// In production: JSON logs to file only
+// In development: Pretty logs to stdout and JSON logs to file
+let pinoLogger;
+
+if (isProduction) {
+  // Production: JSON logs to file only
+  pinoLogger = pino(loggerOptions, pino.destination({
+    dest: logFilePath,
+    sync: false, // Asynchronous logging for better performance
+  }));
+} else {
+  // Development: Multi-destination logging
+  // 1. JSON logs to file
+  // 2. Pretty logs to stdout
+  const fileStream = pino.destination({
+    dest: logFilePath,
+    sync: false,
+  });
+  
+  // Create a multi-destination stream that writes to both stdout and file
+  const streams = [
+    { stream: process.stdout },
+    { stream: fileStream },
+  ];
+  
+  // Create a multi-destination logger
+  pinoLogger = pino(
+    {
+      ...loggerOptions,
+      // Use pretty formatting for development
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:standard',
+        },
+      },
+    },
+    pino.multistream(streams)
+  );
 }
 
 /**
@@ -29,7 +71,7 @@ function formatLogMessage(level: LogLevel, message: string): string {
  * @param data - Optional data to log
  */
 function info(message: string, data?: any): void {
-  console.log(formatLogMessage(LogLevel.INFO, message), data ? data : '');
+  pinoLogger.info(data ? { msg: message, data } : { msg: message });
 }
 
 /**
@@ -38,7 +80,7 @@ function info(message: string, data?: any): void {
  * @param data - Optional data to log
  */
 function warn(message: string, data?: any): void {
-  console.warn(formatLogMessage(LogLevel.WARN, message), data ? data : '');
+  pinoLogger.warn(data ? { msg: message, data } : { msg: message });
 }
 
 /**
@@ -47,7 +89,20 @@ function warn(message: string, data?: any): void {
  * @param error - Optional error to log
  */
 function error(message: string, error?: Error | any): void {
-  console.error(formatLogMessage(LogLevel.ERROR, message), error ? error : '');
+  if (error instanceof Error) {
+    pinoLogger.error(
+      {
+        msg: message,
+        err: {
+          message: error.message,
+          stack: error.stack,
+          ...error
+        }
+      }
+    );
+  } else {
+    pinoLogger.error({ msg: message, data: error });
+  }
 }
 
 /**
@@ -56,9 +111,7 @@ function error(message: string, error?: Error | any): void {
  * @param data - Optional data to log
  */
 function debug(message: string, data?: any): void {
-  if (process.env.NODE_ENV !== 'production') {
-    console.debug(formatLogMessage(LogLevel.DEBUG, message), data ? data : '');
-  }
+  pinoLogger.debug(data ? { msg: message, data } : { msg: message });
 }
 
 // Export as a module with named exports for TypeScript
