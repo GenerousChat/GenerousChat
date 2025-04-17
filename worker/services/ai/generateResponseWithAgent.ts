@@ -209,7 +209,7 @@ const htmlPrompt = `
           console.log("129o837198371398173918237189237191");
     
 
-				const htmlGenerationModel = process.env.USE_XAI ? xai("grok-3-beta") : openai(process.env.DEBUG_MODEL || 'o3-mini');
+				const htmlGenerationModel = process.env.USE_XAI ? xai("grok-3-fast") : openai(process.env.DEBUG_MODEL || 'o3-mini');
          const { text: htmlContent } = await generateText({
           model: htmlGenerationModel,
           temperature: 0.9,
