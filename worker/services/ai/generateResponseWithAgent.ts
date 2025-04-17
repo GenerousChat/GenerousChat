@@ -8,6 +8,7 @@ import generateAITextResponse from "../ai/generateAITextResponse";
 // import generateHTMLContent from "../ai/generateHTMLContent.js";
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { createXai } from "@ai-sdk/xai";
 import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
 
 interface Agent {
@@ -18,7 +19,9 @@ interface Agent {
   avatar_url?: string;
 }
 
-
+const xai = createXai({
+	apiKey: process.env.XAI_API_KEY,
+});
 
 async function generateResponseWithAgent(
   roomId: string,
@@ -2014,12 +2017,16 @@ React Integration: Use useEffect and useRef to manage canvas lifecycle in React 
           console.log("129o837198371398173918237189237191");
     
 
+				const htmlGenerationModel = process.env.USE_XAI ? xai("grok-3-beta") : openai(process.env.DEBUG_MODEL || 'o3-mini');
          const { text: htmlContent } = await generateText({
-          model: openai(process.env.DEBUG_MODEL || 'o3-mini'),
+          model: htmlGenerationModel,
           temperature: 0.9,
           prompt: htmlPrompt,
           maxTokens: 10000,
         });
+
+				console.log("BIGTESTTTTTTTTTT", htmlContent)
+
 
         // Update the existing generation with the completed content
         const { data: updatedGeneration, error: updateError } = await supabaseService.supabase
