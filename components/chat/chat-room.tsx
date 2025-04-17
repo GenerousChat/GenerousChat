@@ -224,7 +224,7 @@ export default function ChatRoom({
           onJoinAudio={handleJoinAudioRoom}
           showAudioRoom={showAudioRoom}
         />
-        {false && <Transcription onTranscript={handleSendMessage} />}
+        {<Transcription onTranscript={handleSendMessage} />}
       </div>
 
       {/* Main Chat Column - Max width 300px */}
@@ -239,7 +239,7 @@ export default function ChatRoom({
           </DyteProvider>
         )}
 
-        {false &&  <TTSManager 
+        { <TTSManager 
           messages={messages} 
           userCache={userCache} 
           currentUserId={currentUser.id}

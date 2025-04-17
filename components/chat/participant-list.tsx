@@ -371,7 +371,69 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
       </div>
       
       {/* Audio Room Join Button */}
-      {false && onJoinAudio && !showAudioRoom && (
+      
+      
+      <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
+        {/* Human participants */}
+        {sortedParticipants.map((participant) => {
+          // Default to a basic object if info isn't loaded yet
+          const info = userInfo[participant.user_id] || { id: participant.user_id, name: null, isAgent: false };
+          // Use a placeholder name if the fetched name is null/empty/still loading
+          const displayName = info.name || `User (${participant.user_id.substring(0, 6)}...)`; // Show partial ID if name is missing
+          const isOnline = isActive(participant.user_id);
+          return (
+            <div 
+              key={participant.user_id} 
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
+            >              <div className={`w-2 h-2 rounded-full ${
+                info.isAgent 
+                  ? agentColorMap[participant.user_id] 
+                  : isOnline 
+                    ? 'bg-green-500 dark:bg-green-400' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+              }`} />
+              {/* Use displayName */}
+              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{displayName}</span>
+              {info.isAgent && (
+                <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
+              )}
+              
+              {/* Speaking indicator */}
+              { isParticipantSpeaking(participant.user_id) && (
+                <SpeakingIndicator 
+                  activityType={getParticipantActivityType(participant.user_id)} 
+                  isAgent={info.isAgent}
+                />
+              )}
+            </div>
+          );
+        })}
+        
+        {/* AI Agents */}
+        {agents.map((agent) => {
+          const isOnline = true; // Agents are always online
+          return (
+            <div 
+              key={agent.id} 
+              data-tooltip-id="agent-tooltip" 
+              data-tooltip-content={agent.description} 
+              data-tooltip-place="right"
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70 cursor-default"
+            >
+              <div className={`w-2 h-2 rounded-full ${agentColorMap[agent.id]}`} />
+              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{agent.name}</span>
+              <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
+              { isParticipantSpeaking(agent.id) && (
+                <SpeakingIndicator 
+                  activityType={getParticipantActivityType(agent.id)} 
+                  isAgent={true}
+                />
+              )}
+            </div>
+          );
+        })}
+
+{ onJoinAudio && !showAudioRoom && (
         <div className="p-3 border-b">
           <Button 
             onClick={onJoinAudio} 
@@ -400,66 +462,6 @@ const ParticipantList = memo(({ participants, onJoinAudio, showAudioRoom = false
           </div>
         </div>
       )}
-      
-      <div className="flex-1 p-2 space-y-1 overflow-auto text-gray-800 dark:text-gray-200">
-        {/* Human participants */}
-        {sortedParticipants.map((participant) => {
-          // Default to a basic object if info isn't loaded yet
-          const info = userInfo[participant.user_id] || { id: participant.user_id, name: null, isAgent: false };
-          // Use a placeholder name if the fetched name is null/empty/still loading
-          const displayName = info.name || `User (${participant.user_id.substring(0, 6)}...)`; // Show partial ID if name is missing
-          const isOnline = isActive(participant.user_id);
-          return (
-            <div 
-              key={participant.user_id} 
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70"
-            >              <div className={`w-2 h-2 rounded-full ${
-                info.isAgent 
-                  ? agentColorMap[participant.user_id] 
-                  : isOnline 
-                    ? 'bg-green-500 dark:bg-green-400' 
-                    : 'bg-gray-300 dark:bg-gray-600'
-              }`} />
-              {/* Use displayName */}
-              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{displayName}</span>
-              {info.isAgent && (
-                <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
-              )}
-              
-              {/* Speaking indicator */}
-              {false && isParticipantSpeaking(participant.user_id) && (
-                <SpeakingIndicator 
-                  activityType={getParticipantActivityType(participant.user_id)} 
-                  isAgent={info.isAgent}
-                />
-              )}
-            </div>
-          );
-        })}
-        
-        {/* AI Agents */}
-        {agents.map((agent) => {
-          const isOnline = true; // Agents are always online
-          return (
-            <div 
-              key={agent.id} 
-              data-tooltip-id="agent-tooltip" 
-              data-tooltip-content={agent.description} 
-              data-tooltip-place="right"
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/70 cursor-default"
-            >
-              <div className={`w-2 h-2 rounded-full ${agentColorMap[agent.id]}`} />
-              <span className="text-sm truncate text-gray-900 dark:text-gray-100">{agent.name}</span>
-              <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">AI</span>
-              {false && isParticipantSpeaking(agent.id) && (
-                <SpeakingIndicator 
-                  activityType={getParticipantActivityType(agent.id)} 
-                  isAgent={true}
-                />
-              )}
-            </div>
-          );
-        })}
       </div>
     </div>
   );
