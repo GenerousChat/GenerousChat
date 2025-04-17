@@ -9,7 +9,7 @@ import logger from './utils/logger.js';
 import supabaseService, { Message, Participant } from './services/supabase.js'; 
 import pusherService from './services/pusher.js';
 import aiService from './services/ai.js';
-import routes from './routes/index.js';
+// import routes from './routes/index.js';
 
 async function handleMessageInserted(message: Message): Promise<void> {
   try {
@@ -70,23 +70,17 @@ async function handleParticipantLeft(participant: Participant): Promise<void> {
   }
 }
 
-// Initialize the application
 async function init(): Promise<void> {
+
+
+  const app = express();
+  
+  app.use(express.json());
+
+  // app.use('/', routes);
+
   try {
     logger.info('===== INITIALIZING APPLICATION =====');
-    logger.info('Environment variables:');
-    logger.info('- PUSHER_SECRET:', process.env.PUSHER_SECRET ? 'is set' : 'is NOT set');
-    logger.info('- NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'is set' : 'is NOT set');
-    logger.info('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'is set' : 'is NOT set');
-    logger.info('- SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'is set' : 'is NOT set');
-    logger.info('- OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'is set' : 'is NOT set');
-    logger.info('- HTML_CONTENT_CHANCE:', process.env.HTML_CONTENT_CHANCE 
-      ? process.env.HTML_CONTENT_CHANCE + '%' 
-      : '90% (default)');
-    logger.info('- Using Supabase key type:', process.env.SUPABASE_SERVICE_KEY 
-      ? 'SERVICE ROLE (privileged)' 
-      : 'ANON (limited)');
-    
 
     // Set up Supabase listeners
     await supabaseService.setupSupabaseListeners(
@@ -105,14 +99,6 @@ async function init(): Promise<void> {
     process.exit(1);
   }
 }
-
-// Express server setup
-const app = express();
-app.use(express.json());
-
-// Register routes
-app.use('/', routes);
-
 
 // Start the application
 init();
