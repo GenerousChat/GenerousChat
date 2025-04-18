@@ -7,6 +7,7 @@ import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RoomThumbnail from '@/components/chat/room-thumbnail';
 import { RelativeTime } from '@/components/ui/timeago';
+import { LoomEmbedWithThumbnail } from '@/components/chat/loom-embed-with-thumbnail';
 
 interface RoomWithCount {
   id: string;
@@ -62,15 +63,11 @@ export default async function ChatPage() {
     <div className="flex flex-col gap-8 pb-12 pt-8 max-w-4xl mx-auto px-4 md:px-6">
       {/* Loom Embed Section - Now comes first */}
       <div className="w-full my-4">
-        <div style={{ position: 'relative', paddingBottom: '53.28125%', height: 0 }}>
-          <iframe 
-            src="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=390c7912-301f-424c-97a0-5fbb02768a8f"
-            frameBorder="0" 
-            allowFullScreen 
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-            title="Loom Video Embed"
-          ></iframe>
-        </div>
+        <LoomEmbedWithThumbnail 
+          loomUrl="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=390c7912-301f-424c-97a0-5fbb02768a8f"
+          thumbnailUrl="/Images/startinggenerous.png" // Ensure this image is in /public
+          thumbnailAlt="Generous AI Chat introduction video thumbnail"
+        />
       </div>
       
       {/* Section containing the header and button - Moved below Loom embed */}
