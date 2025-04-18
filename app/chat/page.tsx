@@ -64,7 +64,7 @@ export default async function ChatPage() {
       <div className="w-full my-4">
         <div style={{ position: 'relative', paddingBottom: '53.28125%', height: 0 }}>
           <iframe 
-            src="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729"
+            src="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=390c7912-301f-424c-97a0-5fbb02768a8f"
             frameBorder="0" 
             allowFullScreen 
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
