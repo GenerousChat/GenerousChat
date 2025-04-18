@@ -37,43 +37,7 @@ export default function AboutPage() {
         Generous is a real-time, social audio AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
         </p>
 
-        {/* Team Section */}
-        <section className="text-center pt-4 md:pt-6">
-          <h2 className="text-2xl font-semibold mb-4 md:mb-6">Meet the Team</h2>
-          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-            {teamMembers.map((member) => (
-              <div key={member.name} className="flex flex-col items-center space-y-2">
-                {/* Standard img tag with Tailwind styling */}
-                <img 
-                  src={member.src}
-                  alt={member.name}
-                  width={96} // Set explicit width for layout
-                  height={96} // Set explicit height for layout
-                  loading="lazy" // Add lazy loading 
-                  className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary/50 shadow-lg object-cover"
-                />
-                <span className="font-medium text-foreground pt-1">{member.name}</span>
-                <span className="text-sm text-muted-foreground">{member.role}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Canva Embed Section */}
-        <div className="w-full max-w-4xl my-6 md:my-8">
-          <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.25%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
-            <iframe 
-              loading="lazy" 
-              style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
-              src="https://www.canva.com/design/DAGk4XrJ4uw/BnBGoqY4P1ZIWltql4Psyg/watch?embed"
-              allowFullScreen 
-              allow="fullscreen"
-              title="Canva Presentation Embed"
-            />
-          </div>
-        </div>
-
-        {/* Built Using Section - Updated with Logos */}
+        {/* MOVED: Built Using Section */}
         <section className="pt-4 md:pt-6 border-t border-border/20 w-full max-w-4xl">
           <h3 className="text-sm font-medium text-muted-foreground mb-4 text-center">Built Using</h3>
           {/* Logos container - Increased gap */}
@@ -189,6 +153,42 @@ export default function AboutPage() {
 
           </div>
         </section>
+
+        {/* Team Section */}
+        <section className="text-center">
+          <h2 className="text-2xl font-semibold mb-4 md:mb-6">Meet the Team</h2>
+          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+            {teamMembers.map((member) => (
+              <div key={member.name} className="flex flex-col items-center space-y-2">
+                {/* Standard img tag with Tailwind styling */}
+                <img 
+                  src={member.src}
+                  alt={member.name}
+                  width={96} // Set explicit width for layout
+                  height={96} // Set explicit height for layout
+                  loading="lazy" // Add lazy loading 
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-primary/50 shadow-lg object-cover"
+                />
+                <span className="font-medium text-foreground pt-1">{member.name}</span>
+                <span className="text-sm text-muted-foreground">{member.role}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Canva Embed Section */}
+        <div className="w-full max-w-4xl my-6 md:my-8">
+          <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.25%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
+            <iframe 
+              loading="lazy" 
+              style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
+              src="https://www.canva.com/design/DAGk4XrJ4uw/BnBGoqY4P1ZIWltql4Psyg/watch?embed"
+              allowFullScreen 
+              allow="fullscreen"
+              title="Canva Presentation Embed"
+            />
+          </div>
+        </div>
 
       </div>
     </div>
