@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { createClient } from "@/utils/supabase/client";
 // Remove Badge & TimeAgoDisplay for now
 
+// Define the authentication paths where "Home" should be excluded
+const authPaths = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password'];
+
 // Simplified BreadcrumbItem - no metadata
 interface BreadcrumbItem {
   label: string;
@@ -13,7 +16,13 @@ interface BreadcrumbItem {
   isCurrent: boolean;
 }
 
-export function Breadcrumbs() {
+// Define props for the component, including the optional callback
+interface BreadcrumbsProps {
+  onLinkClick?: () => void; // Optional callback function
+}
+
+// Accept the onLinkClick prop
+export function Breadcrumbs({ onLinkClick }: BreadcrumbsProps) {
   const pathname = usePathname();
   // State similar to MobileMenu
   const [roomName, setRoomName] = useState<string | null>(null);
@@ -74,11 +83,15 @@ export function Breadcrumbs() {
   // --- Build Breadcrumbs Logic --- 
   if (!pathname) return null;
   const pathSegments = pathname.split('/').filter(Boolean);
-  const breadcrumbItems: BreadcrumbItem[] = [
-      { label: 'Home', href: '/', isCurrent: pathname === '/' }
-  ];
+
+  // Conditionally initialize breadcrumbs
+  const isAuthPath = authPaths.includes(pathname);
+  const breadcrumbItems: BreadcrumbItem[] = isAuthPath
+    ? [] // Start empty for auth paths
+    : [{ label: 'Home', href: '/', isCurrent: pathname === '/' }]; // Start with Home otherwise
+
   let currentPath = '';
-  let finalLabelForRoom = '' // Store the final label determined for the room segment
+  let finalLabelForRoom = ''; // Store the final label determined for the room segment
 
   pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
@@ -125,7 +138,10 @@ export function Breadcrumbs() {
   }
   // ----------------------------
 
-  if (pathname === '/' || breadcrumbItems.length <= 1) return null;
+  // Adjust the condition: Only hide for the root path or if the list is truly empty
+  if (pathname === '/' || breadcrumbItems.length === 0) {
+    return null;
+  }
 
   return (
     <nav className="flex items-center space-x-2 text-lg whitespace-nowrap overflow-x-auto py-1">
@@ -141,7 +157,12 @@ export function Breadcrumbs() {
                 {breadcrumb.label}
             </span>
           ) : (
-            <Link href={breadcrumb.href} className="text-muted-foreground hover:text-foreground transition-colors">
+            // Add onClick handler to the Link element
+            <Link 
+              href={breadcrumb.href} 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              onClick={onLinkClick} // Call the passed function on click
+            >
                 {breadcrumb.label}
             </Link>
           )}

@@ -57,7 +57,7 @@ export default async function Layout({
   const objectPosition = "object-[center_35%]";
 
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-start md:justify-center gap-6 px-4 py-8 md:py-8 overflow-hidden">
+    <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-center gap-6 px-4 py-8 md:py-8 overflow-hidden">
       {/* Background image - now always Robohand */}
       <div className="absolute inset-0 z-0">
         <Image
