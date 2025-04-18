@@ -88,7 +88,7 @@ export function Breadcrumbs({ onLinkClick }: BreadcrumbsProps) {
   const isAuthPath = authPaths.includes(pathname);
   const breadcrumbItems: BreadcrumbItem[] = isAuthPath
     ? [] // Start empty for auth paths
-    : [{ label: 'Home', href: '/', isCurrent: pathname === '/' }]; // Start with Home otherwise
+    : [{ label: 'Home', href: '/chat', isCurrent: pathname === '/chat' }]; // Point Home to Lobby
 
   let currentPath = '';
   let finalLabelForRoom = ''; // Store the final label determined for the room segment
@@ -115,8 +115,7 @@ export function Breadcrumbs({ onLinkClick }: BreadcrumbsProps) {
         label = finalLabelForRoom;
       } else if (segment === 'profile' && index === 0) { // Handle /profile
         label = 'Profile';
-        // Prepend 'Lobby' pointing to the chat base path
-        breadcrumbItems.splice(1, 0, { label: 'Lobby', href: '/chat', isCurrent: false });
+        // No need to prepend Lobby since Home now points to lobby
       } else {
         label = label.charAt(0).toUpperCase() + label.slice(1);
       }
