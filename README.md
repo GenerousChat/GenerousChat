@@ -16,7 +16,7 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 </div>
 
-[![Watch the Loom Video](robohands.png)](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
+[![Watch Demo Video]](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
 
 
 ## 📋 Table of Contents
@@ -34,21 +34,16 @@ Build applications visually with your team and AI assistance in real-time. Colla
 - [Available Scripts](#-available-scripts)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
-- [Security](#-security)
-- [Code of Conduct](#-code-of-conduct)
-- [Support](#-support)
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)
 
 ## 🚀 About The Project
 
-Generous is a web-based platform designed for collaborative application development and prototyping. It leverages a visual canvas interface combined with real-time communication features and AI assistance to streamline the building process for teams.
-
-Users can interact within chat rooms, visualize components or workflows on a canvas, and receive AI-generated responses or code suggestions, fostering a dynamic and efficient development environment.
+Generous is a real-time, social AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
 
 ### 💡 Motivation
 
-The Generous platform was created to address the challenges of remote collaborative development. By combining visual tools, AI assistance, and real-time communication, we aim to make development more accessible and efficient for teams of all sizes.
+The Generous platform was created to address the challenges of remote collaborative. By combining visual tools, AI assistance, and real-time communication, we aim to make collaborative design and development more accessible and efficient for teams of all sizes.
 
 ## ✨ Key Features
 
@@ -278,25 +273,6 @@ Contributions are what make the open source community such an amazing place to l
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to contribute to this project.
-
-## 🔒 Security
-
-We take the security of Generous seriously. If you believe you have found a security vulnerability, please follow our responsible disclosure guidelines in [SECURITY.md](SECURITY.md).
-
-**DO NOT** disclose security vulnerabilities publicly until they have been addressed by the team.
-
-## 📝 Code of Conduct
-
-We expect all contributors and users to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it to understand what actions will and will not be tolerated.
-
-## 💬 Support
-
-Have questions? Need help? Join our community channels:
-
-- [GitHub Discussions](https://github.com/generouschat/generous/discussions)
-- [Discord Server](https://discord.gg/generous) <!-- Replace with actual Discord link if available -->
-
 ## 📄 License
 
 Distributed under the MIT License. This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -304,6 +280,12 @@ Distributed under the MIT License. This project is licensed under the MIT Licens
 ## 🙏 Acknowledgments
 
 - [Next.js](https://nextjs.org/) - The React framework
+- [Vercel](https://vercel.com/) - Deployment platform
+- [OpenAI](https://openai.com/) - AI research and deployment company
+- [XAI](https://x.ai/) - AI company
+- [Dyte](https://dyte.io/) - Real-time communication SDK
+- [Cursor](https://cursor.com/) - AI-powered code editor
+- [Windsurf] - (https://windsurf.com/editor) - The first agentic IDE, and then some.
 - [Supabase](https://supabase.com/) - Backend as a Service
 - [Pusher](https://pusher.com/) - Real-time communication
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
