@@ -1,10 +1,9 @@
 import { Metadata } from "next";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Define team data directly in the server component
 const teamMembers = [
-  { name: "Thomas Davis", role: "Full Stack Developer", src: "/Avatars/TDavis.png" }, 
+  { name: "Thomas Davis", role: "Developer", src: "/Avatars/TDavis.png" }, 
   { name: "Lisa Watts", role: "Prompt Engineer", src: "/Avatars/LWatts.png" },
   { name: "John Kappa", role: "Design", src: "/Avatars/JKappa.png" },
   { name: "Traves Theberge", role: "Developer", src: "/Avatars/TTheberge.png" },
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] overflow-y-auto bg-gradient-to-br from-muted/20 via-background to-background p-6 md:p-8">
+    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] overflow-y-auto p-6 md:p-8">
       
       <div className="container z-10 flex flex-col items-center justify-center h-full max-w-6xl mx-auto text-center space-y-6 md:space-y-8">
 
@@ -37,20 +36,6 @@ export default function AboutPage() {
         <p className="text-base md:text-lg text-muted-foreground max-w-3xl">
         Generous is a real-time, social AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
         </p>
-
-        {/* Canva Embed Section */}
-        <div className="w-full max-w-4xl my-6 md:my-8">
-          <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.25%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
-            <iframe 
-              loading="lazy" 
-              style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
-              src="https://www.canva.com/design/DAGk4XrJ4uw/BnBGoqY4P1ZIWltql4Psyg/watch?embed"
-              allowFullScreen 
-              allow="fullscreen"
-              title="Canva Presentation Embed"
-            />
-          </div>
-        </div>
 
         {/* Team Section */}
         <section className="text-center pt-4 md:pt-6">
@@ -73,6 +58,20 @@ export default function AboutPage() {
             ))}
           </div>
         </section>
+
+        {/* Canva Embed Section */}
+        <div className="w-full max-w-4xl my-6 md:my-8">
+          <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.25%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
+            <iframe 
+              loading="lazy" 
+              style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
+              src="https://www.canva.com/design/DAGk4XrJ4uw/BnBGoqY4P1ZIWltql4Psyg/watch?embed"
+              allowFullScreen 
+              allow="fullscreen"
+              title="Canva Presentation Embed"
+            />
+          </div>
+        </div>
 
         {/* Built Using Section - Updated with Logos */}
         <section className="pt-4 md:pt-6 border-t border-border/20 w-full max-w-4xl">
@@ -101,7 +100,7 @@ export default function AboutPage() {
             </a>
             
             {/* Cursor Logo - Made Smaller Again */}
-            <a href="https://cursor.sh" target="_blank" rel="noopener noreferrer" aria-label="Cursor">
+            <a href="https://cursor.com" target="_blank" rel="noopener noreferrer" aria-label="Cursor">
               <Image 
                 src="/Sponsors/cursor-text.svg" 
                 alt="Cursor Logo" 
@@ -163,6 +162,28 @@ export default function AboutPage() {
                 width={60} // Adjusted width
                 height={32} // Increased height
                 className="h-8 w-auto object-contain dark:invert opacity-80 hover:opacity-100 transition-opacity" // Increased height class to h-8
+              />
+            </a>
+
+            {/* Dyte Logo */}
+            <a href="https://dyte.io" target="_blank" rel="noopener noreferrer" aria-label="Dyte">
+              <Image 
+                src="/Sponsors/63caaeb042a0775de3e30f22_dyte-logo.svg" 
+                alt="Dyte Logo" 
+                width={70} 
+                height={28} 
+                className="h-7 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity dark:brightness-150"
+              />
+            </a>
+
+            {/* Pusher Logo - Made 3x Larger */}
+            <a href="https://pusher.com" target="_blank" rel="noopener noreferrer" aria-label="Pusher">
+              <Image 
+                src="/Sponsors/pusher-svgrepo-com.svg" 
+                alt="Pusher Logo" 
+                width={270}
+                height={84}
+                className="h-[5.25rem] w-auto object-contain dark:invert opacity-80 hover:opacity-100 transition-opacity"
               />
             </a>
 

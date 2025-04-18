@@ -60,31 +60,35 @@ export default async function ChatPage() {
 
   return (
     <div className="flex flex-col gap-8 pb-12 pt-8 max-w-4xl mx-auto px-4 md:px-6">
-      <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Spaces</h2>
-            <p className="text-muted-foreground mt-1">
-              Collaborative environments for chat and co-creation.
-            </p>
-          </div>
-          <CreateRoomForm userId={user.id} trigger={ <Button> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
-        </div>
-      </div>
-
-      {/* Loom Embed Section */}
-      <div className="w-full my-4"> {/* Added margin for spacing */} 
+      {/* Loom Embed Section - Now comes first */}
+      <div className="w-full my-4">
         <div style={{ position: 'relative', paddingBottom: '53.28125%', height: 0 }}>
           <iframe 
             src="https://www.loom.com/embed/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729"
             frameBorder="0" 
             allowFullScreen 
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-            title="Loom Video Embed" // Added title for accessibility
+            title="Loom Video Embed"
           ></iframe>
         </div>
       </div>
+      
+      {/* Section containing the header and button - Moved below Loom embed */}
+      <div className="flex flex-col items-center text-center md:flex-row md:justify-between md:items-center md:text-left gap-4 md:gap-6">
+        {/* Text content - takes full width on mobile, auto on desktop */}
+        <div className="w-full md:w-auto">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Spaces</h2>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            Collaborative environments for chat and co-creation.
+          </p>
+        </div>
+        {/* Button - flex-shrink-0 prevents shrinking on desktop */}
+        <div className="mt-4 md:mt-0 flex-shrink-0">
+          <CreateRoomForm userId={user.id} trigger={ <Button size="lg"> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
+        </div>
+      </div>
 
+      {/* List of existing rooms */}
       <div className="space-y-4">
         {rooms && rooms.length > 0 ? (
           rooms.map((room) => {

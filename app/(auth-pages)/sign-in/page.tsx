@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function LoginForm() {
-  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   
   const messageFromParams = (): Message | undefined => {
@@ -28,15 +28,6 @@ function LoginForm() {
     }
     return undefined;
   };
-  
-  // Ensure component is mounted to prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  if (!mounted) {
-    return null; // Return null on server-side rendering
-  }
 
   const message = messageFromParams();
   return (
@@ -108,17 +99,34 @@ function LoginForm() {
   );
 }
 
-// Fallback component for Suspense
 function FallbackLoading() {
   return (
-    <div className="flex flex-col space-y-5 w-full">
-      <div className="flex flex-col space-y-2 text-center relative">
-        <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight relative">
-          Welcome <span className="text-primary">back</span>
+    <div className="flex flex-col space-y-4 w-full relative z-10 font-sans">
+      <div className="flex flex-col space-y-2 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+          <Skeleton className="h-10 w-3/4 mx-auto mb-2" />
         </h1>
-        <p className="text-sm md:text-base text-muted-foreground">
-          Loading...
-        </p>
+        <Skeleton className="h-16 w-24 mx-auto md:hidden" />
+      </div>
+      <div className="grid gap-4 rounded-xl bg-background">
+        <div className="grid gap-2">
+          <Skeleton className="h-5 w-12" />
+          <Skeleton className="h-11 w-full rounded-xl" />
+        </div>
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <Skeleton className="h-11 w-full rounded-xl" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+        <div>
+          <Skeleton className="h-11 w-full rounded-xl" />
+        </div>
+      </div>
+      <div className="text-center"> 
+        <Skeleton className="h-5 w-28 mx-auto" />
       </div>
     </div>
   );
