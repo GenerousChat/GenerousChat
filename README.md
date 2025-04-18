@@ -11,7 +11,7 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 <div align="center">
 
-[Live Demo](https://generous.rocks) | [Documentation](README.md) | [Report Bug](https://github.com/generouschat/generous/issues) | [Request Feature](https://github.com/generouschat/generous/issues)
+[Live Demo](https://generous.rocks) | [Report Bug](https://github.com/generouschat/generous/issues) | [Request Feature](https://github.com/generouschat/generous/issues)
 
 
 ![generous image](https://github.com/user-attachments/assets/ebd687da-317b-4e6a-b541-fb921e3c6149)
