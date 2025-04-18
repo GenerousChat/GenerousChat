@@ -14,10 +14,10 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 [Live Demo](https://generous.rocks) | [Documentation](README.md) | [Report Bug](https://github.com/generouschat/generous/issues) | [Request Feature](https://github.com/generouschat/generous/issues)
 
-</div>
 
-[![Watch Demo Video]](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf?sid=c7394435-51a8-4263-bd4e-920872367729)
+![generous image](https://github.com/user-attachments/assets/ebd687da-317b-4e6a-b541-fb921e3c6149)
 
+### [Getting Started Video](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf)
 
 ## 📋 Table of Contents
 
