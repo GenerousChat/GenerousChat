@@ -1,5 +1,4 @@
-# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md) [![GitHub Stars](https://img.shields.io/github/stars/generouschat/generous)](https://github.com/generouschat/generous/stargazers) [![GitHub Issues](https://img.shields.io/github/issues/generouschat/generous)](https://github.com/generouschat/generous/issues)
-
+# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./public/logo.svg">
