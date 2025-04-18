@@ -3,7 +3,7 @@ import Image from "next/image";
 
 // Define team data directly in the server component
 const teamMembers = [
-  { name: "Thomas Davis", role: "Developer", src: "/Avatars/TDavis.png" }, 
+  { name: "Ajax Davis", role: "Developer", src: "/Avatars/TDavis.png" }, 
   { name: "Lisa Watts", role: "Prompt Engineer", src: "/Avatars/LWatts.png" },
   { name: "John Kappa", role: "Design", src: "/Avatars/JKappa.png" },
   { name: "Traves Theberge", role: "Developer", src: "/Avatars/TTheberge.png" },
