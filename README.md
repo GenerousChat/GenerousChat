@@ -39,7 +39,7 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 ## 🚀 About The Project
 
-Generous is a real-time, social AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
+Generous is a real-time, Social Audio AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
 
 ### 💡 Motivation
 

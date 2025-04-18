@@ -34,7 +34,7 @@ export default function AboutPage() {
         </h1>
 
         <p className="text-base md:text-lg text-muted-foreground max-w-3xl">
-        Generous is a real-time, social AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
+        Generous is a real-time, social audio AI platform empowering teams to collaboratively design and build immersive virtual experiences with intuitive visualization tools and AI agents.
         </p>
 
         {/* Team Section */}
