@@ -1,4 +1,4 @@
-# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+# Generous [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/GenerousChat/GenerousChat/blob/main/LICENSE) 
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./public/logo.svg">
