@@ -19,6 +19,9 @@ Build applications visually with your team and AI assistance in real-time. Colla
 
 ### [Getting Started Video](https://www.loom.com/share/f5d38e58036d4873b64ff5da4e4cdeaf)
 
+</div>
+
+
 ## 📋 Table of Contents
 
 - [About The Project](#-about-the-project)
@@ -285,7 +288,7 @@ Distributed under the MIT License. This project is licensed under the MIT Licens
 - [XAI](https://x.ai/) - AI company
 - [Dyte](https://dyte.io/) - Real-time communication SDK
 - [Cursor](https://cursor.com/) - AI-powered code editor
-- [Windsurf] - (https://windsurf.com/editor) - The first agentic IDE, and then some.
+- [Windsurf](https://windsurf.com/editor) - The first agentic IDE, and then some.
 - [Supabase](https://supabase.com/) - Backend as a Service
 - [Pusher](https://pusher.com/) - Real-time communication
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
