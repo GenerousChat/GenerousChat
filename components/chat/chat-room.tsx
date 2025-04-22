@@ -261,6 +261,7 @@ export default function ChatRoom({
           formatTime={formatTime}
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
+          readOnly={!isUserLoggedIn}
         />
       </div>
       </div>
