@@ -57,37 +57,34 @@ export default async function Layout({
   const objectPosition = "object-[center_35%]";
 
   return (
-    <div className="relative min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-center gap-6 px-4 py-8 md:py-8 overflow-hidden">
-      {/* Background image - now always Robohand */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={imageSrc}
-          alt="Background"
-          fill
-          priority
-          className={`object-cover ${objectPosition}`}
-          sizes="100vw"
-          quality={100}
-        />
-      </div>
-      
-      {/* Centered logo above card for DESKTOP screen sizes */}
-      <div className="z-10 hidden md:block">
+    <div className="min-h-[calc(100dvh-4rem)] flex flex-col items-center justify-center bg-white dark:bg-gray-900 px-4 py-8 md:py-12">
+      {/* Header with logo */}
+      <div className="w-full max-w-[450px] mb-8 text-center">
         <Image
           src="/logo.svg"
           alt="Generous Logo"
           width={180} 
           height={58}
-          className="object-contain md:w-[400px] md:h-auto invert brightness-200"
+          className="mx-auto dark:invert"
         />
       </div>
 
       {/* Card container */}
-      <div className="w-full max-w-[450px] relative z-10">
-        {/* Removed min-h-[550px] to allow natural height */}
-        <div className="w-full bg-background rounded-2xl shadow-xl p-6 sm:p-10 flex flex-col justify-center">
+      <div className="w-full max-w-[450px] relative">
+        <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
           {children}
         </div>
+      </div>
+      
+      {/* Decorative image */}
+      <div className="fixed bottom-0 right-0 w-64 h-64 md:w-96 md:h-96 -z-10 opacity-20 dark:opacity-10 pointer-events-none">
+        <Image
+          src={imageSrc}
+          alt="Decorative Background"
+          fill
+          className="object-contain"
+          sizes="(max-width: 768px) 256px, 384px"
+        />
       </div>
     </div>
   );
