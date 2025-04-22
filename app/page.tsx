@@ -181,6 +181,24 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Chat Rooms Showcase Section */}
+      <section className="bg-white dark:bg-gray-900 py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Join Collaborative Spaces</h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">Explore our public chat rooms and collaborate with others in real-time.</p>
+          </div>
+          
+          <div className="flex justify-center">
+            <Button asChild size="lg" className="rounded-lg font-medium bg-primary text-white hover:bg-primary/90 h-12 px-8 shadow-md">
+              <Link href="/chat">
+                Browse Chat Rooms <MessageSquare className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+      
       {/* Tech Stack Section */}
       <section className="bg-gray-50 dark:bg-gray-800 py-20">
         <div className="container mx-auto px-6">
@@ -244,11 +262,18 @@ export default async function Home() {
             <p className="text-lg text-white mb-8 max-w-2xl mx-auto">
               Join Generous today and transform the way you build applications with your team.
             </p>
-            <Button asChild size="lg" className="rounded-lg font-medium bg-white text-primary hover:bg-gray-100 h-12 px-8 shadow-md">
-              <Link href="/sign-up">
-                Create an Account <Zap className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="rounded-lg font-medium bg-white text-primary hover:bg-gray-100 h-12 px-8 shadow-md">
+                <Link href="/sign-up">
+                  Create an Account <Zap className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-lg font-medium bg-transparent text-white border-white hover:bg-white/10 h-12 px-8 shadow-md">
+                <Link href="/chat">
+                  Explore Chat Rooms <MessageSquare className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

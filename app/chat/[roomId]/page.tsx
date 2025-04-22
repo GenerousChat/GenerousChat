@@ -19,10 +19,6 @@ export default async function ChatRoomPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/sign-in");
-  }
-
   // Fetch room details
   const { data: room, error: roomError } = await supabase
     .from("chat_rooms")
@@ -44,19 +40,21 @@ export default async function ChatRoomPage({
     );
   }
 
-  // Check if user is a participant, if not, add them
-  const { data: participant } = await supabase
-    .from("room_participants")
-    .select("*")
-    .eq("room_id", roomId)
-    .eq("user_id", user.id)
-    .single();
+  // Check if user is a participant, if not, add them (only for logged-in users)
+  if (user) {
+    const { data: participant } = await supabase
+      .from("room_participants")
+      .select("*")
+      .eq("room_id", roomId)
+      .eq("user_id", user.id)
+      .single();
 
-  if (!participant) {
-    await supabase.from("room_participants").insert({
-      room_id: roomId,
-      user_id: user.id,
-    });
+    if (!participant) {
+      await supabase.from("room_participants").insert({
+        room_id: roomId,
+        user_id: user.id,
+      });
+    }
   }
 
   // Fetch messages
@@ -78,8 +76,10 @@ export default async function ChatRoomPage({
   // Create a map of user IDs to emails
   const userEmails: Record<string, string> = {};
   
-  // Add current user to the map
-  userEmails[user.id] = user.email || 'Unknown';
+  // Add current user to the map if logged in
+  if (user) {
+    userEmails[user.id] = user.email || 'Unknown';
+  }
   
   // Transform messages to match the expected type
   const messages = messagesData ? messagesData.map((msg: any) => ({
@@ -115,10 +115,15 @@ export default async function ChatRoomPage({
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-120px)]">
+      {!user && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-md mb-4 text-sm flex items-center justify-between">
+          <span>You are viewing this chat as a guest. <Link href="/sign-in" className="font-medium underline ml-1">Sign in</Link> to participate in the conversation.</span>
+        </div>
+      )}
       <ChatRoom
         roomId={roomId}
         initialMessages={messages}
-        currentUser={user}
+        currentUser={user || null}
         participants={participants}
       />
     </div>

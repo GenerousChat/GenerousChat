@@ -37,6 +37,11 @@ export default function AuthButton({ user }: AuthButtonProps) {
         </Button>
       )}
 
+      {/* Chat Rooms Link - Always visible for everyone */}
+      <Button asChild variant="ghost" className="text-sm font-medium hover:text-foreground">
+        <Link href="/chat">Chat Rooms</Link>
+      </Button>
+
       {/* User-specific buttons */}
       {user ? (
         // Logged In State

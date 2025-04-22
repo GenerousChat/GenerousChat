@@ -13,6 +13,7 @@ interface IntegratedChatProps {
   formatTime: (timestamp: string) => string;
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  readOnly?: boolean;
 }
 
 export function IntegratedChat({
@@ -22,7 +23,8 @@ export function IntegratedChat({
   getUserEmail,
   formatTime,
   onSendMessage,
-  isLoading
+  isLoading,
+  readOnly = false
 }: IntegratedChatProps) {
   // Input state
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -174,33 +176,39 @@ export function IntegratedChat({
         </div>
       </div>
       
-      {/* Input form */}
-      <form
-        onSubmit={handleSubmit}
-        className="p-2 flex items-end"
-      >
-        <div className="relative flex-grow">
-          <Textarea
-            ref={inputRef}
-            value={localMessage}
-            onChange={(e) => setLocalMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="min-h-[52px] resize-none pr-12 w-full"
-            rows={1} 
-            onKeyDown={handleKeyDown}
-          />
-          <Button 
-            ref={buttonRef}
-            type="submit" 
-            variant="ghost" 
-            size="icon" 
-            disabled={localLoading || !localMessage.trim()} 
-            className="absolute bottom-1.5 right-1.5 h-8 w-8 transition-colors duration-200 disabled:text-muted-foreground hover:text-primary active:scale-95"
-          >
-            <SendHorizontal className="h-4 w-4" />
-          </Button>
+      {/* Input form - show only if not in read-only mode */}
+      {!readOnly ? (
+        <form
+          onSubmit={handleSubmit}
+          className="p-2 flex items-end"
+        >
+          <div className="relative flex-grow">
+            <Textarea
+              ref={inputRef}
+              value={localMessage}
+              onChange={(e) => setLocalMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="min-h-[52px] resize-none pr-12 w-full"
+              rows={1} 
+              onKeyDown={handleKeyDown}
+            />
+            <Button 
+              ref={buttonRef}
+              type="submit" 
+              variant="ghost" 
+              size="icon" 
+              disabled={localLoading || !localMessage.trim()} 
+              className="absolute bottom-1.5 right-1.5 h-8 w-8 transition-colors duration-200 disabled:text-muted-foreground hover:text-primary active:scale-95"
+            >
+              <SendHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <div className="p-2 bg-gray-50 dark:bg-gray-800 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+          Sign in to join the conversation
         </div>
-      </form>
+      )}
     </div>
   );
 }

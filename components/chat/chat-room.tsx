@@ -23,7 +23,7 @@ import { ChevronLeft, ChevronRight, Users, MessageSquare, Layers } from 'lucide-
 interface ChatRoomProps {
   roomId: string;
   initialMessages: Message[];
-  currentUser: User;
+  currentUser: User | null;
   participants: Participant[];
 }
 
@@ -60,7 +60,7 @@ export default function ChatRoom({
     handleJoinAudioRoom,
     handleLeaveAudioRoom,
     
-  } = useAudioRoom(roomId, currentUser.id, currentUser.email || '');
+  } = useAudioRoom(roomId, currentUser?.id || 'guest', currentUser?.email || 'guest@example.com');
   
   // Canvas generation state
   const [activeGeneration, setActiveGeneration] = useState<any>(null);
@@ -85,6 +85,9 @@ export default function ChatRoom({
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+
+  // Function to check if user is logged in
+  const isUserLoggedIn = !!currentUser;
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -155,8 +158,8 @@ export default function ChatRoom({
                     <DyteProvider value={meeting}>
                       <AudioRoom
                         roomId={roomId}
-                        userId={currentUser.id}
-                        userName={currentUser.email?.split('@')[0] || 'User'}
+                        userId={currentUser?.id || 'guest'}
+                        userName={currentUser?.email?.split('@')[0] || 'Guest'}
                       />
                     </DyteProvider>
                   )}
@@ -169,6 +172,7 @@ export default function ChatRoom({
                     formatTime={formatTime}
                     onSendMessage={handleSendMessage}
                     isLoading={isLoading}
+                    readOnly={!isUserLoggedIn}
                   />
                 </div>
               </div>
@@ -231,15 +235,15 @@ export default function ChatRoom({
           <DyteProvider value={meeting}>
             <AudioRoom
               roomId={roomId}
-              userId={currentUser.id}
-              userName={currentUser.email?.split('@')[0] || 'User'}
+              userId={currentUser?.id || 'guest'}
+              userName={currentUser?.email?.split('@')[0] || 'Guest'}
             />
           </DyteProvider>
         )}
        { <TTSManager 
           messages={messages} 
           userCache={userCache} 
-          currentUserId={currentUser.id}
+          currentUserId={currentUser?.id || 'guest'}
           newMessageReceived={newMessageReceived}
         />}
         {<Transcription onTranscript={handleSendMessage} />}

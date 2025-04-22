@@ -38,7 +38,7 @@ export function useChatMessages(
   roomId: string,
   initialMessages: Message[],
   initialParticipants: Participant[],
-  currentUser: User
+  currentUser: User | null
 ) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [participants, setParticipants] = useState<Participant[]>(initialParticipants);
@@ -78,7 +78,7 @@ export function useChatMessages(
     }
 
     // Check if it's the current user
-    if (userId === currentUser.id) {
+    if (currentUser && userId === currentUser.id) {
       const name = currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'You';
       storeUserInfo(userId, name, currentUser.email || '', false);
       return { name, email: currentUser.email, isAgent: false };
@@ -138,7 +138,7 @@ export function useChatMessages(
     }
     
     // Then check if it's the current user
-    if (userId === currentUser.id) {
+    if (currentUser && userId === currentUser.id) {
       return currentUser.email || "You";
     }
     
@@ -149,7 +149,7 @@ export function useChatMessages(
 
   // Send a message
   const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser) return;
 
     setIsLoading(true);
     try {
@@ -168,7 +168,7 @@ export function useChatMessages(
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser.id, roomId, supabase]);
+  }, [currentUser, roomId, supabase]);
 
   // Set up Pusher subscription for real-time messages
   useEffect(() => {
@@ -256,7 +256,7 @@ export function useChatMessages(
     return `${hours}:${minutes}`;
   };
 
-  const isCurrentUser = (userId: string) => userId === currentUser.id;
+  const isCurrentUser = (userId: string) => currentUser ? userId === currentUser.id : false;
 
   return {
     messages,

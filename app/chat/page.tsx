@@ -26,12 +26,8 @@ export default async function ChatPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/sign-in");
-  }
-
   // Fetch chat rooms AND their message counts and latest generation ID
-  console.log("Fetching rooms for user:", user.id); // Add log
+  console.log("Fetching rooms for user:", user?.id || 'anonymous'); // Track anonymous users
   const { data: roomsData, error, status } = await supabase
     .from("chat_rooms")
     .select(`
@@ -81,7 +77,15 @@ export default async function ChatPage() {
         </div>
         {/* Button - flex-shrink-0 prevents shrinking on desktop */}
         <div className="mt-4 md:mt-0 flex-shrink-0">
-          <CreateRoomForm userId={user.id} trigger={ <Button size="lg"> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
+          {user ? (
+            <CreateRoomForm userId={user.id} trigger={ <Button size="lg"> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
+          ) : (
+            <Button asChild size="lg">
+              <Link href="/sign-in">
+                <Plus className="mr-2 h-4 w-4" /> Sign in to Create
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -146,7 +150,15 @@ export default async function ChatPage() {
               <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-4">
                 Create your first space to start collaborating.
               </p>
-              <CreateRoomForm userId={user.id} trigger={ <Button> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
+              {user ? (
+                <CreateRoomForm userId={user.id} trigger={ <Button> <Plus className="mr-2 h-4 w-4" /> Create Space </Button> } />
+              ) : (
+                <Button asChild>
+                  <Link href="/sign-in">
+                    <Plus className="mr-2 h-4 w-4" /> Sign in to Create
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         )}
